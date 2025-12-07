@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>timer || opera7133/opetools</title>
+    <link rel="stylesheet" href="styles/tailwind.css" />
+    <style>
+      .timer-display {
+        font-size: 4rem;
+        font-weight: bold;
+        text-align: center;
+        font-family: "Courier New", monospace;
+        line-height: 1.2;
+      }
+
+      .timer-display.warning {
+        color: #f97316;
+      }
+
+      .timer-display.danger {
+        color: #ef4444;
+      }
+
+      .timer-display.finished {
+        color: #10b981;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 20px 0;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        transition: width 0.1s linear;
+      }
+
+      .progress-fill.warning {
+        background: linear-gradient(90deg, #f97316, #fbbf24);
+      }
+
+      .progress-fill.danger {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .btn-primary {
+        background: #3b82f6;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #2563eb;
+      }
+
+      .btn-primary:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: #6b7280;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #4b5563;
+      }
+
+      .btn-danger {
+        background: #ef4444;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+
+      .settings-panel {
+        background: #f3f4f6;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+
+      .settings-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .settings-title:hover {
+        text-decoration: underline;
+      }
+
+      .collapse-icon {
+        transition: transform 0.3s;
+      }
+
+      .collapse-icon.collapsed {
+        transform: rotate(-90deg);
+      }
+
+      .settings-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+      }
+
+      .bell-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-left: 8px;
+      }
+
+      .bell-indicator.active {
+        background: #ef4444;
+        animation: pulse 0.6s ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .status-info {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 0.95rem;
+        color: #666;
+      }
+
+      .fullscreen-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f9fafb;
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .fullscreen-modal.active {
+        display: flex;
+      }
+
+      .fullscreen-content {
+        text-align: center;
+        width: 100%;
+        padding: 20px;
+      }
+
+      .fullscreen-progress {
+        width: 90%;
+        height: 40px;
+        background: #e5e7eb;
+        border-radius: 20px;
+        overflow: hidden;
+        margin: 30px auto;
+      }
+
+      .fullscreen-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        transition: width 0.1s linear;
+      }
+
+      .fullscreen-progress-fill.warning {
+        background: linear-gradient(90deg, #f97316, #fbbf24);
+      }
+
+      .fullscreen-progress-fill.danger {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+      }
+
+      .fullscreen-timer {
+        font-size: 15vw;
+        font-weight: bold;
+        font-family: "Courier New", monospace;
+        line-height: 1.2;
+        color: #1e2939;
+      }
+
+      .fullscreen-timer.warning {
+        color: #f97316;
+      }
+
+      .fullscreen-timer.danger {
+        color: #ef4444;
+      }
+
+      .fullscreen-timer.finished {
+        color: #10b981;
+      }
+
+      .fullscreen-controls {
+        margin-top: 40px;
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .fullscreen-controls .btn {
+        font-size: 1.5rem;
+        padding: 15px 30px;
+      }
+
+      .fullscreen-status {
+        color: #1e2939;
+        font-size: 2rem;
+        margin-top: 20px;
+      }
+
+      @media (max-width: 768px) {
+        .timer-display {
+          font-size: 2.5rem;
+        }
+
+        .button-group {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .settings-content {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-800 m-0 p-0">
+    <!-- START HEADER -->
+    <!-- END HEADER -->
+
+    <!-- フルスクリーン拡大表示モーダル -->
+    <div class="fullscreen-modal" id="fullscreenModal">
+      <div class="fullscreen-content">
+        <div class="fullscreen-timer" id="fullscreenTimer">00:00</div>
+        <div class="fullscreen-progress">
+          <div
+            class="fullscreen-progress-fill"
+            id="fullscreenProgressFill"
+          ></div>
+        </div>
+        <div class="fullscreen-status" id="fullscreenStatus">準備完了</div>
+        <div class="fullscreen-controls">
+          <button class="btn btn-secondary" onclick="toggleFullscreen()">
+            通常表示に戻る
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <main class="max-w-2xl mx-auto py-12 px-8">
+      <div class="bg-white p-8 rounded-lg shadow-md">
+        <h1 class="text-3xl font-bold mb-8 text-center">プレゼンタイマー</h1>
+
+        <!-- タイマー表示 -->
+        <div class="bg-gray-50 p-8 rounded-lg mb-8">
+          <div class="timer-display" id="timerDisplay">00:00</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="status-info">
+            <span id="statusText">準備完了</span>
+            <span class="bell-indicator" id="bellIndicator"></span>
+          </div>
+        </div>
+
+        <!-- 基本設定 -->
+        <div class="space-y-4 mb-8">
+          <div class="form-group">
+            <label for="totalTime">全体時間 (秒)</label>
+            <input
+              type="number"
+              id="totalTime"
+              value="300"
+              min="1"
+              step="1"
+              class="w-full px-3 py-2 border border-gray-300 rounded"
+              disabled
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="bellTime1">ベル1回目 (秒)</label>
+            <input
+              type="number"
+              id="bellTime1"
+              value="240"
+              min="0"
+              step="1"
+              class="w-full px-3 py-2 border border-gray-300 rounded"
+              disabled
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="bellTime2">ベル2回目 (秒)</label>
+            <input
+              type="number"
+              id="bellTime2"
+              value="60"
+              min="0"
+              step="1"
+              class="w-full px-3 py-2 border border-gray-300 rounded"
+              disabled
+            />
+          </div>
+        </div>
+
+        <!-- コントロールボタン -->
+        <div class="button-group mb-8">
+          <button class="btn btn-primary" id="startBtn" onclick="startTimer()">
+            開始
+          </button>
+          <button
+            class="btn btn-secondary"
+            id="pauseBtn"
+            onclick="pauseTimer()"
+            disabled
+          >
+            一時停止
+          </button>
+          <button
+            class="btn btn-secondary"
+            id="resumeBtn"
+            onclick="resumeTimer()"
+            disabled
+            style="display: none"
+          >
+            再開
+          </button>
+          <button class="btn btn-danger" id="resetBtn" onclick="resetTimer()">
+            リセット
+          </button>
+          <button
+            class="btn btn-secondary"
+            id="fullscreenBtn"
+            onclick="toggleFullscreen()"
+          >
+            拡大表示
+          </button>
+        </div>
+
+        <!-- 高度な設定 -->
+        <div class="settings-panel">
+          <div class="settings-title" onclick="toggleAdvancedSettings()">
+            <span class="collapse-icon" id="collapseIcon">▼</span>
+            <span>高度な設定</span>
+          </div>
+          <div class="settings-content" id="advancedSettings">
+            <div class="form-group">
+              <label for="timerSpeed">タイマー速度</label>
+              <input
+                type="range"
+                id="timerSpeed"
+                min="0.1"
+                max="5"
+                step="0.01"
+                value="1"
+                class="w-full"
+              />
+              <div class="text-sm text-gray-600 mt-2">
+                速度: <span id="speedValue">1.00</span>x
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="bellVolume">ベル音量</label>
+              <input
+                type="range"
+                id="bellVolume"
+                min="0"
+                max="100"
+                step="1"
+                value="50"
+                class="w-full"
+              />
+              <div class="text-sm text-gray-600 mt-2">
+                音量: <span id="volumeValue">50</span>%
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="warningThreshold">警告時刻 (秒)</label>
+              <input
+                type="number"
+                id="warningThreshold"
+                value="60"
+                min="0"
+                step="1"
+                class="w-full px-3 py-2 border border-gray-300 rounded"
+              />
+              <div class="text-sm text-gray-600 mt-2">
+                この時刻以下で色が変わります
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- START FOOTER -->
+    <!-- END FOOTER -->
+
+    <script>
+      let timerInterval = null;
+      let remainingTime = 300; // デフォルト5分
+      let totalTime = 300;
+      let isRunning = false;
+      let isPaused = false;
+      let bellTime1 = 240;
+      let bellTime2 = 60;
+      let bell1Played = false;
+      let bell2Played = false;
+      let timerSpeed = 1;
+      let bellVolume = 50;
+      let warningThreshold = 60;
+
+      const updateDisplay = () => {
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = Math.floor(remainingTime % 60);
+        const timeStr = `${String(minutes).padStart(2, "0")}:${String(
+          seconds
+        ).padStart(2, "0")}`;
+
+        const timerDisplay = document.getElementById("timerDisplay");
+        timerDisplay.innerText = timeStr;
+
+        // フルスクリーン表示も更新
+        const fullscreenTimer = document.getElementById("fullscreenTimer");
+        if (fullscreenTimer) {
+          fullscreenTimer.innerText = timeStr;
+        }
+
+        // プログレスバーの更新
+        const progress = (remainingTime / totalTime) * 100;
+        const progressFill = document.getElementById("progressFill");
+        progressFill.style.width = progress + "%";
+
+        // フルスクリーンプログレスバーの更新
+        const fullscreenProgressFill = document.getElementById(
+          "fullscreenProgressFill"
+        );
+        if (fullscreenProgressFill) {
+          fullscreenProgressFill.style.width = progress + "%";
+        }
+
+        // 色の更新
+        timerDisplay.className = "timer-display";
+        progressFill.className = "progress-fill";
+        if (fullscreenTimer) {
+          fullscreenTimer.className = "fullscreen-timer";
+        }
+        if (fullscreenProgressFill) {
+          fullscreenProgressFill.className = "fullscreen-progress-fill";
+        }
+
+        if (remainingTime <= 0) {
+          timerDisplay.classList.add("finished");
+          progressFill.classList.add("finished");
+          if (fullscreenTimer) {
+            fullscreenTimer.classList.add("finished");
+          }
+          if (fullscreenProgressFill) {
+            fullscreenProgressFill.classList.add("finished");
+          }
+        } else if (remainingTime <= warningThreshold) {
+          timerDisplay.classList.add("danger");
+          progressFill.classList.add("danger");
+          if (fullscreenTimer) {
+            fullscreenTimer.classList.add("danger");
+          }
+          if (fullscreenProgressFill) {
+            fullscreenProgressFill.classList.add("danger");
+          }
+        } else if (remainingTime <= bellTime1) {
+          timerDisplay.classList.add("warning");
+          progressFill.classList.add("warning");
+          if (fullscreenTimer) {
+            fullscreenTimer.classList.add("warning");
+          }
+          if (fullscreenProgressFill) {
+            fullscreenProgressFill.classList.add("warning");
+          }
+        }
+      };
+
+      const playBellSound = () => {
+        const audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
+        const volume = bellVolume / 100;
+
+        // ベル音の周波数
+        const frequencies = [800, 1000, 800];
+        const duration = 0.2;
+        const gap = 0.1;
+
+        let currentTime = audioContext.currentTime;
+
+        frequencies.forEach((freq, index) => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+
+          oscillator.frequency.value = freq;
+          gainNode.gain.setValueAtTime(volume, currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            currentTime + duration
+          );
+
+          oscillator.start(currentTime);
+          oscillator.stop(currentTime + duration);
+
+          currentTime += duration + gap;
+        });
+      };
+
+      const updateStatusText = () => {
+        const statusEl = document.getElementById("statusText");
+        const fullscreenStatus = document.getElementById("fullscreenStatus");
+
+        let statusText = "";
+        if (remainingTime <= 0) {
+          statusText = "終了";
+        } else if (isRunning && !isPaused) {
+          statusText = "実行中";
+        } else if (isPaused) {
+          statusText = "一時停止中";
+        } else {
+          statusText = "準備完了";
+        }
+
+        statusEl.innerText = statusText;
+        if (fullscreenStatus) {
+          fullscreenStatus.innerText = statusText;
+        }
+      };
+
+      const checkBellTimes = () => {
+        if (isRunning && !isPaused) {
+          if (
+            Math.ceil(remainingTime) === bellTime1 &&
+            !bell1Played &&
+            bellTime1 > 0
+          ) {
+            playBellSound();
+            showBellIndicator();
+            bell1Played = true;
+          }
+          if (
+            Math.ceil(remainingTime) === bellTime2 &&
+            !bell2Played &&
+            bellTime2 > 0
+          ) {
+            playBellSound();
+            showBellIndicator();
+            bell2Played = true;
+          }
+        }
+      };
+
+      const showBellIndicator = () => {
+        const bellIndicator = document.getElementById("bellIndicator");
+        bellIndicator.classList.remove("active");
+        // リフロー強制
+        void bellIndicator.offsetWidth;
+        bellIndicator.classList.add("active");
+      };
+
+      const startTimer = () => {
+        if (isRunning) return;
+
+        totalTime = parseInt(document.getElementById("totalTime").value);
+        bellTime1 = parseInt(document.getElementById("bellTime1").value);
+        bellTime2 = parseInt(document.getElementById("bellTime2").value);
+
+        if (remainingTime === totalTime) {
+          bell1Played = false;
+          bell2Played = false;
+        }
+
+        isRunning = true;
+        isPaused = false;
+
+        disableInputs(true);
+        updateButtons();
+        updateStatusText();
+
+        timerInterval = setInterval(() => {
+          remainingTime -= 0.1 * timerSpeed;
+
+          if (remainingTime <= 0) {
+            remainingTime = 0;
+            clearInterval(timerInterval);
+            isRunning = false;
+            playBellSound();
+            updateButtons();
+          }
+
+          checkBellTimes();
+          updateDisplay();
+          updateStatusText();
+        }, 100);
+      };
+
+      const pauseTimer = () => {
+        if (!isRunning || isPaused) return;
+        clearInterval(timerInterval);
+        isPaused = true;
+        updateButtons();
+        updateStatusText();
+      };
+
+      const resumeTimer = () => {
+        if (!isPaused) return;
+        isPaused = false;
+        updateButtons();
+        updateStatusText();
+
+        timerInterval = setInterval(() => {
+          remainingTime -= 0.1 * timerSpeed;
+
+          if (remainingTime <= 0) {
+            remainingTime = 0;
+            clearInterval(timerInterval);
+            isRunning = false;
+            playBellSound();
+            updateButtons();
+          }
+
+          checkBellTimes();
+          updateDisplay();
+          updateStatusText();
+        }, 100);
+      };
+
+      const resetTimer = () => {
+        clearInterval(timerInterval);
+        isRunning = false;
+        isPaused = false;
+        remainingTime = parseInt(document.getElementById("totalTime").value);
+        bell1Played = false;
+        bell2Played = false;
+        disableInputs(false);
+        updateButtons();
+        updateDisplay();
+        updateStatusText();
+      };
+
+      const disableInputs = (disabled) => {
+        document.getElementById("totalTime").disabled = disabled;
+        document.getElementById("bellTime1").disabled = disabled;
+        document.getElementById("bellTime2").disabled = disabled;
+      };
+
+      const updateButtons = () => {
+        const startBtn = document.getElementById("startBtn");
+        const pauseBtn = document.getElementById("pauseBtn");
+        const resumeBtn = document.getElementById("resumeBtn");
+
+        startBtn.disabled = isRunning || isPaused;
+        pauseBtn.disabled = !isRunning || isPaused;
+        resumeBtn.style.display = isPaused ? "inline-block" : "none";
+        resumeBtn.disabled = !isPaused;
+      };
+
+      const toggleAdvancedSettings = () => {
+        const advancedSettings = document.getElementById("advancedSettings");
+        const collapseIcon = document.getElementById("collapseIcon");
+
+        advancedSettings.style.display =
+          advancedSettings.style.display === "none" ? "grid" : "none";
+        collapseIcon.classList.toggle("collapsed");
+      };
+
+      const toggleFullscreen = () => {
+        const fullscreenModal = document.getElementById("fullscreenModal");
+        fullscreenModal.classList.toggle("active");
+      };
+
+      // Escキーでフルスクリーン終了
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const fullscreenModal = document.getElementById("fullscreenModal");
+          if (fullscreenModal.classList.contains("active")) {
+            toggleFullscreen();
+          }
+        }
+      });
+
+      // イベントリスナー
+      document.getElementById("timerSpeed").addEventListener("input", (e) => {
+        timerSpeed = parseFloat(e.target.value);
+        document.getElementById("speedValue").innerText = timerSpeed.toFixed(2);
+      });
+
+      document.getElementById("bellVolume").addEventListener("input", (e) => {
+        bellVolume = parseInt(e.target.value);
+        document.getElementById("volumeValue").innerText = bellVolume;
+      });
+
+      document
+        .getElementById("warningThreshold")
+        .addEventListener("input", (e) => {
+          warningThreshold = parseInt(e.target.value);
+        });
+
+      document.getElementById("totalTime").addEventListener("change", () => {
+        if (!isRunning && !isPaused) {
+          remainingTime = parseInt(document.getElementById("totalTime").value);
+          bell1Played = false;
+          bell2Played = false;
+          updateDisplay();
+        }
+      });
+
+      // 初期化
+      window.addEventListener("load", () => {
+        updateDisplay();
+        updateButtons();
+        document.getElementById("advancedSettings").style.display = "none";
+      });
+    </script>
+  </body>
+</html>

@@ -64,7 +64,7 @@ const publicDir = path.join(componentDir, "src", "public");
 if (!fs.existsSync(publicDir)) {
   fs.mkdirSync(publicDir, { recursive: true });
 }
-fs.cpSync(publicDir, path.join(distDir, "public"), {
+fs.cpSync(publicDir, path.join(distDir), {
   recursive: true,
 });
 

@@ -58,7 +58,11 @@ htmlFiles.forEach((file) => {
   console.log(`✓ ${file} を dist に保存しました`);
 });
 
-fs.cpSync(path.join(componentDir, "src", "public"), path.join(distDir), {
+const publicDir = path.join(componentDir, "src", "public");
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+fs.cpSync(publicDir, path.join(distDir, "public"), {
   recursive: true,
 });
 

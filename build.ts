@@ -27,7 +27,9 @@ const footerContent = fs
   .trim();
 
 // HTMLファイルを処理
-const htmlFiles = ["index.html", "envelope.html", "pukiwiki.html"];
+const htmlFiles = fs
+  .readdirSync(path.join(componentDir, "src", "pages"))
+  .filter((file) => file.endsWith(".html"));
 
 // distディレクトリが存在しなければ作成
 const distDir = path.join(componentDir, "dist");

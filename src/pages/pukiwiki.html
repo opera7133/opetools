@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>pukiwiki || opera7133/opetools</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="styles/tailwind.css" />
+  </head>
+  <body class="bg-white text-gray-800">
+    <!-- START HEADER -->
+    <!-- END HEADER -->
+
+    <main class="max-w-4xl mx-auto py-12 px-8">
+      <h2 class="text-3xl font-bold mb-4">pukiwiki</h2>
+      <h3 class="text-2xl font-semibold mb-3">SoundCloud 楽曲ID抽出</h3>
+      <div>
+        <div class="flex gap-2 mb-4">
+          <input
+            type="text"
+            id="sccode"
+            placeholder="<iframe width=..."
+            class="flex-1 px-3 py-2 border border-gray-300 rounded"
+          />
+          <button
+            id="sccut"
+            onclick="cutSoundCloudId()"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            切り取り
+          </button>
+        </div>
+        <div class="flex gap-2 mb-4">
+          <input
+            type="text"
+            id="scresult"
+            placeholder="楽曲IDがここに表示されます"
+            readonly
+            class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100"
+            oninput="this.value =
+        this.value.replace(/[^0-9]/g, '')"
+          />
+          <button
+            id="sccopy"
+            onclick="copyToClipboard(document.getElementById('scresult').value)"
+            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 whitespace-nowrap"
+          >
+            コピー
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      function cutSoundCloudId() {
+        const code = document.getElementById("sccode");
+        const id = new RegExp("tracks/([0-9]+)&color=");
+        if (id.test(code.value)) {
+          document.getElementById("scresult").value = code.value.match(id)[1];
+        }
+        const id2 = new RegExp("tracks\%253A([0-9]+)&color=");
+        if (id2.test(code.value)) {
+          document.getElementById("scresult").value = code.value.match(id2)[1];
+        }
+      }
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        alert("クリップボードにコピーしました: " + text);
+      }
+    </script>
+
+    <!-- START FOOTER -->
+    <!-- END FOOTER -->
+  </body>
+</html>

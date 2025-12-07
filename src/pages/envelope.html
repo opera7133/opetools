@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>envelope || opera7133/opetools</title>
+    <link rel="stylesheet" href="styles/tailwind.css" />
+    <style>
+      /* --- 基本リセットとフォント --- */
+      body {
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "HGP明朝B",
+          serif;
+      }
+
+      /* --- 縦書き共通設定 --- */
+      .vertical-text {
+        writing-mode: vertical-rl; /* 縦書き・右から左 */
+        text-orientation: mixed; /* 英数字の向き調整 */
+      }
+
+      /* --- レイアウト（画面表示用） --- */
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 20px;
+        gap: 30px;
+      }
+
+      /* --- 入力フォームエリア --- */
+      .input-panel {
+        font-family: sans-serif;
+      }
+
+      .input-panel h2 {
+        font-size: 1.2rem;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .form-group input[type="text"],
+      .form-group input[type="password"],
+      .form-group select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+
+      .form-group input[type="checkbox"] {
+        margin-right: 8px;
+        cursor: pointer;
+      }
+
+      .btn-print {
+        width: 100%;
+        padding: 12px;
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+        margin-top: 10px;
+      }
+
+      .btn-print:hover {
+        background-color: #1a252f;
+      }
+
+      /* --- プレビュー用紙エリア（A4サイズ） --- */
+      .paper-preview {
+        width: 210mm;
+        height: 297mm;
+        background: white;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+        transform-origin: top center;
+      }
+
+      /* --- スマートフォン表示時の縮小 --- */
+      @media (max-width: 768px) {
+        .paper-preview {
+          flex-shrink: 0;
+          transform: scale(0.5);
+          margin: 0 auto;
+        }
+      }
+
+      /* --- 郵便番号（横書き） --- */
+      .zip-area {
+        position: absolute;
+        top: 25mm;
+        right: 20mm;
+        width: 90mm;
+        height: 10mm;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        font-family: sans-serif;
+        font-size: 18pt;
+        letter-spacing: 4mm;
+        z-index: 10;
+        gap: 2mm;
+      }
+
+      .zip-char.hidden {
+        display: none;
+      }
+
+      .zip-digit {
+        width: 1em;
+        height: 1.2em;
+        display: flex;
+        align-items: center;
+        justify-content: normal;
+      }
+
+      .zip-digit.with-border {
+        border: 2px solid red;
+      }
+
+      /* --- 住所エリア（絶対配置・右揃え） --- */
+      .address-container {
+        position: absolute;
+        top: 50mm; /* 上からの開始位置 */
+        right: 25mm; /* 右端からの固定位置（ここを基準に住所が並ぶ） */
+        bottom: 20mm;
+
+        /* レイアウト設定 */
+        display: flex;
+        flex-direction: column; /* 縦書きモードでは右から左への並びになる */
+        align-items: flex-start; /* 上揃え */
+        gap: 8mm; /* 行間 */
+
+        z-index: 5;
+      }
+
+      .address-main {
+        margin-top: 10mm;
+        font-size: 22pt;
+        line-height: 1.4;
+        letter-spacing: 0.1em;
+      }
+
+      .address-sub {
+        font-size: 16pt;
+        line-height: 1.4;
+        color: #333;
+        /* 2行目は少し下げる（インデント） */
+        margin-top: 10mm;
+      }
+
+      .company-name {
+        font-size: 18pt;
+        letter-spacing: 0.1em;
+        margin-top: 5mm;
+      }
+
+      /* --- 名前エリア（中央配置） --- */
+      .name-container {
+        position: absolute;
+        top: 50mm;
+        left: 0;
+        width: 100%; /* 幅いっぱいに広げて中央揃えの基準にする */
+        bottom: 20mm;
+
+        display: flex;
+        justify-content: center; /* 左右中央（縦書きのブロック方向） */
+        align-items: flex-start; /* 上揃え（名前の書き出し位置） */
+        flex-direction: column;
+
+        z-index: 5;
+        pointer-events: none; /* 名前エリアが住所エリアの上に被っても住所を選択できるように（念のため） */
+      }
+
+      .recipient-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .recipient-name {
+        font-size: 36pt;
+        letter-spacing: 0.2em;
+        padding-top: 20mm; /* 住所より少し下から書き始める */
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+      }
+
+      .honorific {
+        font-size: 20pt;
+        margin-top: 15px;
+        white-space: nowrap;
+      }
+
+      /* --- 左下エリア（特別配達）--- */
+      .bottom-left-area {
+        position: absolute;
+        bottom: 20mm;
+        left: 20mm;
+        display: flex;
+        flex-direction: column;
+        gap: 5mm;
+        z-index: 10;
+      }
+
+      .delivery-notice {
+        color: red;
+        border: 3px solid red;
+        padding: 4px 8px;
+        font-size: 14pt;
+        font-weight: bold;
+        text-align: center;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "HGP明朝B",
+          serif;
+        white-space: nowrap;
+      }
+
+      /* --- 印刷用スタイル --- */
+      @media print {
+        @page {
+          size: A4 portrait;
+          margin: 0;
+        }
+        body {
+          background: none;
+          -webkit-print-color-adjust: exact;
+        }
+        .container {
+          display: block;
+          padding: 0;
+          width: 100%;
+        }
+        .input-panel {
+          display: none;
+        }
+        .paper-preview {
+          width: 100%;
+          height: 100vh;
+          box-shadow: none;
+          margin: 0;
+          page-break-after: always;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-800 m-0 p-0">
+    <!-- START HEADER -->
+    <!-- END HEADER -->
+    <div class="container">
+      <div class="input-panel bg-white p-5 rounded-lg shadow-md w-80 h-fit">
+        <h2 class="mt-0 text-lg text-gray-700">宛名入力</h2>
+
+        <div class="form-group pt-4">
+          <label for="inputZip" class="block mb-1 font-bold text-sm"
+            >郵便番号 (ハイフンなし7桁)</label
+          >
+          <input
+            type="text"
+            id="inputZip"
+            placeholder="1234567"
+            maxlength="7"
+            oninput="updatePreview()"
+            class="w-full px-2 py-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="inputAddr1" class="block mb-1 font-bold text-sm"
+            >住所1 (都道府県・市区町村・番地)</label
+          >
+          <input
+            type="text"
+            id="inputAddr1"
+            placeholder="東京都千代田区千代田1-1"
+            oninput="updatePreview()"
+            class="w-full px-2 py-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="inputAddr2" class="block mb-1 font-bold text-sm"
+            >住所2 (ビル・マンション名)</label
+          >
+          <input
+            type="text"
+            id="inputAddr2"
+            placeholder="パレスサイドビル 101"
+            oninput="updatePreview()"
+            class="w-full px-2 py-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="inputCompany" class="block mb-1 font-bold text-sm"
+            >会社名 (任意)</label
+          >
+          <input
+            type="text"
+            id="inputCompany"
+            placeholder="〇〇株式会社"
+            oninput="updatePreview()"
+            class="w-full px-2 py-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="inputName" class="block mb-1 font-bold text-sm"
+            >氏名・企業名・部署名 (\nで改行可)</label
+          >
+          <input
+            type="text"
+            id="inputName"
+            placeholder="山田 太郎"
+            oninput="updatePreview()"
+            class="w-full px-2 py-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="inputHonorific" class="block mb-1 font-bold text-sm"
+            >敬称</label
+          >
+          <select
+            id="inputHonorific"
+            onchange="updatePreview()"
+            class="w-full px-2 py-2 border border-gray-300 rounded"
+          >
+            <option value="様" selected>様</option>
+            <option value="御中">御中</option>
+            <option value="殿">殿</option>
+            <option value="先生">先生</option>
+            <option value="">(なし)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="flex items-center text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              id="inputShowZipSymbol"
+              checked
+              onchange="updatePreview()"
+              class="mr-2"
+            />
+            郵便記号（〒）を表示
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="flex items-center text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              id="inputShowZipBorder"
+              onchange="updatePreview()"
+              class="mr-2"
+            />
+            郵便番号の赤枠を表示
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="inputDeliveryNotice" class="block mb-1 font-bold text-sm"
+            >特別配達（左下）</label
+          >
+          <input
+            type="text"
+            id="inputDeliveryNotice"
+            placeholder="簡易書留などを入力"
+            class="w-full px-2 py-2 border border-gray-300 rounded"
+          />
+          <button
+            type="button"
+            onclick="addDeliveryNotice()"
+            class="w-full px-2 py-1.5 mt-1 bg-red-500 text-white border-0 rounded cursor-pointer hover:bg-red-600"
+          >
+            追加
+          </button>
+        </div>
+
+        <div id="deliveryList" class="mb-2">
+          <div id="deliveryItems"></div>
+        </div>
+
+        <button class="btn-print" onclick="window.print()">印刷する</button>
+      </div>
+
+      <div class="paper-preview">
+        <div class="zip-area" id="previewZip">
+          <span class="zip-char">〒</span>
+          <span class="zip-digit" id="zip-0">1</span>
+          <span class="zip-digit" id="zip-1">2</span>
+          <span class="zip-digit" id="zip-2">3</span>
+          <span style="margin: 0 1mm">-</span>
+          <span class="zip-digit" id="zip-3">4</span>
+          <span class="zip-digit" id="zip-4">5</span>
+          <span class="zip-digit" id="zip-5">6</span>
+          <span class="zip-digit" id="zip-6">7</span>
+        </div>
+
+        <div class="address-container vertical-text">
+          <div class="address-main" id="previewAddr1">
+            東京都千代田区千代田1-1
+          </div>
+          <div class="address-sub" id="previewAddr2">パレスサイドビル 101</div>
+          <div class="company-name" id="previewCompany">〇〇株式会社</div>
+        </div>
+
+        <div class="name-container vertical-text">
+          <div class="recipient-container">
+            <div class="recipient-name" id="previewNameContainer">
+              <span id="previewName">山田 太郎</span>
+            </div>
+            <span class="honorific" id="previewHonorific">様</span>
+          </div>
+        </div>
+
+        <div class="bottom-left-area" id="deliveryAreaPreview"></div>
+      </div>
+    </div>
+
+    <!-- START FOOTER -->
+    <!-- END FOOTER -->
+
+    <script>
+      let deliveryNotices = [];
+
+      function addDeliveryNotice() {
+        const inputEl = document.getElementById("inputDeliveryNotice");
+        const text = inputEl.value.trim();
+        if (!text) {
+          alert("テキストを入力してください");
+          return;
+        }
+        deliveryNotices.push(text);
+        inputEl.value = "";
+        updateDeliveryDisplay();
+      }
+
+      function removeDeliveryNotice(index) {
+        deliveryNotices.splice(index, 1);
+        updateDeliveryDisplay();
+      }
+
+      function updateDeliveryDisplay() {
+        const itemsEl = document.getElementById("deliveryItems");
+        const previewEl = document.getElementById("deliveryAreaPreview");
+
+        // 入力パネルの一覧表示
+        itemsEl.innerHTML = "";
+        deliveryNotices.forEach((notice, index) => {
+          const div = document.createElement("div");
+          div.className =
+            "flex justify-between items-center mb-1 p-1 border border-gray-300 rounded bg-red-50";
+          div.innerHTML = `
+            <span class="text-red-600 font-bold">${notice}</span>
+            <button type="button" onclick="removeDeliveryNotice(${index})" class="bg-red-500 text-white border-0 rounded px-2 py-0.5 cursor-pointer text-xs hover:bg-red-600">削除</button>
+          `;
+          itemsEl.appendChild(div);
+        });
+
+        // プレビューエリアの表示
+        previewEl.innerHTML = "";
+        deliveryNotices.forEach((notice) => {
+          const div = document.createElement("div");
+          div.className = "delivery-notice";
+          div.innerText = notice;
+          previewEl.appendChild(div);
+        });
+      }
+
+      function updatePreview() {
+        const zip = document.getElementById("inputZip").value;
+        const addr1 = document.getElementById("inputAddr1").value;
+        const addr2 = document.getElementById("inputAddr2").value;
+        const company = document.getElementById("inputCompany").value;
+        const name = document.getElementById("inputName").value;
+        const honorific = document.getElementById("inputHonorific").value;
+        const showZipSymbol =
+          document.getElementById("inputShowZipSymbol").checked;
+        const showZipBorder =
+          document.getElementById("inputShowZipBorder").checked;
+
+        // 郵便番号整形
+        const zipAreaEl = document.getElementById("previewZip");
+        const zipCharEl = document.querySelector(".zip-char");
+        const cleanZip = zip.replace(/[^0-9]/g, "");
+
+        zipCharEl.classList.toggle("hidden", !showZipSymbol);
+
+        // 各桁のspan要素を更新
+        for (let i = 0; i < 7; i++) {
+          const digitEl = document.getElementById("zip-" + i);
+          if (digitEl) {
+            digitEl.innerText = cleanZip[i] || "";
+            digitEl.classList.toggle(
+              "with-border",
+              showZipBorder && cleanZip[i]
+            );
+          }
+        }
+
+        // 各要素の反映
+        document.getElementById("previewAddr1").innerText = addr1;
+        document.getElementById("previewAddr2").innerText = addr2;
+
+        const companyEl = document.getElementById("previewCompany");
+        companyEl.innerText = company;
+        companyEl.style.display = company ? "block" : "none";
+
+        // 名前を改行処理する
+        const nameContainer = document.getElementById("previewNameContainer");
+        const lines = name.split("\\n");
+        let nameHTML = "";
+        for (let i = 0; i < lines.length; i++) {
+          nameHTML += "<span>" + lines[i] + "</span>";
+          if (i < lines.length - 1) {
+            nameHTML += '<div style="height: 1em;"></div>';
+          }
+        }
+        nameContainer.innerHTML = nameHTML;
+
+        document.getElementById("previewHonorific").innerText = honorific;
+      }
+
+      // 初期化
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("inputZip").value = "";
+        document.getElementById("inputAddr1").value = "";
+        document.getElementById("inputAddr2").value = "";
+        document.getElementById("inputCompany").value = "";
+        document.getElementById("inputName").value = "";
+      });
+    </script>
+  </body>
+</html>

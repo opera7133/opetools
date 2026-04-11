@@ -1,0 +1,592 @@
+
+      :root {
+        --color-bg: #f8f7f4;
+        --color-surface: #ffffff;
+        --color-primary: #16a34a;
+        --color-primary-dark: #15803d;
+        --color-primary-light: #bbf7d0;
+        --color-accent: #f59e0b;
+        --color-danger: #ef4444;
+        --color-text: #1f2937;
+        --color-text-muted: #6b7280;
+        --color-border: #e5e7eb;
+        --shadow-card:
+          0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+        --radius: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      }
+
+      /* --- Tab Navigation --- */
+      .tab-nav {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 20px;
+        background: var(--color-border);
+        padding: 4px;
+        border-radius: calc(var(--radius) + 2px);
+        flex-wrap: wrap;
+      }
+      .tab-btn {
+        flex: 1;
+        min-width: 80px;
+        padding: 8px 12px;
+        border: none;
+        background: transparent;
+        border-radius: var(--radius);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--color-text-muted);
+        transition: all 0.2s;
+        text-align: center;
+      }
+      .tab-btn.active {
+        background: white;
+        color: var(--color-primary);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+
+      /* --- Cards --- */
+      .card {
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-card);
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--color-text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* --- Meal Type Badge --- */
+      .meal-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 99px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .meal-badge.morning {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .meal-badge.lunch {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .meal-badge.dinner {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+      .meal-badge.other {
+        background: #ede9fe;
+        color: #7c3aed;
+      }
+
+      /* --- Form elements --- */
+      label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        margin-bottom: 4px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1.5px solid var(--color-border);
+        border-radius: 7px;
+        font-size: 0.9rem;
+        color: var(--color-text);
+        background: #fafafa;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        outline: none;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+        background: white;
+      }
+
+      /* --- Buttons --- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 9px 18px;
+        border: none;
+        border-radius: 7px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .btn-primary {
+        background: var(--color-primary);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--color-primary-dark);
+        transform: translateY(-1px);
+      }
+      .btn-secondary {
+        background: var(--color-border);
+        color: var(--color-text);
+      }
+      .btn-secondary:hover {
+        background: #d1d5db;
+      }
+      .btn-danger {
+        background: #fee2e2;
+        color: var(--color-danger);
+      }
+      .btn-danger:hover {
+        background: #fecaca;
+      }
+      .btn-sm {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+      }
+      .btn-icon {
+        padding: 6px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        color: var(--color-text-muted);
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+      }
+      .btn-icon:hover {
+        background: var(--color-border);
+        color: var(--color-text);
+      }
+      .btn-icon.danger:hover {
+        background: #fee2e2;
+        color: var(--color-danger);
+      }
+
+      /* --- Type Toggle --- */
+      .type-toggle {
+        display: flex;
+        gap: 0;
+        border: 1.5px solid var(--color-border);
+        border-radius: 7px;
+        overflow: hidden;
+      }
+      .type-toggle button {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        background: transparent;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--color-text-muted);
+        transition: all 0.15s;
+      }
+      .type-toggle button.active {
+        background: var(--color-primary);
+        color: white;
+      }
+
+      /* --- Ingredient rows --- */
+      .ingredient-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 8px;
+        align-items: center;
+        padding: 8px;
+        background: #f9fafb;
+        border-radius: 7px;
+        margin-bottom: 6px;
+      }
+      .ingredient-row .ing-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .ingredient-row .ing-price {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
+      .ingredient-row .ing-usage {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+      }
+      .ing-usage input[type="number"] {
+        width: 64px;
+        padding: 4px 6px;
+        font-size: 0.8rem;
+      }
+      .ing-usage select {
+        padding: 4px 6px;
+        font-size: 0.8rem;
+        width: auto;
+      }
+      .computed-cost {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        text-align: right;
+        min-width: 52px;
+      }
+
+      /* --- Record list --- */
+      .record-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px;
+        border: 1.5px solid var(--color-border);
+        border-radius: var(--radius);
+        margin-bottom: 10px;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        background: white;
+      }
+      .record-item:hover {
+        border-color: #c4c9d0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      .record-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
+      .record-icon.morning {
+        background: #fef3c7;
+      }
+      .record-icon.lunch {
+        background: #dbeafe;
+      }
+      .record-icon.dinner {
+        background: #e0e7ff;
+      }
+      .record-icon.other {
+        background: #ede9fe;
+      }
+      .record-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .record-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+      }
+      .record-sub {
+        font-size: 0.78rem;
+        color: var(--color-text-muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+      }
+      .record-cost {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--color-primary);
+        white-space: nowrap;
+      }
+
+      /* --- Date header --- */
+      .date-group-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 20px 0 10px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .date-group-header::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--color-border);
+      }
+      .date-total {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        background: var(--color-primary-light);
+        padding: 2px 8px;
+        border-radius: 99px;
+      }
+
+      /* --- Summary stats --- */
+      .stat-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-card);
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--color-text);
+      }
+      .stat-value span {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        margin-left: 2px;
+      }
+
+      /* --- Food inventory --- */
+      .food-item {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 12px;
+        border: 1.5px solid var(--color-border);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: white;
+      }
+      .food-item-info .food-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+      .food-item-info .food-price {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
+      .food-remaining {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        background: #f3f4f6;
+        border-radius: 99px;
+        padding: 2px 10px;
+        white-space: nowrap;
+      }
+      .food-remaining.low {
+        background: #fee2e2;
+        color: var(--color-danger);
+      }
+
+      /* --- Month nav --- */
+      .month-nav {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .month-nav button {
+        padding: 4px 10px;
+        border: 1.5px solid var(--color-border);
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.15s;
+      }
+      .month-nav button:hover {
+        background: var(--color-border);
+      }
+      .month-label {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--color-text);
+        min-width: 90px;
+        text-align: center;
+      }
+
+      /* --- Modal --- */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+      .modal {
+        background: white;
+        border-radius: 14px;
+        padding: 24px;
+        width: min(500px, 95vw);
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+      }
+      .modal-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin-bottom: 18px;
+        color: var(--color-text);
+      }
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      /* --- Empty state --- */
+      .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--color-text-muted);
+      }
+      .empty-state .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+      .empty-state p {
+        font-size: 0.9rem;
+      }
+
+      /* --- Chart --- */
+      .bar-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+      }
+      .bar-label {
+        width: 60px;
+        text-align: right;
+        color: var(--color-text-muted);
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .bar-track {
+        flex: 1;
+        background: #f3f4f6;
+        height: 20px;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.4s ease;
+      }
+      .bar-amount {
+        width: 60px;
+        font-weight: 700;
+        color: var(--color-text);
+      }
+
+      /* --- Misc --- */
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .form-group {
+        margin-bottom: 14px;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .section-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--color-text);
+        margin-bottom: 12px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 8px;
+        border-radius: 99px;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .tag-cooking {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .tag-eating-out {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+      .tag-prepmake {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+      hr {
+        border: none;
+        border-top: 1.5px solid var(--color-border);
+        margin: 16px 0;
+      }
+
+      @media (max-width: 600px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    

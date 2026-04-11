@@ -674,6 +674,10 @@
             <label>Edit Key</label>
             <input type="text" id="syncEditKey" placeholder="パスワード代わりになるキーです" />
           </div>
+          <div class="form-group">
+            <label>Proxy Worker URL</label>
+            <input type="text" id="syncProxyUrl" placeholder="例: https://xxx.workers.dev (CORS回避用)" />
+          </div>
           <div style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;">
             <button class="btn btn-secondary" onclick="saveSyncConfig()">キーをローカル保存</button>
             <button class="btn btn-primary" onclick="syncUpload()">↑ クラウドにアップロード (新規作成)</button>
@@ -796,7 +800,7 @@
         }
         if (!state.foods) state.foods = [];
         if (!state.records) state.records = [];
-        if (!state.syncConfig) state.syncConfig = { id: '', editKey: '' };
+        if (!state.syncConfig) state.syncConfig = { id: '', editKey: '', proxyUrl: '' };
         if (!state.currentMonth) {
           const d = new Date();
           state.currentMonth = { year: d.getFullYear(), month: d.getMonth() };
@@ -805,6 +809,7 @@
         if (document.getElementById('syncDataId')) {
           document.getElementById('syncDataId').value = state.syncConfig.id || '';
           document.getElementById('syncEditKey').value = state.syncConfig.editKey || '';
+          document.getElementById('syncProxyUrl').value = state.syncConfig.proxyUrl || '';
         }
       }
 
@@ -1410,7 +1415,8 @@
       function saveSyncConfig() {
         state.syncConfig = {
           id: document.getElementById('syncDataId').value.trim(),
-          editKey: document.getElementById('syncEditKey').value.trim()
+          editKey: document.getElementById('syncEditKey').value.trim(),
+          proxyUrl: document.getElementById('syncProxyUrl').value.trim()
         };
         saveState();
         const statusEl = document.getElementById('syncStatus');
@@ -1421,8 +1427,11 @@
       async function syncUpload() {
         const idInput = document.getElementById('syncDataId');
         const keyInput = document.getElementById('syncEditKey');
+        const proxyInput = document.getElementById('syncProxyUrl');
         const id = idInput.value.trim();
         const editKey = keyInput.value.trim();
+        const proxyUrl = proxyInput.value.trim().replace(/\/$/, "");
+        const baseUrl = proxyUrl ? proxyUrl : 'https://jsonhosting.com';
         const statusEl = document.getElementById('syncStatus');
         
         statusEl.textContent = "アップロード中...";
@@ -1435,7 +1444,7 @@
           });
           
           if (id && editKey) {
-            const res = await fetch(`https://jsonhosting.com/api/json/${id}`, {
+            const res = await fetch(`${baseUrl}/api/json/${id}`, {
               method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
@@ -1446,7 +1455,7 @@
             if (!res.ok) throw new Error('アップロード失敗');
             statusEl.textContent = "アップロード完了！ (" + new Date().toLocaleTimeString() + ")";
           } else {
-            const res = await fetch('https://jsonhosting.com/api/json', {
+            const res = await fetch(`${baseUrl}/api/json`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: payload
@@ -1468,6 +1477,8 @@
 
       async function syncDownload() {
         const id = document.getElementById('syncDataId').value.trim();
+        const proxyUrl = document.getElementById('syncProxyUrl').value.trim().replace(/\/$/, "");
+        const baseUrl = proxyUrl ? proxyUrl : 'https://jsonhosting.com';
         const statusEl = document.getElementById('syncStatus');
         if (!id) {
           statusEl.textContent = "Data IDを入力してください";
@@ -1480,7 +1491,7 @@
         
         try {
           // キャッシュを防ぐためにタイムスタンプを付与
-          const res = await fetch(`https://jsonhosting.com/api/json/${id}?t=${Date.now()}`);
+          const res = await fetch(`${baseUrl}/api/json/${id}?t=${Date.now()}`);
           if (!res.ok) throw new Error('ダウンロード失敗');
           const data = await res.json();
           

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,10 @@
     <meta name="description" content="毎日の食費を記録・管理するツール" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <meta property="og:title" content="食費管理 || opera7133/opetools" />
-    <meta property="og:description" content="毎日の食費を記録・管理するツール" />
+    <meta
+      property="og:description"
+      content="毎日の食費を記録・管理するツール"
+    />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
     <link rel="stylesheet" href="styles/tailwind.css" />
@@ -23,16 +26,19 @@
         --color-text: #1f2937;
         --color-text-muted: #6b7280;
         --color-border: #e5e7eb;
-        --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+        --shadow-card:
+          0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
         --radius: 10px;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
       body {
         background: var(--color-bg);
         color: var(--color-text);
-        font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+        font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
       }
 
       /* --- Tab Navigation --- */
@@ -62,10 +68,14 @@
       .tab-btn.active {
         background: white;
         color: var(--color-primary);
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
       }
-      .tab-panel { display: none; }
-      .tab-panel.active { display: block; }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
 
       /* --- Cards --- */
       .card {
@@ -100,10 +110,22 @@
         font-size: 0.75rem;
         font-weight: 700;
       }
-      .meal-badge.morning  { background: #fef3c7; color: #d97706; }
-      .meal-badge.lunch    { background: #dbeafe; color: #2563eb; }
-      .meal-badge.dinner   { background: #e0e7ff; color: #4338ca; }
-      .meal-badge.other    { background: #ede9fe; color: #7c3aed; }
+      .meal-badge.morning {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .meal-badge.lunch {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .meal-badge.dinner {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+      .meal-badge.other {
+        background: #ede9fe;
+        color: #7c3aed;
+      }
 
       /* --- Form elements --- */
       label {
@@ -127,10 +149,14 @@
         font-size: 0.9rem;
         color: var(--color-text);
         background: #fafafa;
-        transition: border-color 0.15s, box-shadow 0.15s;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
         outline: none;
       }
-      input:focus, select:focus, textarea:focus {
+      input:focus,
+      select:focus,
+      textarea:focus {
         border-color: var(--color-primary);
         box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
         background: white;
@@ -154,18 +180,28 @@
         background: var(--color-primary);
         color: white;
       }
-      .btn-primary:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
+      .btn-primary:hover {
+        background: var(--color-primary-dark);
+        transform: translateY(-1px);
+      }
       .btn-secondary {
         background: var(--color-border);
         color: var(--color-text);
       }
-      .btn-secondary:hover { background: #d1d5db; }
+      .btn-secondary:hover {
+        background: #d1d5db;
+      }
       .btn-danger {
         background: #fee2e2;
         color: var(--color-danger);
       }
-      .btn-danger:hover { background: #fecaca; }
-      .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+      .btn-danger:hover {
+        background: #fecaca;
+      }
+      .btn-sm {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+      }
       .btn-icon {
         padding: 6px;
         background: transparent;
@@ -177,8 +213,14 @@
         display: inline-flex;
         align-items: center;
       }
-      .btn-icon:hover { background: var(--color-border); color: var(--color-text); }
-      .btn-icon.danger:hover { background: #fee2e2; color: var(--color-danger); }
+      .btn-icon:hover {
+        background: var(--color-border);
+        color: var(--color-text);
+      }
+      .btn-icon.danger:hover {
+        background: #fee2e2;
+        color: var(--color-danger);
+      }
 
       /* --- Type Toggle --- */
       .type-toggle {
@@ -215,9 +257,15 @@
         border-radius: 7px;
         margin-bottom: 6px;
       }
-      .ingredient-row .ing-name { font-size: 0.85rem; font-weight: 600; }
-      .ingredient-row .ing-price { font-size: 0.75rem; color: var(--color-text-muted); }
-      .ingredient-row .ing-usage { 
+      .ingredient-row .ing-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .ingredient-row .ing-price {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
+      .ingredient-row .ing-usage {
         display: flex;
         align-items: center;
         gap: 4px;
@@ -250,10 +298,15 @@
         border: 1.5px solid var(--color-border);
         border-radius: var(--radius);
         margin-bottom: 10px;
-        transition: border-color 0.15s, box-shadow 0.15s;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
         background: white;
       }
-      .record-item:hover { border-color: #c4c9d0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+      .record-item:hover {
+        border-color: #c4c9d0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
       .record-icon {
         width: 36px;
         height: 36px;
@@ -264,13 +317,35 @@
         font-size: 1rem;
         flex-shrink: 0;
       }
-      .record-icon.morning  { background: #fef3c7; }
-      .record-icon.lunch    { background: #dbeafe; }
-      .record-icon.dinner   { background: #e0e7ff; }
-      .record-icon.other    { background: #ede9fe; }
-      .record-body { flex: 1; min-width: 0; }
-      .record-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
-      .record-sub { font-size: 0.78rem; color: var(--color-text-muted); display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+      .record-icon.morning {
+        background: #fef3c7;
+      }
+      .record-icon.lunch {
+        background: #dbeafe;
+      }
+      .record-icon.dinner {
+        background: #e0e7ff;
+      }
+      .record-icon.other {
+        background: #ede9fe;
+      }
+      .record-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .record-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+      }
+      .record-sub {
+        font-size: 0.78rem;
+        color: var(--color-text-muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+      }
       .record-cost {
         font-size: 1rem;
         font-weight: 800;
@@ -291,7 +366,7 @@
         letter-spacing: 0.06em;
       }
       .date-group-header::after {
-        content: '';
+        content: "";
         flex: 1;
         height: 1px;
         background: var(--color-border);
@@ -315,9 +390,24 @@
         flex-direction: column;
         gap: 4px;
       }
-      .stat-label { font-size: 0.75rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-      .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--color-text); }
-      .stat-value span { font-size: 0.9rem; font-weight: 600; color: var(--color-text-muted); margin-left: 2px; }
+      .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--color-text);
+      }
+      .stat-value span {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        margin-left: 2px;
+      }
 
       /* --- Food inventory --- */
       .food-item {
@@ -331,8 +421,14 @@
         margin-bottom: 8px;
         background: white;
       }
-      .food-item-info .food-name { font-size: 0.9rem; font-weight: 700; }
-      .food-item-info .food-price { font-size: 0.75rem; color: var(--color-text-muted); }
+      .food-item-info .food-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+      .food-item-info .food-price {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
       .food-remaining {
         font-size: 0.8rem;
         font-weight: 600;
@@ -342,7 +438,10 @@
         padding: 2px 10px;
         white-space: nowrap;
       }
-      .food-remaining.low { background: #fee2e2; color: var(--color-danger); }
+      .food-remaining.low {
+        background: #fee2e2;
+        color: var(--color-danger);
+      }
 
       /* --- Month nav --- */
       .month-nav {
@@ -360,20 +459,30 @@
         font-weight: 600;
         transition: all 0.15s;
       }
-      .month-nav button:hover { background: var(--color-border); }
-      .month-label { font-size: 1rem; font-weight: 800; color: var(--color-text); min-width: 90px; text-align: center; }
+      .month-nav button:hover {
+        background: var(--color-border);
+      }
+      .month-label {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--color-text);
+        min-width: 90px;
+        text-align: center;
+      }
 
       /* --- Modal --- */
       .modal-overlay {
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.45);
+        background: rgba(0, 0, 0, 0.45);
         z-index: 1000;
         justify-content: center;
         align-items: center;
       }
-      .modal-overlay.open { display: flex; }
+      .modal-overlay.open {
+        display: flex;
+      }
       .modal {
         background: white;
         border-radius: 14px;
@@ -381,7 +490,7 @@
         width: min(500px, 95vw);
         max-height: 90vh;
         overflow-y: auto;
-        box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
       }
       .modal-title {
         font-size: 1.1rem;
@@ -402,8 +511,13 @@
         padding: 48px 20px;
         color: var(--color-text-muted);
       }
-      .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
-      .empty-state p { font-size: 0.9rem; }
+      .empty-state .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+      .empty-state p {
+        font-size: 0.9rem;
+      }
 
       /* --- Chart --- */
       .bar-chart {
@@ -417,16 +531,49 @@
         gap: 8px;
         font-size: 0.8rem;
       }
-      .bar-label { width: 60px; text-align: right; color: var(--color-text-muted); font-weight: 600; flex-shrink: 0; }
-      .bar-track { flex: 1; background: #f3f4f6; height: 20px; border-radius: 99px; overflow: hidden; }
-      .bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
-      .bar-amount { width: 60px; font-weight: 700; color: var(--color-text); }
+      .bar-label {
+        width: 60px;
+        text-align: right;
+        color: var(--color-text-muted);
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .bar-track {
+        flex: 1;
+        background: #f3f4f6;
+        height: 20px;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.4s ease;
+      }
+      .bar-amount {
+        width: 60px;
+        font-weight: 700;
+        color: var(--color-text);
+      }
 
       /* --- Misc --- */
-      .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-      .form-group { margin-bottom: 14px; }
-      .text-right { text-align: right; }
-      .section-title { font-size: 1rem; font-weight: 800; color: var(--color-text); margin-bottom: 12px; }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .form-group {
+        margin-bottom: 14px;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .section-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--color-text);
+        margin-bottom: 12px;
+      }
       .tag {
         display: inline-flex;
         align-items: center;
@@ -435,13 +582,28 @@
         font-size: 0.72rem;
         font-weight: 600;
       }
-      .tag-cooking { background: #dcfce7; color: #15803d; }
-      .tag-eating-out { background: #fff7ed; color: #c2410c; }
-      .tag-prepmake { background: #e0e7ff; color: #4338ca; }
-      hr { border: none; border-top: 1.5px solid var(--color-border); margin: 16px 0; }
+      .tag-cooking {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .tag-eating-out {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+      .tag-prepmake {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+      hr {
+        border: none;
+        border-top: 1.5px solid var(--color-border);
+        margin: 16px 0;
+      }
 
       @media (max-width: 600px) {
-        .form-row { grid-template-columns: 1fr; }
+        .form-row {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -450,11 +612,29 @@
     <!-- END HEADER -->
 
     <main class="max-w-3xl mx-auto py-10 px-4">
-      <div class="card" style="margin-bottom: 20px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <div class="card" style="margin-bottom: 20px">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+          "
+        >
           <div>
-            <h1 style="font-size:1.4rem; font-weight:800; margin:0 0 4px;">🍽 食費管理</h1>
-            <p style="font-size:0.82rem; color:var(--color-text-muted); margin:0;">毎日の食費を記録・管理するツール</p>
+            <h1 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 4px">
+              🍽 食費管理
+            </h1>
+            <p
+              style="
+                font-size: 0.82rem;
+                color: var(--color-text-muted);
+                margin: 0;
+              "
+            >
+              毎日の食費を記録・管理するツール
+            </p>
           </div>
           <div class="month-nav">
             <button id="prevMonth" onclick="changeMonth(-1)">‹</button>
@@ -465,7 +645,14 @@
       </div>
 
       <!-- Summary row -->
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:12px; margin-bottom:16px;">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+          gap: 12px;
+          margin-bottom: 16px;
+        "
+      >
         <div class="stat-card">
           <span class="stat-label">今月の合計</span>
           <span class="stat-value" id="statMonthTotal">¥0</span>
@@ -482,11 +669,37 @@
 
       <!-- Tab nav -->
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('records', this)" id="tab-records">📋 記録</button>
-        <button class="tab-btn" onclick="switchTab('add', this)" id="tab-add">➕ 追加</button>
-        <button class="tab-btn" onclick="switchTab('foods', this)" id="tab-foods">🛒 食品管理</button>
-        <button class="tab-btn" onclick="switchTab('chart', this)" id="tab-chart">📊 分析</button>
-        <button class="tab-btn" onclick="switchTab('settings', this)" id="tab-settings">⚙️ 設定</button>
+        <button
+          class="tab-btn active"
+          onclick="switchTab('records', this)"
+          id="tab-records"
+        >
+          📋 記録
+        </button>
+        <button class="tab-btn" onclick="switchTab('add', this)" id="tab-add">
+          ➕ 追加
+        </button>
+        <button
+          class="tab-btn"
+          onclick="switchTab('foods', this)"
+          id="tab-foods"
+        >
+          🛒 食品管理
+        </button>
+        <button
+          class="tab-btn"
+          onclick="switchTab('chart', this)"
+          id="tab-chart"
+        >
+          📊 分析
+        </button>
+        <button
+          class="tab-btn"
+          onclick="switchTab('settings', this)"
+          id="tab-settings"
+        >
+          ⚙️ 設定
+        </button>
       </div>
 
       <!-- === RECORDS TAB === -->
@@ -510,10 +723,22 @@
             <div>
               <label>食事のタイミング</label>
               <div class="type-toggle">
-                <button class="active" onclick="selectMealTime('morning', this)" id="mtMorning">☀ 朝</button>
-                <button onclick="selectMealTime('lunch', this)" id="mtLunch">🌤 昼</button>
-                <button onclick="selectMealTime('dinner', this)" id="mtDinner">🌙 夜</button>
-                <button onclick="selectMealTime('other', this)" id="mtOther">🍩 その他</button>
+                <button
+                  class="active"
+                  onclick="selectMealTime('morning', this)"
+                  id="mtMorning"
+                >
+                  ☀ 朝
+                </button>
+                <button onclick="selectMealTime('lunch', this)" id="mtLunch">
+                  🌤 昼
+                </button>
+                <button onclick="selectMealTime('dinner', this)" id="mtDinner">
+                  🌙 夜
+                </button>
+                <button onclick="selectMealTime('other', this)" id="mtOther">
+                  🍩 その他
+                </button>
               </div>
             </div>
           </div>
@@ -522,9 +747,25 @@
           <div class="form-group">
             <label>種別</label>
             <div class="type-toggle">
-              <button class="active" onclick="selectMealType('cooking', this)" id="typeCooking">🍳 自炊</button>
-              <button onclick="selectMealType('eatingout', this)" id="typeEatingout">🍜 外食</button>
-              <button onclick="selectMealType('prepmake', this)" id="typePrepmake">🍱 作り置き作成</button>
+              <button
+                class="active"
+                onclick="selectMealType('cooking', this)"
+                id="typeCooking"
+              >
+                🍳 自炊
+              </button>
+              <button
+                onclick="selectMealType('eatingout', this)"
+                id="typeEatingout"
+              >
+                🍜 外食
+              </button>
+              <button
+                onclick="selectMealType('prepmake', this)"
+                id="typePrepmake"
+              >
+                🍱 作り置き作成
+              </button>
             </div>
           </div>
 
@@ -532,60 +773,159 @@
           <div id="sectionCooking">
             <div class="form-group" id="fgCookingMemo">
               <label>メモ（任意）</label>
-              <input type="text" id="cookingMemo" placeholder="例: 野菜炒め定食" />
+              <input
+                type="text"
+                id="cookingMemo"
+                placeholder="例: 野菜炒め定食"
+              />
             </div>
-            <div class="form-group" id="fgPrepMake" style="display:none;">
-              <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:8px; margin-bottom:12px;">
-                <label style="color:#166534;">完成品の名前 <span style="color:var(--color-danger)">*</span></label>
-                <input type="text" id="prepName" placeholder="例: カレー" style="margin-bottom:8px; border-color:#86efac;"/>
-                <label style="color:#166534;">出来上がる食数 <span style="color:var(--color-danger)">*</span></label>
-                <input type="number" id="prepServings" value="4" min="0.1" step="0.5" style="border-color:#86efac;"/>
-                <p style="font-size:0.75rem; color:#15803d; margin-top:8px;">
-                  ※作った料理は「食品管理」に【作り置き】として自動追加されます。<br>
-                  作成時の食費は 0円 として記録され、次回自炊時に選んで消費すると食べた日の食費として計上されます。
+            <div class="form-group" id="fgPrepMake" style="display: none">
+              <div
+                style="
+                  background: #f0fdf4;
+                  border: 1px solid #bbf7d0;
+                  padding: 12px;
+                  border-radius: 8px;
+                  margin-bottom: 12px;
+                "
+              >
+                <label style="color: #166534"
+                  >完成品の名前
+                  <span style="color: var(--color-danger)">*</span></label
+                >
+                <input
+                  type="text"
+                  id="prepName"
+                  placeholder="例: カレー"
+                  style="margin-bottom: 8px; border-color: #86efac"
+                />
+                <label style="color: #166534"
+                  >出来上がる食数
+                  <span style="color: var(--color-danger)">*</span></label
+                >
+                <input
+                  type="number"
+                  id="prepServings"
+                  value="4"
+                  min="0.1"
+                  step="0.5"
+                  style="border-color: #86efac"
+                />
+                <p style="font-size: 0.75rem; color: #15803d; margin-top: 8px">
+                  ※作った料理は「食品管理」に【作り置き】として自動追加されます。<br />
+                  作成時の食費は 0円
+                  として記録され、次回自炊時に選んで消費すると食べた日の食費として計上されます。
                 </p>
               </div>
             </div>
             <hr />
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-              <span class="section-title" style="margin:0;">使用した材料</span>
-              <button class="btn btn-secondary btn-sm" onclick="openFoodPickerModal()">＋ 食品を追加</button>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 10px;
+              "
+            >
+              <span class="section-title" style="margin: 0">使用した材料</span>
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick="openFoodPickerModal()"
+              >
+                ＋ 食品を追加
+              </button>
             </div>
             <div id="selectedIngredients">
-              <div class="empty-state" style="padding:24px;">
+              <div class="empty-state" style="padding: 24px">
                 <div class="empty-icon">🧺</div>
                 <p>食品を追加してください</p>
               </div>
             </div>
             <hr />
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <span id="labelCookingTotal" style="font-size:0.85rem; color:var(--color-text-muted);">合計（計算値）</span>
-              <span id="cookingTotal" style="font-size:1.1rem; font-weight:800; color:var(--color-primary);">¥0</span>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <span
+                id="labelCookingTotal"
+                style="font-size: 0.85rem; color: var(--color-text-muted)"
+                >合計（計算値）</span
+              >
+              <span
+                id="cookingTotal"
+                style="
+                  font-size: 1.1rem;
+                  font-weight: 800;
+                  color: var(--color-primary);
+                "
+                >¥0</span
+              >
             </div>
           </div>
 
           <!-- Eating out section -->
-          <div id="sectionEatingout" style="display:none;">
+          <div id="sectionEatingout" style="display: none">
             <div class="form-group">
               <label for="restaurantName">店名</label>
               <input type="text" id="restaurantName" placeholder="例: すき家" />
             </div>
             <div id="eatingoutItems">
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-                <span class="section-title" style="margin:0; font-size:0.85rem;">注文した商品</span>
-                <button class="btn btn-secondary btn-sm" onclick="addEatingOutItem()">＋ 商品追加</button>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 8px;
+                "
+              >
+                <span
+                  class="section-title"
+                  style="margin: 0; font-size: 0.85rem"
+                  >注文した商品</span
+                >
+                <button
+                  class="btn btn-secondary btn-sm"
+                  onclick="addEatingOutItem()"
+                >
+                  ＋ 商品追加
+                </button>
               </div>
               <div id="eatingoutItemList"></div>
             </div>
             <hr />
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <span style="font-size:0.85rem; color:var(--color-text-muted);">合計</span>
-              <span id="eatingOutTotal" style="font-size:1.1rem; font-weight:800; color:var(--color-primary);">¥0</span>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <span style="font-size: 0.85rem; color: var(--color-text-muted)"
+                >合計</span
+              >
+              <span
+                id="eatingOutTotal"
+                style="
+                  font-size: 1.1rem;
+                  font-weight: 800;
+                  color: var(--color-primary);
+                "
+                >¥0</span
+              >
             </div>
           </div>
 
-          <div style="margin-top:20px;">
-            <button class="btn btn-primary" style="width:100%;" onclick="submitRecord()">記録を保存</button>
+          <div style="margin-top: 20px">
+            <button
+              class="btn btn-primary"
+              style="width: 100%"
+              onclick="submitRecord()"
+            >
+              記録を保存
+            </button>
           </div>
         </div>
       </div>
@@ -603,13 +943,24 @@
             </div>
             <div>
               <label for="newFoodPrice">価格（円）</label>
-              <input type="number" id="newFoodPrice" placeholder="例: 480" min="0" />
+              <input
+                type="number"
+                id="newFoodPrice"
+                placeholder="例: 480"
+                min="0"
+              />
             </div>
           </div>
           <div class="form-row form-group">
             <div>
               <label for="newFoodQuantity">購入量</label>
-              <input type="number" id="newFoodQuantity" placeholder="例: 400" min="0" step="0.1" />
+              <input
+                type="number"
+                id="newFoodQuantity"
+                placeholder="例: 400"
+                min="0"
+                step="0.1"
+              />
             </div>
             <div>
               <label for="newFoodUnit">単位</label>
@@ -627,9 +978,15 @@
           </div>
           <div class="form-group">
             <label for="newFoodNote">メモ（任意）</label>
-            <input type="text" id="newFoodNote" placeholder="例: 業務スーパー購入" />
+            <input
+              type="text"
+              id="newFoodNote"
+              placeholder="例: 業務スーパー購入"
+            />
           </div>
-          <button class="btn btn-primary" onclick="addFood()">食品を追加</button>
+          <button class="btn btn-primary" onclick="addFood()">
+            食品を追加
+          </button>
         </div>
 
         <div id="foodList"></div>
@@ -663,27 +1020,64 @@
           <div class="card-header">
             <span class="card-title">☁️ クラウド同期 (JSONHosting)</span>
           </div>
-          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px; line-height: 1.5;">
-            別の端末とデータを同期できます。データは <a href="https://jsonhosting.com" target="_blank" class="text-blue-500 hover:underline">jsonhosting.com</a> に保存されます。
+          <p
+            style="
+              font-size: 0.85rem;
+              color: var(--color-text-muted);
+              margin-bottom: 12px;
+              line-height: 1.5;
+            "
+          >
+            別の端末とデータを同期できます。データは
+            <a
+              href="https://jsonhosting.com"
+              target="_blank"
+              class="text-blue-500 hover:underline"
+              >jsonhosting.com</a
+            >
+            に保存されます。
           </p>
           <div class="form-group">
             <label>Data ID</label>
-            <input type="text" id="syncDataId" placeholder="未設定（新規作成で自動で入ります）" />
+            <input
+              type="text"
+              id="syncDataId"
+              placeholder="未設定（新規作成で自動で入ります）"
+            />
           </div>
           <div class="form-group">
             <label>Edit Key</label>
-            <input type="text" id="syncEditKey" placeholder="パスワード代わりになるキーです" />
+            <input
+              type="text"
+              id="syncEditKey"
+              placeholder="パスワード代わりになるキーです"
+            />
           </div>
           <div class="form-group">
             <label>Proxy Worker URL</label>
-            <input type="text" id="syncProxyUrl" placeholder="例: https://xxx.workers.dev (CORS回避用)" />
+            <input
+              type="text"
+              id="syncProxyUrl"
+              placeholder="例: https://xxx.workers.dev (CORS回避用)"
+            />
           </div>
-          <div style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;">
-            <button class="btn btn-secondary" onclick="saveSyncConfig()">キーをローカル保存</button>
-            <button class="btn btn-primary" onclick="syncUpload()">↑ クラウドにアップロード (新規作成)</button>
-            <button class="btn btn-primary" onclick="syncDownload()">↓ クラウドから読込</button>
+          <div
+            style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap"
+          >
+            <button class="btn btn-secondary" onclick="saveSyncConfig()">
+              キーをローカル保存
+            </button>
+            <button class="btn btn-primary" onclick="syncUpload()">
+              ↑ クラウドにアップロード (新規作成)
+            </button>
+            <button class="btn btn-primary" onclick="syncDownload()">
+              ↓ クラウドから読込
+            </button>
           </div>
-          <p id="syncStatus" style="font-size:0.85rem; font-weight:bold; margin-top:12px;"></p>
+          <p
+            id="syncStatus"
+            style="font-size: 0.85rem; font-weight: bold; margin-top: 12px"
+          ></p>
         </div>
       </div>
     </main>
@@ -694,8 +1088,15 @@
         <div class="modal-title">🛒 食品を選択</div>
         <div id="foodPickerList"></div>
         <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeModal('foodPickerModal')">キャンセル</button>
-          <button class="btn btn-primary" onclick="confirmFoodPicker()">追加</button>
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('foodPickerModal')"
+          >
+            キャンセル
+          </button>
+          <button class="btn btn-primary" onclick="confirmFoodPicker()">
+            追加
+          </button>
         </div>
       </div>
     </div>
@@ -733,7 +1134,12 @@
           <input type="text" id="editFoodNote" />
         </div>
         <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeModal('foodEditModal')">キャンセル</button>
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('foodEditModal')"
+          >
+            キャンセル
+          </button>
           <button class="btn btn-primary" onclick="saveFoodEdit()">保存</button>
         </div>
       </div>
@@ -767,8 +1173,15 @@
           <input type="text" id="editRecordNote" />
         </div>
         <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeModal('recordEditModal')">キャンセル</button>
-          <button class="btn btn-primary" onclick="saveRecordEdit()">保存</button>
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('recordEditModal')"
+          >
+            キャンセル
+          </button>
+          <button class="btn btn-primary" onclick="saveRecordEdit()">
+            保存
+          </button>
         </div>
       </div>
     </div>
@@ -779,47 +1192,53 @@
     <script>
       // ========== State & Storage ==========
       let state = {
-        foods: [],       // { id, name, price, quantity, unit, remaining, note }
-        records: [],     // { id, date, mealTime, type, memo, ingredients:[{foodId,usage,usageType,cost}], items:[{name,price}], totalCost }
-        syncConfig: { id: '', editKey: '' },
+        foods: [], // { id, name, price, quantity, unit, remaining, note }
+        records: [], // { id, date, mealTime, type, memo, ingredients:[{foodId,usage,usageType,cost}], items:[{name,price}], totalCost }
+        syncConfig: { id: "", editKey: "" },
         currentMonth: null,
       };
 
       const TODAY = (() => {
         const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       })();
 
       function saveState() {
-        localStorage.setItem('foods_tool_v1', JSON.stringify(state));
+        localStorage.setItem("foods_tool_v1", JSON.stringify(state));
       }
       function loadState() {
-        const raw = localStorage.getItem('foods_tool_v1');
+        const raw = localStorage.getItem("foods_tool_v1");
         if (raw) {
-          try { state = JSON.parse(raw); } catch(e) {}
+          try {
+            state = JSON.parse(raw);
+          } catch (e) {}
         }
         if (!state.foods) state.foods = [];
         if (!state.records) state.records = [];
-        if (!state.syncConfig) state.syncConfig = { id: '', editKey: '', proxyUrl: '' };
+        if (!state.syncConfig)
+          state.syncConfig = { id: "", editKey: "", proxyUrl: "" };
         if (!state.currentMonth) {
           const d = new Date();
           state.currentMonth = { year: d.getFullYear(), month: d.getMonth() };
         }
-        
-        if (document.getElementById('syncDataId')) {
-          document.getElementById('syncDataId').value = state.syncConfig.id || '';
-          document.getElementById('syncEditKey').value = state.syncConfig.editKey || '';
-          document.getElementById('syncProxyUrl').value = state.syncConfig.proxyUrl || '';
+
+        if (document.getElementById("syncDataId")) {
+          document.getElementById("syncDataId").value =
+            state.syncConfig.id || "";
+          document.getElementById("syncEditKey").value =
+            state.syncConfig.editKey || "";
+          document.getElementById("syncProxyUrl").value =
+            state.syncConfig.proxyUrl || "";
         }
       }
 
       function closeModal(id) {
-        document.getElementById(id).classList.remove('open');
+        document.getElementById(id).classList.remove("open");
       }
 
       // Click outside modal to close
-      document.querySelectorAll('.modal-overlay').forEach(el => {
-        el.addEventListener('click', function(e) {
+      document.querySelectorAll(".modal-overlay").forEach((el) => {
+        el.addEventListener("click", function (e) {
           if (e.target === this) closeModal(this.id);
         });
       });
@@ -828,15 +1247,21 @@
       function changeMonth(delta) {
         let { year, month } = state.currentMonth;
         month += delta;
-        if (month < 0) { month = 11; year--; }
-        if (month > 11) { month = 0; year++; }
+        if (month < 0) {
+          month = 11;
+          year--;
+        }
+        if (month > 11) {
+          month = 0;
+          year++;
+        }
         state.currentMonth = { year, month };
         saveState();
         renderAll();
       }
       function getMonthLabel() {
         const { year, month } = state.currentMonth;
-        return `${year}年${month+1}月`;
+        return `${year}年${month + 1}月`;
       }
       function isInCurrentMonth(dateStr) {
         const { year, month } = state.currentMonth;
@@ -846,143 +1271,170 @@
 
       // ========== Tab switching ==========
       function switchTab(name, btn) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(`panel-${name}`).classList.add('active');
-        if (name === 'records') renderRecords();
-        if (name === 'foods') renderFoods();
-        if (name === 'chart') renderCharts();
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(`panel-${name}`).classList.add("active");
+        if (name === "records") renderRecords();
+        if (name === "foods") renderFoods();
+        if (name === "chart") renderCharts();
       }
 
       // ========== Meal form state ==========
-      let currentMealTime = 'morning';
-      let currentMealType = 'cooking';
+      let currentMealTime = "morning";
+      let currentMealType = "cooking";
       let selectedIngredients = []; // { foodId, usage, usageType }
-      let eatingOutItems = [];     // { name, price }
+      let eatingOutItems = []; // { name, price }
 
       function selectMealTime(mt, btn) {
         currentMealTime = mt;
-        ['morning','lunch','dinner','other'].forEach(t => {
-          document.getElementById(`mt${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active', t === mt);
+        ["morning", "lunch", "dinner", "other"].forEach((t) => {
+          document
+            .getElementById(`mt${t.charAt(0).toUpperCase() + t.slice(1)}`)
+            .classList.toggle("active", t === mt);
         });
       }
-      
+
       function selectMealType(mt, btn) {
         currentMealType = mt;
-        document.getElementById('typeCooking').classList.toggle('active', mt === 'cooking');
-        document.getElementById('typeEatingout').classList.toggle('active', mt === 'eatingout');
-        document.getElementById('typePrepmake').classList.toggle('active', mt === 'prepmake');
-        
-        if (mt === 'cooking') {
-          document.getElementById('sectionCooking').style.display = '';
-          document.getElementById('sectionEatingout').style.display = 'none';
-          document.getElementById('fgCookingMemo').style.display = '';
-          document.getElementById('fgPrepMake').style.display = 'none';
-          document.getElementById('labelCookingTotal').textContent = '自炊コスト（合計）';
-        } else if (mt === 'prepmake') {
-          document.getElementById('sectionCooking').style.display = '';
-          document.getElementById('sectionEatingout').style.display = 'none';
-          document.getElementById('fgCookingMemo').style.display = 'none';
-          document.getElementById('fgPrepMake').style.display = '';
-          document.getElementById('labelCookingTotal').textContent = '総材料費（記録は0円になります）';
+        document
+          .getElementById("typeCooking")
+          .classList.toggle("active", mt === "cooking");
+        document
+          .getElementById("typeEatingout")
+          .classList.toggle("active", mt === "eatingout");
+        document
+          .getElementById("typePrepmake")
+          .classList.toggle("active", mt === "prepmake");
+
+        if (mt === "cooking") {
+          document.getElementById("sectionCooking").style.display = "";
+          document.getElementById("sectionEatingout").style.display = "none";
+          document.getElementById("fgCookingMemo").style.display = "";
+          document.getElementById("fgPrepMake").style.display = "none";
+          document.getElementById("labelCookingTotal").textContent =
+            "自炊コスト（合計）";
+        } else if (mt === "prepmake") {
+          document.getElementById("sectionCooking").style.display = "";
+          document.getElementById("sectionEatingout").style.display = "none";
+          document.getElementById("fgCookingMemo").style.display = "none";
+          document.getElementById("fgPrepMake").style.display = "";
+          document.getElementById("labelCookingTotal").textContent =
+            "総材料費（記録は0円になります）";
         } else {
-          document.getElementById('sectionCooking').style.display = 'none';
-          document.getElementById('sectionEatingout').style.display = '';
+          document.getElementById("sectionCooking").style.display = "none";
+          document.getElementById("sectionEatingout").style.display = "";
         }
       }
 
       // ========== Food Picker Modal ==========
       let pickerSelectedIds = new Set();
       function openFoodPickerModal() {
-        pickerSelectedIds = new Set(selectedIngredients.map(i => i.foodId));
+        pickerSelectedIds = new Set(selectedIngredients.map((i) => i.foodId));
         renderFoodPickerList();
-        document.getElementById('foodPickerModal').classList.add('open');
+        document.getElementById("foodPickerModal").classList.add("open");
       }
       function renderFoodPickerList() {
-        const el = document.getElementById('foodPickerList');
+        const el = document.getElementById("foodPickerList");
         if (state.foods.length === 0) {
-          el.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>食品が登録されていません。<br>まず「食品管理」タブで食品を追加してください。</p></div>';
+          el.innerHTML =
+            '<div class="empty-state"><div class="empty-icon">📦</div><p>食品が登録されていません。<br>まず「食品管理」タブで食品を追加してください。</p></div>';
           return;
         }
-        el.innerHTML = state.foods.map(f => {
-          const sel = pickerSelectedIds.has(f.id);
-          return `<div class="food-item" style="cursor:pointer; ${sel ? 'background:#f0fdf4; border-color:var(--color-primary);' : ''}" 
+        el.innerHTML = state.foods
+          .map((f) => {
+            const sel = pickerSelectedIds.has(f.id);
+            return `<div class="food-item" style="cursor:pointer; ${sel ? "background:#f0fdf4; border-color:var(--color-primary);" : ""}"
             onclick="togglePickerFood('${f.id}', this)">
             <div class="food-item-info">
               <div class="food-name">${esc(f.name)}</div>
               <div class="food-price">¥${f.price} / ${f.quantity}${esc(f.unit)} → 残り: ${formatRemaining(f)}</div>
             </div>
-            <span style="font-size:1.2rem;">${sel ? '✅' : '⬜'}</span>
+            <span style="font-size:1.2rem;">${sel ? "✅" : "⬜"}</span>
           </div>`;
-        }).join('');
+          })
+          .join("");
       }
       function togglePickerFood(id, el) {
         if (pickerSelectedIds.has(id)) {
           pickerSelectedIds.delete(id);
-          el.style.background = '';
-          el.style.borderColor = '';
-          el.querySelector('span').textContent = '⬜';
+          el.style.background = "";
+          el.style.borderColor = "";
+          el.querySelector("span").textContent = "⬜";
         } else {
           pickerSelectedIds.add(id);
-          el.style.background = '#f0fdf4';
-          el.style.borderColor = 'var(--color-primary)';
-          el.querySelector('span').textContent = '✅';
+          el.style.background = "#f0fdf4";
+          el.style.borderColor = "var(--color-primary)";
+          el.querySelector("span").textContent = "✅";
         }
       }
       function confirmFoodPicker() {
-        pickerSelectedIds.forEach(id => {
-          if (!selectedIngredients.find(i => i.foodId === id)) {
-            selectedIngredients.push({ foodId: id, usage: 100, usageType: 'percent' });
+        pickerSelectedIds.forEach((id) => {
+          if (!selectedIngredients.find((i) => i.foodId === id)) {
+            selectedIngredients.push({
+              foodId: id,
+              usage: 100,
+              usageType: "percent",
+            });
           }
         });
         // Remove deselected
-        selectedIngredients = selectedIngredients.filter(i => pickerSelectedIds.has(i.foodId));
-        closeModal('foodPickerModal');
+        selectedIngredients = selectedIngredients.filter((i) =>
+          pickerSelectedIds.has(i.foodId),
+        );
+        closeModal("foodPickerModal");
         renderSelectedIngredients();
         recalcCookingTotal();
       }
 
       function renderSelectedIngredients() {
-        const el = document.getElementById('selectedIngredients');
+        const el = document.getElementById("selectedIngredients");
         if (selectedIngredients.length === 0) {
-          el.innerHTML = '<div class="empty-state" style="padding:24px;"><div class="empty-icon">🧺</div><p>食品を追加してください</p></div>';
+          el.innerHTML =
+            '<div class="empty-state" style="padding:24px;"><div class="empty-icon">🧺</div><p>食品を追加してください</p></div>';
           return;
         }
-        el.innerHTML = selectedIngredients.map((ing, idx) => {
-          const food = state.foods.find(f => f.id === ing.foodId);
-          if (!food) return '';
-          const cost = calcIngredientCost(food, ing);
-          return `<div class="ingredient-row">
+        el.innerHTML = selectedIngredients
+          .map((ing, idx) => {
+            const food = state.foods.find((f) => f.id === ing.foodId);
+            if (!food) return "";
+            const cost = calcIngredientCost(food, ing);
+            return `<div class="ingredient-row">
             <div>
               <div class="ing-name">${esc(food.name)}</div>
               <div class="ing-price">¥${food.price} / ${food.quantity}${esc(food.unit)}</div>
             </div>
             <div class="ing-usage">
-              ${ing.usageType === 'fraction'
-                ? `<div class="fraction-input">
+              ${
+                ing.usageType === "fraction"
+                  ? `<div class="fraction-input">
                     <input type="number" value="${ing.usageNumer ?? 1}" min="1" onchange="updateIngUsage(${idx},'numer',this.value)" style="width:42px;padding:3px 5px;font-size:0.78rem;" />
                     <span class="fraction-sep">/</span>
                     <input type="number" value="${ing.usageDenom ?? 2}" min="1" onchange="updateIngUsage(${idx},'denom',this.value)" style="width:42px;padding:3px 5px;font-size:0.78rem;" />
                   </div>`
-                : `<input type="number" value="${ing.usage}" min="0" onchange="updateIngUsage(${idx},'percent',this.value)" style="width:54px;padding:3px 5px;font-size:0.78rem;" />`
+                  : `<input type="number" value="${ing.usage}" min="0" onchange="updateIngUsage(${idx},'percent',this.value)" style="width:54px;padding:3px 5px;font-size:0.78rem;" />`
               }
               <select onchange="updateIngUsageType(${idx},this.value)" style="padding:3px 5px;font-size:0.75rem;width:auto;">
-                <option value="percent" ${ing.usageType==='percent'?'selected':''}>%</option>
-                <option value="fraction" ${ing.usageType==='fraction'?'selected':''}>分数</option>
+                <option value="percent" ${ing.usageType === "percent" ? "selected" : ""}>%</option>
+                <option value="fraction" ${ing.usageType === "fraction" ? "selected" : ""}>分数</option>
               </select>
             </div>
             <div class="computed-cost">¥${cost}</div>
             <button class="btn-icon danger" onclick="removeIngredient(${idx})" title="削除">✕</button>
           </div>`;
-        }).join('');
+          })
+          .join("");
       }
       function updateIngUsage(idx, key, val) {
-        if (key === 'percent') {
+        if (key === "percent") {
           selectedIngredients[idx].usage = parseFloat(val) || 0;
-        } else if (key === 'numer') {
+        } else if (key === "numer") {
           selectedIngredients[idx].usageNumer = parseInt(val) || 1;
-        } else if (key === 'denom') {
+        } else if (key === "denom") {
           selectedIngredients[idx].usageDenom = parseInt(val) || 1;
         }
         renderSelectedIngredients();
@@ -990,9 +1442,11 @@
       }
       function updateIngUsageType(idx, type) {
         selectedIngredients[idx].usageType = type;
-        if (type === 'fraction') {
-          if (!selectedIngredients[idx].usageNumer) selectedIngredients[idx].usageNumer = 1;
-          if (!selectedIngredients[idx].usageDenom) selectedIngredients[idx].usageDenom = 2;
+        if (type === "fraction") {
+          if (!selectedIngredients[idx].usageNumer)
+            selectedIngredients[idx].usageNumer = 1;
+          if (!selectedIngredients[idx].usageDenom)
+            selectedIngredients[idx].usageDenom = 2;
         }
         renderSelectedIngredients();
         recalcCookingTotal();
@@ -1005,7 +1459,7 @@
 
       function calcIngredientCost(food, ing) {
         let ratio = 0;
-        if (ing.usageType === 'fraction') {
+        if (ing.usageType === "fraction") {
           const n = ing.usageNumer ?? 1;
           const d = ing.usageDenom ?? 1;
           ratio = d > 0 ? n / d : 0;
@@ -1017,16 +1471,16 @@
 
       function recalcCookingTotal() {
         let total = 0;
-        selectedIngredients.forEach(ing => {
-          const food = state.foods.find(f => f.id === ing.foodId);
+        selectedIngredients.forEach((ing) => {
+          const food = state.foods.find((f) => f.id === ing.foodId);
           if (food) total += calcIngredientCost(food, ing);
         });
-        document.getElementById('cookingTotal').textContent = `¥${total}`;
+        document.getElementById("cookingTotal").textContent = `¥${total}`;
       }
 
       // ========== Eating out Items ==========
       function addEatingOutItem() {
-        eatingOutItems.push({ name: '', price: 0 });
+        eatingOutItems.push({ name: "", price: 0 });
         renderEatingOutItems();
       }
       function removeEatingOutItem(idx) {
@@ -1034,34 +1488,42 @@
         renderEatingOutItems();
       }
       function renderEatingOutItems() {
-        const el = document.getElementById('eatingoutItemList');
+        const el = document.getElementById("eatingoutItemList");
         if (eatingOutItems.length === 0) {
-          el.innerHTML = '<p style="font-size:0.82rem;color:var(--color-text-muted);margin:0 0 8px;">商品を追加してください</p>';
+          el.innerHTML =
+            '<p style="font-size:0.82rem;color:var(--color-text-muted);margin:0 0 8px;">商品を追加してください</p>';
           return;
         }
-        el.innerHTML = eatingOutItems.map((item, idx) => `
+        el.innerHTML = eatingOutItems
+          .map(
+            (item, idx) => `
           <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:8px;">
             <input type="text" value="${esc(item.name)}" placeholder="商品名" onchange="updateEatingItem(${idx},'name',this.value)" />
-            <input type="number" value="${item.price||''}" placeholder="円" min="0" style="width:90px;" onchange="updateEatingItem(${idx},'price',this.value)" />
+            <input type="number" value="${item.price || ""}" placeholder="円" min="0" style="width:90px;" onchange="updateEatingItem(${idx},'price',this.value)" />
             <button class="btn-icon danger" onclick="removeEatingOutItem(${idx})">✕</button>
           </div>
-        `).join('');
+        `,
+          )
+          .join("");
         recalcEatingOutTotal();
       }
       function updateEatingItem(idx, key, val) {
-        if (key === 'price') eatingOutItems[idx].price = parseInt(val) || 0;
+        if (key === "price") eatingOutItems[idx].price = parseInt(val) || 0;
         else eatingOutItems[idx].name = val;
         recalcEatingOutTotal();
       }
       function recalcEatingOutTotal() {
         const total = eatingOutItems.reduce((s, i) => s + (i.price || 0), 0);
-        document.getElementById('eatingOutTotal').textContent = `¥${total}`;
+        document.getElementById("eatingOutTotal").textContent = `¥${total}`;
       }
 
       // ========== Submit Record ==========
       function submitRecord() {
-        const date = document.getElementById('addDate').value;
-        if (!date) { alert('日付を入力してください'); return; }
+        const date = document.getElementById("addDate").value;
+        if (!date) {
+          alert("日付を入力してください");
+          return;
+        }
 
         let totalCost = 0;
         let record = {
@@ -1071,28 +1533,43 @@
           type: currentMealType,
         };
 
-        if (currentMealType === 'cooking' || currentMealType === 'prepmake') {
-          if (selectedIngredients.length === 0) { alert('食品を1つ以上選択してください'); return; }
-          
-          let prepName = "", prepServings = 1;
-          if (currentMealType === 'prepmake') {
-            prepName = document.getElementById('prepName').value.trim();
-            prepServings = parseFloat(document.getElementById('prepServings').value) || 1;
-            if (!prepName) { alert('完成品の名前を入力してください'); return; }
+        if (currentMealType === "cooking" || currentMealType === "prepmake") {
+          if (selectedIngredients.length === 0) {
+            alert("食品を1つ以上選択してください");
+            return;
           }
-          
-          const ingredients = selectedIngredients.map(ing => {
-            const food = state.foods.find(f => f.id === ing.foodId);
+
+          let prepName = "",
+            prepServings = 1;
+          if (currentMealType === "prepmake") {
+            prepName = document.getElementById("prepName").value.trim();
+            prepServings =
+              parseFloat(document.getElementById("prepServings").value) || 1;
+            if (!prepName) {
+              alert("完成品の名前を入力してください");
+              return;
+            }
+          }
+
+          const ingredients = selectedIngredients.map((ing) => {
+            const food = state.foods.find((f) => f.id === ing.foodId);
             const cost = calcIngredientCost(food, ing);
-            return { foodId: ing.foodId, usage: ing.usage, usageType: ing.usageType, usageNumer: ing.usageNumer, usageDenom: ing.usageDenom, cost };
+            return {
+              foodId: ing.foodId,
+              usage: ing.usage,
+              usageType: ing.usageType,
+              usageNumer: ing.usageNumer,
+              usageDenom: ing.usageDenom,
+              cost,
+            };
           });
-          
+
           totalCost = ingredients.reduce((s, i) => s + i.cost, 0);
 
-          if (currentMealType === 'prepmake') {
+          if (currentMealType === "prepmake") {
             record.memo = `【作り置き作成】${prepName} (${prepServings}食)`;
             record.totalCost = 0; // 作り置き作成時は0円として記録
-            
+
             // foodsに作り置きアイテムを追加
             const prepPrice = Math.round(totalCost / prepServings);
             state.foods.push({
@@ -1100,33 +1577,44 @@
               name: `【作り置き】${prepName}`,
               price: prepPrice,
               quantity: prepServings,
-              unit: '食',
+              unit: "食",
               remaining: prepServings,
-              note: `${date} 作成`
+              note: `${date} 作成`,
             });
           } else {
-            record.memo = document.getElementById('cookingMemo').value;
+            record.memo = document.getElementById("cookingMemo").value;
             record.totalCost = totalCost;
           }
-          
+
           record.ingredients = ingredients;
 
           // Update food remaining
-          selectedIngredients.forEach(ing => {
-            const food = state.foods.find(f => f.id === ing.foodId);
+          selectedIngredients.forEach((ing) => {
+            const food = state.foods.find((f) => f.id === ing.foodId);
             if (!food) return;
-            let ratio = ing.usageType === 'fraction'
-              ? ((ing.usageNumer??1) / (ing.usageDenom??1))
-              : ((ing.usage||0) / 100);
-            food.remaining = Math.max(0, (food.remaining ?? food.quantity) - food.quantity * ratio);
+            let ratio =
+              ing.usageType === "fraction"
+                ? (ing.usageNumer ?? 1) / (ing.usageDenom ?? 1)
+                : (ing.usage || 0) / 100;
+            food.remaining = Math.max(
+              0,
+              (food.remaining ?? food.quantity) - food.quantity * ratio,
+            );
           });
         } else {
           // Eating Out
-          if (eatingOutItems.length === 0) { alert('商品を1つ以上追加してください'); return; }
-          const validItems = eatingOutItems.filter(i => i.name.trim());
-          if (validItems.length === 0) { alert('商品名を入力してください'); return; }
-          totalCost = eatingOutItems.reduce((s, i) => s + (i.price||0), 0);
-          record.restaurantName = document.getElementById('restaurantName').value;
+          if (eatingOutItems.length === 0) {
+            alert("商品を1つ以上追加してください");
+            return;
+          }
+          const validItems = eatingOutItems.filter((i) => i.name.trim());
+          if (validItems.length === 0) {
+            alert("商品名を入力してください");
+            return;
+          }
+          totalCost = eatingOutItems.reduce((s, i) => s + (i.price || 0), 0);
+          record.restaurantName =
+            document.getElementById("restaurantName").value;
           record.items = [...eatingOutItems];
           record.totalCost = totalCost;
         }
@@ -1137,156 +1625,210 @@
         // Reset form
         selectedIngredients = [];
         eatingOutItems = [];
-        document.getElementById('cookingMemo').value = '';
-        document.getElementById('prepName').value = '';
-        document.getElementById('restaurantName').value = '';
+        document.getElementById("cookingMemo").value = "";
+        document.getElementById("prepName").value = "";
+        document.getElementById("restaurantName").value = "";
         renderSelectedIngredients();
         renderEatingOutItems();
         recalcCookingTotal();
 
         // Switch to records tab
-        switchTab('records', document.getElementById('tab-records'));
+        switchTab("records", document.getElementById("tab-records"));
         renderAll();
-        alert('記録を保存しました ✓');
+        alert("記録を保存しました ✓");
       }
 
       // ========== Food Management & Edit ==========
       function addFood() {
-        const name = document.getElementById('newFoodName').value.trim();
-        const price = parseInt(document.getElementById('newFoodPrice').value) || 0;
-        const quantity = parseFloat(document.getElementById('newFoodQuantity').value) || 0;
-        const unit = document.getElementById('newFoodUnit').value;
-        const note = document.getElementById('newFoodNote').value.trim();
+        const name = document.getElementById("newFoodName").value.trim();
+        const price =
+          parseInt(document.getElementById("newFoodPrice").value) || 0;
+        const quantity =
+          parseFloat(document.getElementById("newFoodQuantity").value) || 0;
+        const unit = document.getElementById("newFoodUnit").value;
+        const note = document.getElementById("newFoodNote").value.trim();
 
-        if (!name) { alert('食品名を入力してください'); return; }
-        if (price <= 0) { alert('価格を入力してください'); return; }
-        if (quantity <= 0) { alert('購入量を入力してください'); return; }
+        if (!name) {
+          alert("食品名を入力してください");
+          return;
+        }
+        if (price <= 0) {
+          alert("価格を入力してください");
+          return;
+        }
+        if (quantity <= 0) {
+          alert("購入量を入力してください");
+          return;
+        }
 
-        state.foods.push({ id: genId(), name, price, quantity, unit, remaining: quantity, note });
+        state.foods.push({
+          id: genId(),
+          name,
+          price,
+          quantity,
+          unit,
+          remaining: quantity,
+          note,
+        });
         saveState();
-        document.getElementById('newFoodName').value = '';
-        document.getElementById('newFoodPrice').value = '';
-        document.getElementById('newFoodQuantity').value = '';
-        document.getElementById('newFoodNote').value = '';
+        document.getElementById("newFoodName").value = "";
+        document.getElementById("newFoodPrice").value = "";
+        document.getElementById("newFoodQuantity").value = "";
+        document.getElementById("newFoodNote").value = "";
         renderFoods();
       }
       function deleteFood(id) {
-        if (!confirm('この食品を削除しますか？')) return;
-        state.foods = state.foods.filter(f => f.id !== id);
+        if (!confirm("この食品を削除しますか？")) return;
+        state.foods = state.foods.filter((f) => f.id !== id);
         saveState();
         renderFoods();
       }
       function resetFoodRemaining(id) {
-        const food = state.foods.find(f => f.id === id);
-        if (food) { food.remaining = food.quantity; saveState(); renderFoods(); }
+        const food = state.foods.find((f) => f.id === id);
+        if (food) {
+          food.remaining = food.quantity;
+          saveState();
+          renderFoods();
+        }
       }
       function formatRemaining(food) {
         const r = food.remaining ?? food.quantity;
         return `${Math.round(r * 10) / 10}${food.unit}`;
       }
       function renderFoods() {
-        const el = document.getElementById('foodList');
+        const el = document.getElementById("foodList");
         if (state.foods.length === 0) {
-          el.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>食品が登録されていません</p></div>';
+          el.innerHTML =
+            '<div class="empty-state"><div class="empty-icon">📦</div><p>食品が登録されていません</p></div>';
           return;
         }
         // sort: prepmake first or alphabetical.. just simple map
-        el.innerHTML = state.foods.map(f => {
-          const rem = f.remaining ?? f.quantity;
-          const pct = f.quantity > 0 ? rem / f.quantity : 0;
-          const low = pct <= 0.2;
-          return `<div class="food-item">
+        el.innerHTML = state.foods
+          .map((f) => {
+            const rem = f.remaining ?? f.quantity;
+            const pct = f.quantity > 0 ? rem / f.quantity : 0;
+            const low = pct <= 0.2;
+            return `<div class="food-item">
             <div class="food-item-info">
               <div class="food-name">${esc(f.name)}</div>
-              <div class="food-price">¥${f.price} / ${f.quantity}${esc(f.unit)}${f.note ? ` — ${esc(f.note)}` : ''}</div>
+              <div class="food-price">¥${f.price} / ${f.quantity}${esc(f.unit)}${f.note ? ` — ${esc(f.note)}` : ""}</div>
             </div>
-            <span class="food-remaining ${low ? 'low' : ''}">残 ${formatRemaining(f)}</span>
+            <span class="food-remaining ${low ? "low" : ""}">残 ${formatRemaining(f)}</span>
             <div style="display:flex;gap:4px;">
               <button class="btn-icon" title="編集" onclick="openFoodEditModal('${f.id}')">✎</button>
               <button class="btn-icon" title="残量をリセット" onclick="resetFoodRemaining('${f.id}')">🔄</button>
               <button class="btn-icon danger" title="削除" onclick="deleteFood('${f.id}')">🗑</button>
             </div>
           </div>`;
-        }).reverse().join('');
+          })
+          .reverse()
+          .join("");
       }
 
       let editingFoodId = null;
       function openFoodEditModal(id) {
-        const f = state.foods.find(x => x.id === id);
+        const f = state.foods.find((x) => x.id === id);
         if (!f) return;
         editingFoodId = id;
-        document.getElementById('editFoodName').value = f.name;
-        document.getElementById('editFoodPrice').value = f.price;
-        document.getElementById('editFoodQuantity').value = f.quantity;
-        document.getElementById('editFoodUnit').value = f.unit || 'g';
-        document.getElementById('editFoodRemaining').value = f.remaining ?? f.quantity;
-        document.getElementById('editFoodNote').value = f.note || '';
-        document.getElementById('foodEditModal').classList.add('open');
+        document.getElementById("editFoodName").value = f.name;
+        document.getElementById("editFoodPrice").value = f.price;
+        document.getElementById("editFoodQuantity").value = f.quantity;
+        document.getElementById("editFoodUnit").value = f.unit || "g";
+        document.getElementById("editFoodRemaining").value =
+          f.remaining ?? f.quantity;
+        document.getElementById("editFoodNote").value = f.note || "";
+        document.getElementById("foodEditModal").classList.add("open");
       }
       function saveFoodEdit() {
-        const f = state.foods.find(x => x.id === editingFoodId);
+        const f = state.foods.find((x) => x.id === editingFoodId);
         if (!f) return;
-        f.name = document.getElementById('editFoodName').value.trim();
-        f.price = parseInt(document.getElementById('editFoodPrice').value) || 0;
-        f.quantity = parseFloat(document.getElementById('editFoodQuantity').value) || 0;
-        f.unit = document.getElementById('editFoodUnit').value;
-        f.remaining = parseFloat(document.getElementById('editFoodRemaining').value) || 0;
-        f.note = document.getElementById('editFoodNote').value.trim();
+        f.name = document.getElementById("editFoodName").value.trim();
+        f.price = parseInt(document.getElementById("editFoodPrice").value) || 0;
+        f.quantity =
+          parseFloat(document.getElementById("editFoodQuantity").value) || 0;
+        f.unit = document.getElementById("editFoodUnit").value;
+        f.remaining =
+          parseFloat(document.getElementById("editFoodRemaining").value) || 0;
+        f.note = document.getElementById("editFoodNote").value.trim();
         saveState();
-        closeModal('foodEditModal');
+        closeModal("foodEditModal");
         renderFoods();
       }
 
       // ========== Records & Edit ==========
-      const MEAL_ICONS = { morning: '☀️', lunch: '🌤️', dinner: '🌙', other: '🍩' };
-      const MEAL_LABELS = { morning: '朝食', lunch: '昼食', dinner: '夕食', other: 'その他' };
+      const MEAL_ICONS = {
+        morning: "☀️",
+        lunch: "🌤️",
+        dinner: "🌙",
+        other: "🍩",
+      };
+      const MEAL_LABELS = {
+        morning: "朝食",
+        lunch: "昼食",
+        dinner: "夕食",
+        other: "その他",
+      };
 
       function renderRecords() {
-        const el = document.getElementById('recordList');
-        const monthRecords = state.records.filter(r => isInCurrentMonth(r.date));
+        const el = document.getElementById("recordList");
+        const monthRecords = state.records.filter((r) =>
+          isInCurrentMonth(r.date),
+        );
         if (monthRecords.length === 0) {
-          el.innerHTML = '<div class="empty-state"><div class="empty-icon">🗒️</div><p>この月の記録はありません</p></div>';
+          el.innerHTML =
+            '<div class="empty-state"><div class="empty-icon">🗒️</div><p>この月の記録はありません</p></div>';
           return;
         }
 
         // Group by date descending
         const groups = {};
-        monthRecords.forEach(r => {
+        monthRecords.forEach((r) => {
           if (!groups[r.date]) groups[r.date] = [];
           groups[r.date].push(r);
         });
-        const sortedDates = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+        const sortedDates = Object.keys(groups).sort((a, b) =>
+          b.localeCompare(a),
+        );
 
-        el.innerHTML = sortedDates.map(date => {
-          const recs = groups[date];
-          const dayTotal = recs.reduce((s, r) => s + (r.totalCost || 0), 0);
-          const items = recs.map(r => {
-            const title = r.type === 'cooking' || r.type === 'prepmake'
-              ? (r.memo || (r.type === 'prepmake' ? '作り置き作成' : '自炊'))
-              : (r.restaurantName || '外食');
-            
-            let sub = "";
-            if (r.type === 'cooking' || r.type === 'prepmake') {
-              sub = (r.ingredients || []).map(ing => {
-                  const f = state.foods.find(x => x.id === ing.foodId);
-                  return f ? f.name : '不明';
-                }).join('、');
-            } else {
-              sub = (r.items || []).map(i => i.name).join('、');
-            }
+        el.innerHTML = sortedDates
+          .map((date) => {
+            const recs = groups[date];
+            const dayTotal = recs.reduce((s, r) => s + (r.totalCost || 0), 0);
+            const items = recs
+              .map((r) => {
+                const title =
+                  r.type === "cooking" || r.type === "prepmake"
+                    ? r.memo ||
+                      (r.type === "prepmake" ? "作り置き作成" : "自炊")
+                    : r.restaurantName || "外食";
 
-            const tagHtml = r.type === 'cooking' ? '<span class="tag tag-cooking" style="margin-left:4px;">自炊</span>' :
-                            r.type === 'eatingout' ? '<span class="tag tag-eating-out" style="margin-left:4px;">外食</span>' :
-                            '<span class="tag tag-prepmake" style="margin-left:4px;">作り置き作成</span>';
+                let sub = "";
+                if (r.type === "cooking" || r.type === "prepmake") {
+                  sub = (r.ingredients || [])
+                    .map((ing) => {
+                      const f = state.foods.find((x) => x.id === ing.foodId);
+                      return f ? f.name : "不明";
+                    })
+                    .join("、");
+                } else {
+                  sub = (r.items || []).map((i) => i.name).join("、");
+                }
 
-            return `<div class="record-item">
-              <div class="record-icon ${r.mealTime}">${MEAL_ICONS[r.mealTime]||'🍽️'}</div>
+                const tagHtml =
+                  r.type === "cooking"
+                    ? '<span class="tag tag-cooking" style="margin-left:4px;">自炊</span>'
+                    : r.type === "eatingout"
+                      ? '<span class="tag tag-eating-out" style="margin-left:4px;">外食</span>'
+                      : '<span class="tag tag-prepmake" style="margin-left:4px;">作り置き作成</span>';
+
+                return `<div class="record-item">
+              <div class="record-icon ${r.mealTime}">${MEAL_ICONS[r.mealTime] || "🍽️"}</div>
               <div class="record-body">
                 <div class="record-title">${esc(title)}</div>
                 <div class="record-sub">
-                  <span class="meal-badge ${r.mealTime}">${MEAL_LABELS[r.mealTime]||r.mealTime}</span>
+                  <span class="meal-badge ${r.mealTime}">${MEAL_LABELS[r.mealTime] || r.mealTime}</span>
                   ${tagHtml}
-                  ${sub ? `<span style="margin-left:6px; opacity:0.8;">${esc(sub)}</span>` : ''}
+                  ${sub ? `<span style="margin-left:6px; opacity:0.8;">${esc(sub)}</span>` : ""}
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:4px;">
@@ -1295,172 +1837,224 @@
                 <button class="btn-icon danger" title="削除" onclick="deleteRecord('${r.id}')">🗑</button>
               </div>
             </div>`;
-          }).join('');
+              })
+              .join("");
 
-          const d = new Date(date + 'T00:00:00');
-          const dLabel = `${d.getMonth()+1}/${d.getDate()} (${['日','月','火','水','木','金','土'][d.getDay()]})`;
-          return `<div class="date-group-header">${dLabel}<span class="date-total">¥${dayTotal}</span></div>${items}`;
-        }).join('');
+            const d = new Date(date + "T00:00:00");
+            const dLabel = `${d.getMonth() + 1}/${d.getDate()} (${["日", "月", "火", "水", "木", "金", "土"][d.getDay()]})`;
+            return `<div class="date-group-header">${dLabel}<span class="date-total">¥${dayTotal}</span></div>${items}`;
+          })
+          .join("");
       }
 
       function deleteRecord(id) {
-        if (!confirm('この記録を削除しますか？')) return;
-        state.records = state.records.filter(r => r.id !== id);
+        if (!confirm("この記録を削除しますか？")) return;
+        state.records = state.records.filter((r) => r.id !== id);
         saveState();
         renderAll();
       }
 
       let editingRecordId = null;
       function openRecordEditModal(id) {
-        const r = state.records.find(x => x.id === id);
+        const r = state.records.find((x) => x.id === id);
         if (!r) return;
         editingRecordId = id;
-        document.getElementById('editRecordDate').value = r.date;
-        document.getElementById('editRecordTime').value = r.mealTime;
-        document.getElementById('editRecordCost').value = r.totalCost || 0;
-        document.getElementById('editRecordNote').value = (r.type === 'cooking' || r.type === 'prepmake') ? (r.memo || '') : (r.restaurantName || '');
-        document.getElementById('recordEditModal').classList.add('open');
+        document.getElementById("editRecordDate").value = r.date;
+        document.getElementById("editRecordTime").value = r.mealTime;
+        document.getElementById("editRecordCost").value = r.totalCost || 0;
+        document.getElementById("editRecordNote").value =
+          r.type === "cooking" || r.type === "prepmake"
+            ? r.memo || ""
+            : r.restaurantName || "";
+        document.getElementById("recordEditModal").classList.add("open");
       }
       function saveRecordEdit() {
-        const r = state.records.find(x => x.id === editingRecordId);
+        const r = state.records.find((x) => x.id === editingRecordId);
         if (!r) return;
-        r.date = document.getElementById('editRecordDate').value;
-        r.mealTime = document.getElementById('editRecordTime').value;
-        r.totalCost = parseInt(document.getElementById('editRecordCost').value) || 0;
-        
-        if (r.type === 'cooking' || r.type === 'prepmake') {
-          r.memo = document.getElementById('editRecordNote').value.trim();
+        r.date = document.getElementById("editRecordDate").value;
+        r.mealTime = document.getElementById("editRecordTime").value;
+        r.totalCost =
+          parseInt(document.getElementById("editRecordCost").value) || 0;
+
+        if (r.type === "cooking" || r.type === "prepmake") {
+          r.memo = document.getElementById("editRecordNote").value.trim();
         } else {
-          r.restaurantName = document.getElementById('editRecordNote').value.trim();
+          r.restaurantName = document
+            .getElementById("editRecordNote")
+            .value.trim();
         }
 
         saveState();
-        closeModal('recordEditModal');
+        closeModal("recordEditModal");
         renderAll();
       }
 
       // ========== Summary ==========
       function renderSummary() {
-        const monthRecords = state.records.filter(r => isInCurrentMonth(r.date));
-        const monthTotal = monthRecords.reduce((s, r) => s + (r.totalCost||0), 0);
-        document.getElementById('statMonthTotal').textContent = `¥${monthTotal.toLocaleString()}`;
+        const monthRecords = state.records.filter((r) =>
+          isInCurrentMonth(r.date),
+        );
+        const monthTotal = monthRecords.reduce(
+          (s, r) => s + (r.totalCost || 0),
+          0,
+        );
+        document.getElementById("statMonthTotal").textContent =
+          `¥${monthTotal.toLocaleString()}`;
 
-        const todayRecords = state.records.filter(r => r.date === TODAY);
-        const todayTotal = todayRecords.reduce((s, r) => s + (r.totalCost||0), 0);
-        document.getElementById('statToday').textContent = `¥${todayTotal.toLocaleString()}`;
+        const todayRecords = state.records.filter((r) => r.date === TODAY);
+        const todayTotal = todayRecords.reduce(
+          (s, r) => s + (r.totalCost || 0),
+          0,
+        );
+        document.getElementById("statToday").textContent =
+          `¥${todayTotal.toLocaleString()}`;
 
         const { year, month } = state.currentMonth;
-        const days = new Set(monthRecords.map(r => r.date)).size;
+        const days = new Set(monthRecords.map((r) => r.date)).size;
         const avg = days > 0 ? Math.round(monthTotal / days) : 0;
-        document.getElementById('statAvg').textContent = `¥${avg.toLocaleString()}`;
+        document.getElementById("statAvg").textContent =
+          `¥${avg.toLocaleString()}`;
       }
 
       // ========== Charts ==========
       function renderCharts() {
         // ... (省略せずに記述しますが、既存のものとほぼ同じ)
-        const monthRecords = state.records.filter(r => isInCurrentMonth(r.date));
+        const monthRecords = state.records.filter((r) =>
+          isInCurrentMonth(r.date),
+        );
         // max is unused if 0
         const mealGroups = { morning: 0, lunch: 0, dinner: 0, other: 0 };
-        monthRecords.forEach(r => { mealGroups[r.mealTime] = (mealGroups[r.mealTime]||0) + (r.totalCost||0); });
+        monthRecords.forEach((r) => {
+          mealGroups[r.mealTime] =
+            (mealGroups[r.mealTime] || 0) + (r.totalCost || 0);
+        });
         const mealMax = Math.max(1, ...Object.values(mealGroups));
-        const mealColors = { morning: '#f59e0b', lunch: '#3b82f6', dinner: '#6366f1', other: '#8b5cf6' };
-        document.getElementById('mealTimeChart').innerHTML = Object.entries(mealGroups).map(([k, v]) => `
+        const mealColors = {
+          morning: "#f59e0b",
+          lunch: "#3b82f6",
+          dinner: "#6366f1",
+          other: "#8b5cf6",
+        };
+        document.getElementById("mealTimeChart").innerHTML = Object.entries(
+          mealGroups,
+        )
+          .map(
+            ([k, v]) => `
           <div class="bar-row">
             <span class="bar-label">${MEAL_LABELS[k]}</span>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/mealMax*100)}%;background:${mealColors[k]};"></div></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((v / mealMax) * 100)}%;background:${mealColors[k]};"></div></div>
             <span class="bar-amount">¥${v.toLocaleString()}</span>
           </div>
-        `).join('');
+        `,
+          )
+          .join("");
 
         // Type chart (prepmake is 0 mostly, but added to cooking or left alone. separate prepmake isn't very useful unless cost > 0)
-        let cooking = 0, eatingOut = 0, prepmake = 0;
-        monthRecords.forEach(r => {
-          if (r.type === 'cooking') cooking += (r.totalCost||0);
-          else if (r.type === 'eatingout') eatingOut += (r.totalCost||0);
-          else prepmake += (r.totalCost||0);
+        let cooking = 0,
+          eatingOut = 0,
+          prepmake = 0;
+        monthRecords.forEach((r) => {
+          if (r.type === "cooking") cooking += r.totalCost || 0;
+          else if (r.type === "eatingout") eatingOut += r.totalCost || 0;
+          else prepmake += r.totalCost || 0;
         });
         const typeMax = Math.max(1, cooking, eatingOut, prepmake);
         const typeRows = [
-          ['自炊', cooking, '#16a34a'],
-          ['外食', eatingOut, '#f59e0b']
+          ["自炊", cooking, "#16a34a"],
+          ["外食", eatingOut, "#f59e0b"],
         ];
-        if (prepmake > 0) typeRows.push(['作り置き', prepmake, '#4338ca']);
-        document.getElementById('typeChart').innerHTML = typeRows.map(([label, val, color]) => `
+        if (prepmake > 0) typeRows.push(["作り置き", prepmake, "#4338ca"]);
+        document.getElementById("typeChart").innerHTML = typeRows
+          .map(
+            ([label, val, color]) => `
           <div class="bar-row">
             <span class="bar-label">${label}</span>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/typeMax*100)}%;background:${color};"></div></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((val / typeMax) * 100)}%;background:${color};"></div></div>
             <span class="bar-amount">¥${val.toLocaleString()}</span>
           </div>
-        `).join('');
+        `,
+          )
+          .join("");
 
         // Weekly chart
         const weekData = [0, 0, 0, 0, 0];
-        monthRecords.forEach(r => {
-          const day = new Date(r.date + 'T00:00:00').getDate();
+        monthRecords.forEach((r) => {
+          const day = new Date(r.date + "T00:00:00").getDate();
           const weekIdx = Math.min(4, Math.floor((day - 1) / 7));
-          weekData[weekIdx] += (r.totalCost||0);
+          weekData[weekIdx] += r.totalCost || 0;
         });
         const weekMax = Math.max(1, ...weekData);
-        const weekColors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6'];
-        document.getElementById('weeklyChart').innerHTML = weekData.map((v, i) => `
+        const weekColors = [
+          "#3b82f6",
+          "#10b981",
+          "#f59e0b",
+          "#ef4444",
+          "#8b5cf6",
+        ];
+        document.getElementById("weeklyChart").innerHTML = weekData
+          .map(
+            (v, i) => `
           <div class="bar-row">
-            <span class="bar-label">第${i+1}週</span>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/weekMax*100)}%;background:${weekColors[i]};"></div></div>
+            <span class="bar-label">第${i + 1}週</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((v / weekMax) * 100)}%;background:${weekColors[i]};"></div></div>
             <span class="bar-amount">¥${v.toLocaleString()}</span>
           </div>
-        `).join('');
+        `,
+          )
+          .join("");
       }
 
       // ========== Cloud Sync ==========
       function saveSyncConfig() {
         state.syncConfig = {
-          id: document.getElementById('syncDataId').value.trim(),
-          editKey: document.getElementById('syncEditKey').value.trim(),
-          proxyUrl: document.getElementById('syncProxyUrl').value.trim()
+          id: document.getElementById("syncDataId").value.trim(),
+          editKey: document.getElementById("syncEditKey").value.trim(),
+          proxyUrl: document.getElementById("syncProxyUrl").value.trim(),
         };
         saveState();
-        const statusEl = document.getElementById('syncStatus');
+        const statusEl = document.getElementById("syncStatus");
         statusEl.textContent = "設定を保存しました。";
         statusEl.style.color = "var(--color-primary)";
       }
 
       async function syncUpload() {
-        const idInput = document.getElementById('syncDataId');
-        const keyInput = document.getElementById('syncEditKey');
-        const proxyInput = document.getElementById('syncProxyUrl');
+        const idInput = document.getElementById("syncDataId");
+        const keyInput = document.getElementById("syncEditKey");
+        const proxyInput = document.getElementById("syncProxyUrl");
         const id = idInput.value.trim();
         const editKey = keyInput.value.trim();
         const proxyUrl = proxyInput.value.trim().replace(/\/$/, "");
-        const baseUrl = proxyUrl ? proxyUrl : 'https://jsonhosting.com';
-        const statusEl = document.getElementById('syncStatus');
-        
+        const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
+        const statusEl = document.getElementById("syncStatus");
+
         statusEl.textContent = "アップロード中...";
         statusEl.style.color = "var(--color-primary)";
 
         try {
           const payload = JSON.stringify({
             foods: state.foods,
-            records: state.records
+            records: state.records,
           });
-          
+
           if (id && editKey) {
             const res = await fetch(`${baseUrl}/api/json/${id}`, {
-              method: 'PATCH',
+              method: "PATCH",
               headers: {
-                'Content-Type': 'application/json',
-                'X-Edit-Key': editKey
+                "Content-Type": "application/json",
+                "X-Edit-Key": editKey,
               },
-              body: payload
+              body: payload,
             });
-            if (!res.ok) throw new Error('アップロード失敗');
-            statusEl.textContent = "アップロード完了！ (" + new Date().toLocaleTimeString() + ")";
+            if (!res.ok) throw new Error("アップロード失敗");
+            statusEl.textContent =
+              "アップロード完了！ (" + new Date().toLocaleTimeString() + ")";
           } else {
             const res = await fetch(`${baseUrl}/api/json`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: payload
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: payload,
             });
-            if (!res.ok) throw new Error('新規作成失敗');
+            if (!res.ok) throw new Error("新規作成失敗");
             const data = await res.json();
             idInput.value = data.id;
             keyInput.value = data.editKey;
@@ -1476,35 +2070,41 @@
       }
 
       async function syncDownload() {
-        const id = document.getElementById('syncDataId').value.trim();
-        const proxyUrl = document.getElementById('syncProxyUrl').value.trim().replace(/\/$/, "");
-        const baseUrl = proxyUrl ? proxyUrl : 'https://jsonhosting.com';
-        const statusEl = document.getElementById('syncStatus');
+        const id = document.getElementById("syncDataId").value.trim();
+        const proxyUrl = document
+          .getElementById("syncProxyUrl")
+          .value.trim()
+          .replace(/\/$/, "");
+        const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
+        const statusEl = document.getElementById("syncStatus");
         if (!id) {
           statusEl.textContent = "Data IDを入力してください";
           statusEl.style.color = "var(--color-danger)";
           return;
         }
-        
+
         statusEl.textContent = "ダウンロード中...";
         statusEl.style.color = "var(--color-primary)";
-        
+
         try {
           // キャッシュを防ぐためにタイムスタンプを付与
           const res = await fetch(`${baseUrl}/api/json/${id}?t=${Date.now()}`);
-          if (!res.ok) throw new Error('ダウンロード失敗');
-          const data = await res.json();
-          
+          if (!res.ok) throw new Error("ダウンロード失敗");
+          const data = (await res.json()).content;
+
           if (data.foods && data.records) {
             state.foods = data.foods;
             state.records = data.records;
             saveState();
             renderAll();
-            statusEl.textContent = "ダウンロードしてデータを復元しました！ (" + new Date().toLocaleTimeString() + ")";
+            statusEl.textContent =
+              "ダウンロードしてデータを復元しました！ (" +
+              new Date().toLocaleTimeString() +
+              ")";
           } else {
-            throw new Error('データ形式が不正です');
+            throw new Error("データ形式が不正です");
           }
-        } catch(err) {
+        } catch (err) {
           console.error(err);
           statusEl.textContent = "エラー: " + err.message;
           statusEl.style.color = "var(--color-danger)";
@@ -1516,11 +2116,17 @@
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
       }
       function esc(str) {
-        return (str || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        return (str || "")
+          .toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
 
       function renderAll() {
-        document.getElementById('currentMonthLabel').textContent = getMonthLabel();
+        document.getElementById("currentMonthLabel").textContent =
+          getMonthLabel();
         renderSummary();
         renderRecords();
         renderFoods();
@@ -1528,9 +2134,9 @@
       }
 
       // ========== Init ==========
-      window.addEventListener('load', () => {
+      window.addEventListener("load", () => {
         loadState();
-        document.getElementById('addDate').value = TODAY;
+        document.getElementById("addDate").value = TODAY;
         addEatingOutItem();
         renderAll();
       });

@@ -18,7 +18,8 @@ function autoSyncUpload() {
   if (state.syncConfig && state.syncConfig.id && state.syncConfig.editKey) {
     if (syncTimeout) clearTimeout(syncTimeout);
     syncTimeout = setTimeout(() => {
-      const proxyUrl = state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
+      const proxyUrl =
+        state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
       const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
       fetch(`${baseUrl}/api/json/${state.syncConfig.id}`, {
         method: "PATCH",
@@ -30,7 +31,7 @@ function autoSyncUpload() {
           foods: state.foods,
           records: state.records,
         }),
-      }).catch(e => console.error("Auto sync failed", e));
+      }).catch((e) => console.error("Auto sync failed", e));
     }, 1500); // 1.5s debounce
   }
 }
@@ -49,7 +50,12 @@ function loadState() {
   if (!state.foods) state.foods = [];
   if (!state.records) state.records = [];
   if (!state.syncConfig)
-    state.syncConfig = { id: "", editKey: "", proxyUrl: "", autoDownload: false };
+    state.syncConfig = {
+      id: "",
+      editKey: "",
+      proxyUrl: "",
+      autoDownload: false,
+    };
   if (!state.currentMonth) {
     const d = new Date();
     state.currentMonth = { year: d.getFullYear(), month: d.getMonth() };
@@ -63,7 +69,8 @@ function loadState() {
       state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
   }
   if (document.getElementById("syncAutoDL")) {
-    document.getElementById("syncAutoDL").checked = !!state.syncConfig.autoDownload;
+    document.getElementById("syncAutoDL").checked =
+      !!state.syncConfig.autoDownload;
   }
 }
 
@@ -249,6 +256,7 @@ function renderSelectedIngredients() {
       if (!food) return "";
       const cost = calcIngredientCost(food, ing);
       const usageAmount = getUsageAmount(food, ing);
+      const rem = food.remaining ?? food.quantity;
       const afterRem = Math.max(0, rem - usageAmount);
       return `<div class="ingredient-row">
             <div>
@@ -268,7 +276,7 @@ function renderSelectedIngredients() {
               }
               <select onchange="updateIngUsageType(${idx},this.value)" style="padding:3px 5px;font-size:0.75rem;width:auto;">
                 <option value="amount" ${ing.usageType === "amount" ? "selected" : ""}>単位量(${esc(food.unit)})</option>
-                <option value="percent" ${(!ing.usageType || ing.usageType === "percent") ? "selected" : ""}>残りの割合(%)</option>
+                <option value="percent" ${!ing.usageType || ing.usageType === "percent" ? "selected" : ""}>残りの割合(%)</option>
                 <option value="fraction" ${ing.usageType === "fraction" ? "selected" : ""}>残りの割合(分数)</option>
                 <option value="decimal" ${ing.usageType === "decimal" ? "selected" : ""}>残りの割合(小数)</option>
               </select>
@@ -302,8 +310,12 @@ function updateIngUsageType(idx, type) {
   } else if (type === "decimal") {
     selectedIngredients[idx].usage = 0.5;
   } else if (type === "amount") {
-    const food = state.foods.find((f) => f.id === selectedIngredients[idx].foodId);
-    selectedIngredients[idx].usage = food ? (food.remaining ?? food.quantity) : 0;
+    const food = state.foods.find(
+      (f) => f.id === selectedIngredients[idx].foodId,
+    );
+    selectedIngredients[idx].usage = food
+      ? (food.remaining ?? food.quantity)
+      : 0;
   }
   renderSelectedIngredients();
   recalcCookingTotal();
@@ -459,9 +471,12 @@ function submitRecord() {
     selectedIngredients.forEach((ing) => {
       const food = state.foods.find((f) => f.id === ing.foodId);
       if (!food) return;
-      
+
       const usageAmount = getUsageAmount(food, ing);
-      food.remaining = Math.max(0, (food.remaining ?? food.quantity) - usageAmount);
+      food.remaining = Math.max(
+        0,
+        (food.remaining ?? food.quantity) - usageAmount,
+      );
     });
   } else {
     // Eating Out
@@ -950,21 +965,24 @@ async function syncUpload() {
 }
 
 async function syncDownload(silent = false) {
-  const id = state.syncConfig.id || document.getElementById("syncDataId").value.trim();
-  const proxyUrl = state.syncConfig.proxyUrl || document.getElementById("syncProxyUrl").value.trim().replace(/\/$/, "");
+  const id =
+    state.syncConfig.id || document.getElementById("syncDataId").value.trim();
+  const proxyUrl =
+    state.syncConfig.proxyUrl ||
+    document.getElementById("syncProxyUrl").value.trim().replace(/\/$/, "");
   const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
   const statusEl = document.getElementById("syncStatus");
   if (!id) {
     if (!silent) {
-        statusEl.textContent = "Data IDを入力してください";
-        statusEl.style.color = "var(--color-danger)";
+      statusEl.textContent = "Data IDを入力してください";
+      statusEl.style.color = "var(--color-danger)";
     }
     return;
   }
 
   if (!silent) {
-      statusEl.textContent = "ダウンロード中...";
-      statusEl.style.color = "var(--color-primary)";
+    statusEl.textContent = "ダウンロード中...";
+    statusEl.style.color = "var(--color-primary)";
   }
 
   try {
@@ -981,10 +999,10 @@ async function syncDownload(silent = false) {
       isSyncing = false;
       renderAll();
       if (!silent) {
-          statusEl.textContent =
-            "ダウンロードしてデータを復元しました！ (" +
-            new Date().toLocaleTimeString() +
-            ")";
+        statusEl.textContent =
+          "ダウンロードしてデータを復元しました！ (" +
+          new Date().toLocaleTimeString() +
+          ")";
       }
     } else {
       throw new Error("データ形式が不正です");
@@ -992,8 +1010,8 @@ async function syncDownload(silent = false) {
   } catch (err) {
     console.error(err);
     if (!silent) {
-        statusEl.textContent = "エラー: " + err.message;
-        statusEl.style.color = "var(--color-danger)";
+      statusEl.textContent = "エラー: " + err.message;
+      statusEl.style.color = "var(--color-danger)";
     }
   }
 }
@@ -1028,7 +1046,11 @@ window.addEventListener("load", () => {
   addEatingOutItem();
   renderAll();
 
-  if (state.syncConfig && state.syncConfig.id && state.syncConfig.autoDownload) {
+  if (
+    state.syncConfig &&
+    state.syncConfig.id &&
+    state.syncConfig.autoDownload
+  ) {
     syncDownload(true);
   }
 });

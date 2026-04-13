@@ -11,8 +11,33 @@ const TODAY = (() => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 })();
 
+let isSyncing = false;
+let syncTimeout = null;
+
+function autoSyncUpload() {
+  if (state.syncConfig && state.syncConfig.id && state.syncConfig.editKey) {
+    if (syncTimeout) clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      const proxyUrl = state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
+      const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
+      fetch(`${baseUrl}/api/json/${state.syncConfig.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Edit-Key": state.syncConfig.editKey,
+        },
+        body: JSON.stringify({
+          foods: state.foods,
+          records: state.records,
+        }),
+      }).catch(e => console.error("Auto sync failed", e));
+    }, 1500); // 1.5s debounce
+  }
+}
+
 function saveState() {
   localStorage.setItem("foods_tool_v1", JSON.stringify(state));
+  if (!isSyncing) autoSyncUpload();
 }
 function loadState() {
   const raw = localStorage.getItem("foods_tool_v1");
@@ -24,7 +49,7 @@ function loadState() {
   if (!state.foods) state.foods = [];
   if (!state.records) state.records = [];
   if (!state.syncConfig)
-    state.syncConfig = { id: "", editKey: "", proxyUrl: "" };
+    state.syncConfig = { id: "", editKey: "", proxyUrl: "", autoDownload: false };
   if (!state.currentMonth) {
     const d = new Date();
     state.currentMonth = { year: d.getFullYear(), month: d.getMonth() };
@@ -37,6 +62,14 @@ function loadState() {
     document.getElementById("syncProxyUrl").value =
       state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
   }
+  if (document.getElementById("syncAutoDL")) {
+    document.getElementById("syncAutoDL").checked = !!state.syncConfig.autoDownload;
+  }
+}
+
+function toggleAutoSyncDL(checked) {
+  state.syncConfig.autoDownload = checked;
+  saveState();
 }
 
 function closeModal(id) {
@@ -147,12 +180,17 @@ function openFoodPickerModal() {
 }
 function renderFoodPickerList() {
   const el = document.getElementById("foodPickerList");
-  if (state.foods.length === 0) {
+  const availableFoods = state.foods.filter((f) => {
+    const rem = f.remaining ?? f.quantity;
+    return rem > 0 || pickerSelectedIds.has(f.id);
+  });
+
+  if (availableFoods.length === 0) {
     el.innerHTML =
-      '<div class="empty-state"><div class="empty-icon">📦</div><p>食品が登録されていません。<br>まず「食品管理」タブで食品を追加してください。</p></div>';
+      '<div class="empty-state"><div class="empty-icon">📦</div><p>使用可能な食品がありません。<br>まず「食品管理」タブで食品を追加してください。</p></div>';
     return;
   }
-  el.innerHTML = state.foods
+  el.innerHTML = availableFoods
     .map((f) => {
       const sel = pickerSelectedIds.has(f.id);
       return `<div class="food-item" style="cursor:pointer; ${sel ? "background:#f0fdf4; border-color:var(--color-primary);" : ""}"
@@ -210,16 +248,8 @@ function renderSelectedIngredients() {
       const food = state.foods.find((f) => f.id === ing.foodId);
       if (!food) return "";
       const cost = calcIngredientCost(food, ing);
-      let ratio = 0;
-      if (ing.usageType === "fraction") {
-        const n = ing.usageNumer ?? 1;
-        const d = ing.usageDenom ?? 1;
-        ratio = d > 0 ? n / d : 0;
-      } else {
-        ratio = (ing.usage || 0) / 100;
-      }
-      const rem = food.remaining ?? food.quantity;
-      const afterRem = Math.max(0, rem - food.quantity * ratio);
+      const usageAmount = getUsageAmount(food, ing);
+      const afterRem = Math.max(0, rem - usageAmount);
       return `<div class="ingredient-row">
             <div>
               <div class="ing-name">${esc(food.name)}</div>
@@ -234,11 +264,13 @@ function renderSelectedIngredients() {
                     <span class="fraction-sep">/</span>
                     <input type="number" value="${ing.usageDenom ?? 2}" min="1" onchange="updateIngUsage(${idx},'denom',this.value)" style="width:42px;padding:3px 5px;font-size:0.78rem;" />
                   </div>`
-                  : `<input type="number" value="${ing.usage}" min="0" onchange="updateIngUsage(${idx},'percent',this.value)" style="width:54px;padding:3px 5px;font-size:0.78rem;" />`
+                  : `<input class="usage-input" type="number" value="${ing.usage}" min="0" step="0.1" onchange="updateIngUsage(${idx},'value',this.value)" style="width:54px;padding:3px 5px;font-size:0.78rem;" />`
               }
               <select onchange="updateIngUsageType(${idx},this.value)" style="padding:3px 5px;font-size:0.75rem;width:auto;">
-                <option value="percent" ${ing.usageType === "percent" ? "selected" : ""}>%</option>
-                <option value="fraction" ${ing.usageType === "fraction" ? "selected" : ""}>分数</option>
+                <option value="amount" ${ing.usageType === "amount" ? "selected" : ""}>単位量(${esc(food.unit)})</option>
+                <option value="percent" ${(!ing.usageType || ing.usageType === "percent") ? "selected" : ""}>残りの割合(%)</option>
+                <option value="fraction" ${ing.usageType === "fraction" ? "selected" : ""}>残りの割合(分数)</option>
+                <option value="decimal" ${ing.usageType === "decimal" ? "selected" : ""}>残りの割合(小数)</option>
               </select>
             </div>
             <div class="computed-cost">¥${cost}</div>
@@ -248,7 +280,7 @@ function renderSelectedIngredients() {
     .join("");
 }
 function updateIngUsage(idx, key, val) {
-  if (key === "percent") {
+  if (key === "value" || key === "percent") {
     selectedIngredients[idx].usage = parseFloat(val) || 0;
   } else if (key === "numer") {
     selectedIngredients[idx].usageNumer = parseInt(val) || 1;
@@ -265,6 +297,13 @@ function updateIngUsageType(idx, type) {
       selectedIngredients[idx].usageNumer = 1;
     if (!selectedIngredients[idx].usageDenom)
       selectedIngredients[idx].usageDenom = 2;
+  } else if (type === "percent") {
+    selectedIngredients[idx].usage = 100;
+  } else if (type === "decimal") {
+    selectedIngredients[idx].usage = 0.5;
+  } else if (type === "amount") {
+    const food = state.foods.find((f) => f.id === selectedIngredients[idx].foodId);
+    selectedIngredients[idx].usage = food ? (food.remaining ?? food.quantity) : 0;
   }
   renderSelectedIngredients();
   recalcCookingTotal();
@@ -275,16 +314,26 @@ function removeIngredient(idx) {
   recalcCookingTotal();
 }
 
-function calcIngredientCost(food, ing) {
-  let ratio = 0;
+function getUsageAmount(food, ing) {
+  const rem = food.remaining ?? food.quantity;
   if (ing.usageType === "fraction") {
     const n = ing.usageNumer ?? 1;
     const d = ing.usageDenom ?? 1;
-    ratio = d > 0 ? n / d : 0;
+    return rem * (d > 0 ? n / d : 0);
+  } else if (ing.usageType === "decimal") {
+    return rem * (parseFloat(ing.usage) || 0);
+  } else if (ing.usageType === "amount") {
+    return parseFloat(ing.usage) || 0;
   } else {
-    ratio = (ing.usage || 0) / 100;
+    // percent
+    return rem * ((parseFloat(ing.usage) || 0) / 100);
   }
-  return Math.round(food.price * ratio);
+}
+
+function calcIngredientCost(food, ing) {
+  const usageAmount = getUsageAmount(food, ing);
+  const costRatio = food.quantity > 0 ? usageAmount / food.quantity : 0;
+  return Math.round(food.price * costRatio);
 }
 
 function recalcCookingTotal() {
@@ -410,14 +459,9 @@ function submitRecord() {
     selectedIngredients.forEach((ing) => {
       const food = state.foods.find((f) => f.id === ing.foodId);
       if (!food) return;
-      let ratio =
-        ing.usageType === "fraction"
-          ? (ing.usageNumer ?? 1) / (ing.usageDenom ?? 1)
-          : (ing.usage || 0) / 100;
-      food.remaining = Math.max(
-        0,
-        (food.remaining ?? food.quantity) - food.quantity * ratio,
-      );
+      
+      const usageAmount = getUsageAmount(food, ing);
+      food.remaining = Math.max(0, (food.remaining ?? food.quantity) - usageAmount);
     });
   } else {
     // Eating Out
@@ -905,22 +949,23 @@ async function syncUpload() {
   }
 }
 
-async function syncDownload() {
-  const id = document.getElementById("syncDataId").value.trim();
-  const proxyUrl = document
-    .getElementById("syncProxyUrl")
-    .value.trim()
-    .replace(/\/$/, "");
+async function syncDownload(silent = false) {
+  const id = state.syncConfig.id || document.getElementById("syncDataId").value.trim();
+  const proxyUrl = state.syncConfig.proxyUrl || document.getElementById("syncProxyUrl").value.trim().replace(/\/$/, "");
   const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
   const statusEl = document.getElementById("syncStatus");
   if (!id) {
-    statusEl.textContent = "Data IDを入力してください";
-    statusEl.style.color = "var(--color-danger)";
+    if (!silent) {
+        statusEl.textContent = "Data IDを入力してください";
+        statusEl.style.color = "var(--color-danger)";
+    }
     return;
   }
 
-  statusEl.textContent = "ダウンロード中...";
-  statusEl.style.color = "var(--color-primary)";
+  if (!silent) {
+      statusEl.textContent = "ダウンロード中...";
+      statusEl.style.color = "var(--color-primary)";
+  }
 
   try {
     // キャッシュを防ぐためにタイムスタンプを付与
@@ -929,21 +974,27 @@ async function syncDownload() {
     const data = (await res.json()).content;
 
     if (data.foods && data.records) {
+      isSyncing = true;
       state.foods = data.foods;
       state.records = data.records;
       saveState();
+      isSyncing = false;
       renderAll();
-      statusEl.textContent =
-        "ダウンロードしてデータを復元しました！ (" +
-        new Date().toLocaleTimeString() +
-        ")";
+      if (!silent) {
+          statusEl.textContent =
+            "ダウンロードしてデータを復元しました！ (" +
+            new Date().toLocaleTimeString() +
+            ")";
+      }
     } else {
       throw new Error("データ形式が不正です");
     }
   } catch (err) {
     console.error(err);
-    statusEl.textContent = "エラー: " + err.message;
-    statusEl.style.color = "var(--color-danger)";
+    if (!silent) {
+        statusEl.textContent = "エラー: " + err.message;
+        statusEl.style.color = "var(--color-danger)";
+    }
   }
 }
 
@@ -976,4 +1027,8 @@ window.addEventListener("load", () => {
   if (newFoodDateEl) newFoodDateEl.value = TODAY;
   addEatingOutItem();
   renderAll();
+
+  if (state.syncConfig && state.syncConfig.id && state.syncConfig.autoDownload) {
+    syncDownload(true);
+  }
 });

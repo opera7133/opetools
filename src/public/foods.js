@@ -18,10 +18,7 @@ function autoSyncUpload() {
   if (state.syncConfig && state.syncConfig.id && state.syncConfig.editKey) {
     if (syncTimeout) clearTimeout(syncTimeout);
     syncTimeout = setTimeout(() => {
-      const proxyUrl =
-        state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
-      const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
-      fetch(`${baseUrl}/api/json/${state.syncConfig.id}`, {
+      fetch(getSyncEndpoint(state.syncConfig.id), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -55,18 +52,24 @@ function loadState() {
       editKey: "",
       proxyUrl: "",
       autoDownload: false,
+      serverVersion: "v2"
     };
   if (!state.currentMonth) {
     const d = new Date();
     state.currentMonth = { year: d.getFullYear(), month: d.getMonth() };
   }
 
-  if (document.getElementById("syncDataId")) {
-    document.getElementById("syncDataId").value = state.syncConfig.id || "";
-    document.getElementById("syncEditKey").value =
-      state.syncConfig.editKey || "";
+  if (document.getElementById("syncToken")) {
+    const s = state.syncConfig;
+    if (s.id && s.editKey) document.getElementById("syncToken").value = `${s.id}:${s.editKey}`;
+    else document.getElementById("syncToken").value = "";
+    
     document.getElementById("syncProxyUrl").value =
       state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
+      
+    const sVer = s.serverVersion || "v2";
+    const rads = document.getElementsByName("syncServer");
+    rads.forEach(r => r.checked = (r.value === sVer));
   }
   if (document.getElementById("syncAutoDL")) {
     document.getElementById("syncAutoDL").checked =
@@ -180,8 +183,14 @@ function selectMealType(mt, btn) {
 
 // ========== Food Picker Modal ==========
 let pickerSelectedIds = new Set();
-function openFoodPickerModal() {
-  pickerSelectedIds = new Set(selectedIngredients.map((i) => i.foodId));
+let isPickerForEdit = false;
+let editModalIngredients = [];
+let editingRecordId = null;
+
+function openFoodPickerModal(forEdit = false) {
+  isPickerForEdit = forEdit;
+  const targetList = forEdit ? editModalIngredients : selectedIngredients;
+  pickerSelectedIds = new Set(targetList.map((i) => i.foodId));
   renderFoodPickerList();
   document.getElementById("foodPickerModal").classList.add("open");
 }
@@ -225,9 +234,10 @@ function togglePickerFood(id, el) {
   }
 }
 function confirmFoodPicker() {
+  const targetList = isPickerForEdit ? editModalIngredients : selectedIngredients;
   pickerSelectedIds.forEach((id) => {
-    if (!selectedIngredients.find((i) => i.foodId === id)) {
-      selectedIngredients.push({
+    if (!targetList.find((i) => i.foodId === id)) {
+      targetList.push({
         foodId: id,
         usage: 100,
         usageType: "percent",
@@ -235,12 +245,20 @@ function confirmFoodPicker() {
     }
   });
   // Remove deselected
-  selectedIngredients = selectedIngredients.filter((i) =>
-    pickerSelectedIds.has(i.foodId),
-  );
+  const newTargetList = targetList.filter((i) => pickerSelectedIds.has(i.foodId));
+  
+  if (isPickerForEdit) editModalIngredients = newTargetList;
+  else selectedIngredients = newTargetList;
+
   closeModal("foodPickerModal");
-  renderSelectedIngredients();
-  recalcCookingTotal();
+  
+  if (isPickerForEdit) {
+    renderEditSelectedIngredients();
+    recalcEditRecordTotal();
+  } else {
+    renderSelectedIngredients();
+    recalcCookingTotal();
+  }
 }
 
 function renderSelectedIngredients() {
@@ -356,6 +374,67 @@ function recalcCookingTotal() {
   });
   document.getElementById("cookingTotal").textContent = `¥${total}`;
 }
+
+function renderEditSelectedIngredients() {
+  const el = document.getElementById("editSelectedIngredients");
+  if (editModalIngredients.length === 0) {
+    el.innerHTML = '<div class="empty-state" style="padding:16px;"><p>食品がありません</p></div>';
+    return;
+  }
+  el.innerHTML = editModalIngredients.map((ing, idx) => {
+    const food = state.foods.find(f => f.id === ing.foodId);
+    if(!food) return "";
+    const cost = calcIngredientCost(food, ing);
+    const usageAmount = getUsageAmount(food, ing);
+    return `<div class="ingredient-row" style="margin-bottom:8px; border:1px solid #e5e7eb; padding:8px; display:flex; flex-direction:column; gap:4px;">
+      <div style="font-weight:bold;">${esc(food.name)} <span style="font-weight:normal; font-size:0.8rem;">(¥${food.price}/${food.quantity}${esc(food.unit)})</span></div>
+      <div class="ing-usage" style="display:flex; gap:8px; align-items:center;">
+        ${
+          ing.usageType === "fraction"
+            ? `<div class="fraction-input"><input type="number" value="${ing.usageNumer??1}" onchange="updateEditIngUsage(${idx},'numer',this.value)" style="width:42px;padding:3px;"/><span class="fraction-sep">/</span><input type="number" value="${ing.usageDenom??2}" onchange="updateEditIngUsage(${idx},'denom',this.value)" style="width:42px;padding:3px;"/></div>`
+            : `<input class="usage-input" type="number" value="${ing.usage}" min="0" step="0.1" onchange="updateEditIngUsage(${idx},'value',this.value)" style="width:60px;padding:3px;"/>`
+        }
+        <select onchange="updateEditIngUsageType(${idx},this.value)" style="padding:3px;">
+            <option value="amount" ${ing.usageType === "amount" ? "selected" : ""}>単位量(${esc(food.unit)})</option>
+            <option value="percent" ${!ing.usageType || ing.usageType === "percent" ? "selected" : ""}>全体の割合(%)</option>
+            <option value="fraction" ${ing.usageType === "fraction" ? "selected" : ""}>全体の割合(分数)</option>
+            <option value="decimal" ${ing.usageType === "decimal" ? "selected" : ""}>全体の割合(小数)</option>
+        </select>
+        <span style="margin-left:auto; font-weight:bold;">¥${cost}</span>
+        <button class="btn-icon danger" onclick="removeEditIngredient(${idx})">✕</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function updateEditIngUsage(idx, key, val) {
+  if (key === "value" || key === "percent") editModalIngredients[idx].usage = parseFloat(val) || 0;
+  else if (key === "numer") editModalIngredients[idx].usageNumer = parseInt(val) || 1;
+  else if (key === "denom") editModalIngredients[idx].usageDenom = parseInt(val) || 1;
+  renderEditSelectedIngredients();
+  recalcEditRecordTotal();
+}
+function updateEditIngUsageType(idx, type) {
+  editModalIngredients[idx].usageType = type;
+  if(type === "percent") editModalIngredients[idx].usage = 100;
+  else if (type === "decimal") editModalIngredients[idx].usage = 0.5;
+  renderEditSelectedIngredients();
+  recalcEditRecordTotal();
+}
+function removeEditIngredient(idx) {
+  editModalIngredients.splice(idx, 1);
+  renderEditSelectedIngredients();
+  recalcEditRecordTotal();
+}
+function recalcEditRecordTotal() {
+  let total = 0;
+  editModalIngredients.forEach(ing => {
+    const food = state.foods.find(f => f.id === ing.foodId);
+    if(food) total += calcIngredientCost(food, ing);
+  });
+  document.getElementById("editRecordTotalLabel").textContent = `¥${total}`;
+}
+
 
 // ========== Eating out Items ==========
 function addEatingOutItem() {
@@ -748,7 +827,7 @@ function deleteRecord(id) {
   renderAll();
 }
 
-let editingRecordId = null;
+
 function openRecordEditModal(id) {
   const r = state.records.find((x) => x.id === id);
   if (!r) return;
@@ -756,22 +835,61 @@ function openRecordEditModal(id) {
   document.getElementById("editRecordDate").value = r.date;
   document.getElementById("editRecordTime").value = r.mealTime;
   document.getElementById("editRecordCost").value = r.totalCost || 0;
-  document.getElementById("editRecordNote").value =
-    r.type === "cooking" || r.type === "prepmake"
-      ? r.memo || ""
-      : r.restaurantName || "";
+  
+  const ingArea = document.getElementById("editRecordIngredientsArea");
+  if (r.type === "cooking" || r.type === "prepmake") {
+    document.getElementById("editRecordNote").value = r.memo || "";
+    ingArea.style.display = "";
+    editModalIngredients = JSON.parse(JSON.stringify(r.ingredients || []));
+    renderEditSelectedIngredients();
+    recalcEditRecordTotal();
+  } else {
+    document.getElementById("editRecordNote").value = r.restaurantName || "";
+    ingArea.style.display = "none";
+    editModalIngredients = [];
+  }
   document.getElementById("recordEditModal").classList.add("open");
 }
+
 function saveRecordEdit() {
   const r = state.records.find((x) => x.id === editingRecordId);
   if (!r) return;
   r.date = document.getElementById("editRecordDate").value;
   r.mealTime = document.getElementById("editRecordTime").value;
-  r.totalCost = parseInt(document.getElementById("editRecordCost").value) || 0;
 
   if (r.type === "cooking" || r.type === "prepmake") {
     r.memo = document.getElementById("editRecordNote").value.trim();
+    
+    // Reverse old ingredients stock
+    if (r.ingredients) {
+      r.ingredients.forEach(oldIng => {
+        const food = state.foods.find(f => f.id === oldIng.foodId);
+        if (food) {
+          food.remaining = (food.remaining ?? food.quantity) + getUsageAmount(food, oldIng);
+        }
+      });
+    }
+    
+    // Apply new ingredients
+    let newTotalCost = 0;
+    const newIngredients = editModalIngredients.map(ing => {
+       const food = state.foods.find(f => f.id === ing.foodId);
+       let cost = 0;
+       if (food) {
+           cost = calcIngredientCost(food, ing);
+           food.remaining = Math.max(0, (food.remaining ?? food.quantity) - getUsageAmount(food, ing));
+       }
+       return { ...ing, cost };
+    });
+    
+    r.ingredients = newIngredients;
+    newTotalCost = newIngredients.reduce((s, i) => s + i.cost, 0);
+    
+    r.totalCost = (r.type === "prepmake") ? 0 : newTotalCost; 
+    // ※ prepmake cost is theoretically 0 in record, but if we updated the prep item food price, it could get complicated.
+    // For now, we keep it simple.
   } else {
+    r.totalCost = parseInt(document.getElementById("editRecordCost").value) || 0;
     r.restaurantName = document.getElementById("editRecordNote").value.trim();
   }
 
@@ -878,48 +996,82 @@ function renderCharts() {
 }
 
 // ========== Cloud Sync ==========
-function copySyncCredentials() {
-  const id = document.getElementById("syncDataId").value.trim();
-  const key = document.getElementById("syncEditKey").value.trim();
-  if (!id || !key) {
-    alert("Data ID と Edit Key を入力・同期してください");
+
+function toggleSyncServer() {} 
+
+function parseSyncToken(token) {
+    let id = "", key = "";
+    if (!token) return {id, key};
+    if (token.startsWith("{")) {
+        try {
+            const parsed = JSON.parse(token);
+            id = parsed.id || "";
+            key = parsed.editKey || parsed.key || "";
+        } catch(e){}
+    } else if (token.includes(":")) {
+        const parts = token.split(":");
+        id = parts[0];
+        key = parts.slice(1).join(":");
+    } else if (token.includes("_")) {
+        const parts = token.split("_");
+        id = parts[0];
+        key = parts.slice(1).join("_");
+    }
+    return {id, key};
+}
+
+function copySyncToken() {
+  const token = document.getElementById("syncToken").value.trim();
+  if (!token) {
+    alert("トークンを入力・同期してください");
     return;
   }
-  const text = JSON.stringify({ id, key });
   if (navigator.clipboard) {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        alert("コピーしました：\n" + text);
-      })
-      .catch((e) => {
-        prompt("以下のテキストをコピーしてください", text);
-      });
+    navigator.clipboard.writeText(token).then(() => {
+        alert("コピーしました：\n" + token);
+    }).catch((e) => prompt("以下のテキストをコピーしてください", token));
   } else {
-    prompt("以下のテキストをコピーしてください", text);
+    prompt("以下のテキストをコピーしてください", token);
   }
 }
 
 function saveSyncConfig() {
+  const token = document.getElementById("syncToken").value.trim();
+  const {id, key} = parseSyncToken(token);
+  
+  let serverVersion = "v2";
+  const rads = document.getElementsByName("syncServer");
+  rads.forEach(r => { if(r.checked) serverVersion = r.value; });
+
   state.syncConfig = {
-    id: document.getElementById("syncDataId").value.trim(),
-    editKey: document.getElementById("syncEditKey").value.trim(),
+    id: id || token, // if not parseable cleanly, just store
+    editKey: key,
     proxyUrl: document.getElementById("syncProxyUrl").value.trim(),
+    serverVersion
   };
   saveState();
+  
   const statusEl = document.getElementById("syncStatus");
   statusEl.textContent = "設定を保存しました。";
   statusEl.style.color = "var(--color-primary)";
 }
 
+function getSyncEndpoint(idStr = null) {
+  const proxyUrl = state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
+  const serverVersion = state.syncConfig.serverVersion || "v2";
+  const baseUrl = proxyUrl ? proxyUrl.replace(/\/$/, "") : "https://jsonhosting.com";
+  
+  const path = serverVersion === "v2" ? "/api/v2/data" : "/api/json";
+  if (idStr) return `${baseUrl}${path}/${idStr}`;
+  return `${baseUrl}${path}`;
+}
+
+
 async function syncUpload() {
-  const idInput = document.getElementById("syncDataId");
-  const keyInput = document.getElementById("syncEditKey");
+  const tokenInput = document.getElementById("syncToken");
   const proxyInput = document.getElementById("syncProxyUrl");
-  const id = idInput.value.trim();
-  const editKey = keyInput.value.trim();
-  const proxyUrl = proxyInput.value.trim().replace(/\/$/, "");
-  const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
+  const tokenStr = tokenInput.value.trim();
+  const {id, key: editKey} = parseSyncToken(tokenStr);
   const statusEl = document.getElementById("syncStatus");
 
   statusEl.textContent = "アップロード中...";
@@ -932,7 +1084,7 @@ async function syncUpload() {
     });
 
     if (id && editKey) {
-      const res = await fetch(`${baseUrl}/api/json/${id}`, {
+      const res = await fetch(getSyncEndpoint(id), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -944,16 +1096,20 @@ async function syncUpload() {
       statusEl.textContent =
         "アップロード完了！ (" + new Date().toLocaleTimeString() + ")";
     } else {
-      const res = await fetch(`${baseUrl}/api/json`, {
+      const res = await fetch(getSyncEndpoint(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: payload,
       });
       if (!res.ok) throw new Error("新規作成失敗");
       const data = await res.json();
-      idInput.value = data.id;
-      keyInput.value = data.editKey;
-      state.syncConfig = { id: data.id, editKey: data.editKey };
+      tokenInput.value = `${data.id}:${data.editKey}`;
+      
+      let serverVersion = "v2";
+      const rads = document.getElementsByName("syncServer");
+      rads.forEach(r => { if(r.checked) serverVersion = r.value; });
+      state.syncConfig = { id: data.id, editKey: data.editKey, proxyUrl: proxyInput.value.trim(), serverVersion };
+
       saveState();
       statusEl.textContent = "新規作成してアップロードしました！";
     }
@@ -965,12 +1121,11 @@ async function syncUpload() {
 }
 
 async function syncDownload(silent = false) {
-  const id =
-    state.syncConfig.id || document.getElementById("syncDataId").value.trim();
-  const proxyUrl =
-    state.syncConfig.proxyUrl ||
-    document.getElementById("syncProxyUrl").value.trim().replace(/\/$/, "");
-  const baseUrl = proxyUrl ? proxyUrl : "https://jsonhosting.com";
+  let id = state.syncConfig.id;
+  if (!id) {
+     const t = parseSyncToken(document.getElementById("syncToken").value.trim());
+     id = t.id;
+  }
   const statusEl = document.getElementById("syncStatus");
   if (!id) {
     if (!silent) {
@@ -987,7 +1142,7 @@ async function syncDownload(silent = false) {
 
   try {
     // キャッシュを防ぐためにタイムスタンプを付与
-    const res = await fetch(`${baseUrl}/api/json/${id}?t=${Date.now()}`);
+    const res = await fetch(getSyncEndpoint(id)+`?t=${Date.now()}`);
     if (!res.ok) throw new Error("ダウンロード失敗");
     const data = (await res.json()).content;
 

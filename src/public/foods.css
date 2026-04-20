@@ -138,7 +138,7 @@
           box-shadow 0.15s;
         outline: none;
       }
-      input:focus:not([type="checkbox"]),
+      input:focus:not([type="checkbox"]):not([type="radio"]),
       select:focus,
       textarea:focus {
         border-color: var(--color-primary);

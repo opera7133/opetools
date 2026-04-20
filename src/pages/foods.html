@@ -431,7 +431,7 @@
       <div class="tab-panel" id="panel-settings">
         <div class="card">
           <div class="card-header">
-            <span class="card-title">☁️ クラウド同期 (JSONHosting)</span>
+            <span class="card-title">☁️ クラウド同期</span>
           </div>
           <p
             style="
@@ -441,37 +441,29 @@
               line-height: 1.5;
             "
           >
-            別の端末とデータを同期できます。データは
-            <a
-              href="https://jsonhosting.com"
-              target="_blank"
-              class="text-blue-500 hover:underline"
-              >jsonhosting.com</a
-            >
-            に保存されます。
+            別の端末とデータを同期できます。データはクラウドに保存されます。
           </p>
           <div class="form-group">
-            <label>Data ID</label>
-            <input
-              type="text"
-              id="syncDataId"
-              placeholder="未設定（新規作成で自動で入ります）"
-            />
+            <label>同期サーバー</label>
+            <div style="display:flex;gap:12px;">
+              <label><input type="radio" name="syncServer" value="v1" onclick="toggleSyncServer()" /> 旧 (jsonhosting.com)</label>
+              <label><input type="radio" name="syncServer" value="v2" onclick="toggleSyncServer()" checked /> 新 (専用サーバー / D1)</label>
+            </div>
           </div>
           <div class="form-group">
-            <label>Edit Key</label>
+            <label>同期トークン (Sync Token)</label>
             <input
               type="text"
-              id="syncEditKey"
-              placeholder="パスワード代わりになるキーです"
+              id="syncToken"
+              placeholder="例: id:editKey (旧形式のJSONも可)"
             />
           </div>
           <div style="margin-bottom: 14px">
             <button
               class="btn btn-secondary btn-sm"
-              onclick="copySyncCredentials()"
+              onclick="copySyncToken()"
             >
-              📋 IDとKeyをコピー
+              📋 トークンをコピー
             </button>
           </div>
           <div class="form-group">
@@ -604,7 +596,19 @@
           <label>タイトル / メモ</label>
           <input type="text" id="editRecordNote" />
         </div>
-        <div class="modal-actions">
+        <div id="editRecordIngredientsArea" style="display:none; margin-top:16px;">
+          <hr />
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <span class="section-title" style="margin:0;">使用した材料</span>
+            <button class="btn btn-secondary btn-sm" onclick="openFoodPickerModal(true)">＋ 食品を追加</button>
+          </div>
+          <div id="editSelectedIngredients"></div>
+          <div style="display:flex; justify-content:space-between; margin-top:10px;">
+            <span style="font-size:0.85rem;color:var(--color-text-muted);">合計コスト</span>
+            <span id="editRecordTotalLabel" style="font-weight:bold;color:var(--color-primary);">¥0</span>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:16px;">
           <button
             class="btn btn-secondary"
             onclick="closeModal('recordEditModal')"

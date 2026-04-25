@@ -33,6 +33,36 @@ function autoSyncUpload() {
   }
 }
 
+function migrateRecords() {
+  state.records.forEach(r => {
+    if (r.ingredients) {
+      r.ingredients.forEach(ing => {
+        if (ing.usageType !== 'amount') {
+          const food = state.foods.find(f => f.id === ing.foodId);
+          if (food) {
+            if (food.price > 0 && ing.cost !== undefined) {
+              let est = (ing.cost / food.price) * food.quantity;
+              ing.usage = Math.round(est * 10) / 10;
+            } else {
+              const rem = food.remaining ?? food.quantity;
+              if (ing.usageType === "fraction") {
+                const n = ing.usageNumer ?? 1;
+                const d = ing.usageDenom ?? 1;
+                ing.usage = rem * (d > 0 ? n / d : 0);
+              } else if (ing.usageType === "decimal") {
+                ing.usage = rem * (parseFloat(ing.usage) || 0);
+              } else {
+                ing.usage = rem * ((parseFloat(ing.usage) || 0) / 100);
+              }
+            }
+            ing.usageType = 'amount';
+          }
+        }
+      });
+    }
+  });
+}
+
 function saveState() {
   localStorage.setItem("foods_tool_v1", JSON.stringify(state));
   if (!isSyncing) autoSyncUpload();
@@ -46,6 +76,7 @@ function loadState() {
   }
   if (!state.foods) state.foods = [];
   if (!state.records) state.records = [];
+  migrateRecords();
   if (!state.syncConfig)
     state.syncConfig = {
       id: "",
@@ -511,13 +542,12 @@ function submitRecord() {
 
     const ingredients = selectedIngredients.map((ing) => {
       const food = state.foods.find((f) => f.id === ing.foodId);
+      const usageAmount = getUsageAmount(food, ing);
       const cost = calcIngredientCost(food, ing);
       return {
         foodId: ing.foodId,
-        usage: ing.usage,
-        usageType: ing.usageType,
-        usageNumer: ing.usageNumer,
-        usageDenom: ing.usageDenom,
+        usage: usageAmount,
+        usageType: "amount",
         cost,
       };
     });
@@ -529,11 +559,10 @@ function submitRecord() {
       record.totalCost = 0; // 作り置き作成時は0円として記録
 
       // foodsに作り置きアイテムを追加
-      const prepPrice = Math.round(totalCost / prepServings);
       state.foods.push({
         id: genId(),
         name: `【作り置き】${prepName}`,
-        price: prepPrice,
+        price: totalCost,
         quantity: prepServings,
         unit: "食",
         remaining: prepServings,
@@ -860,31 +889,44 @@ function saveRecordEdit() {
   if (r.type === "cooking" || r.type === "prepmake") {
     r.memo = document.getElementById("editRecordNote").value.trim();
     
+    // Resolve new ingredients first
+    const resolvedNewIngredients = editModalIngredients.map(ing => {
+       const food = state.foods.find(f => f.id === ing.foodId);
+       let usageAmount = 0;
+       let cost = 0;
+       if (food) {
+           usageAmount = getUsageAmount(food, ing);
+           cost = calcIngredientCost(food, ing);
+       }
+       return {
+           foodId: ing.foodId,
+           usage: usageAmount,
+           usageType: "amount",
+           cost
+       };
+    });
+    
     // Reverse old ingredients stock
     if (r.ingredients) {
       r.ingredients.forEach(oldIng => {
         const food = state.foods.find(f => f.id === oldIng.foodId);
         if (food) {
-          food.remaining = (food.remaining ?? food.quantity) + getUsageAmount(food, oldIng);
+          food.remaining = (food.remaining ?? food.quantity) + (oldIng.usage || 0);
         }
       });
     }
     
     // Apply new ingredients
     let newTotalCost = 0;
-    const newIngredients = editModalIngredients.map(ing => {
+    resolvedNewIngredients.forEach(ing => {
        const food = state.foods.find(f => f.id === ing.foodId);
-       let cost = 0;
        if (food) {
-           cost = calcIngredientCost(food, ing);
-           food.remaining = Math.max(0, (food.remaining ?? food.quantity) - getUsageAmount(food, ing));
+           food.remaining = Math.max(0, (food.remaining ?? food.quantity) - ing.usage);
        }
-       return { ...ing, cost };
+       newTotalCost += ing.cost;
     });
     
-    r.ingredients = newIngredients;
-    newTotalCost = newIngredients.reduce((s, i) => s + i.cost, 0);
-    
+    r.ingredients = resolvedNewIngredients;
     r.totalCost = (r.type === "prepmake") ? 0 : newTotalCost; 
     // ※ prepmake cost is theoretically 0 in record, but if we updated the prep item food price, it could get complicated.
     // For now, we keep it simple.
@@ -1150,6 +1192,7 @@ async function syncDownload(silent = false) {
       isSyncing = true;
       state.foods = data.foods;
       state.records = data.records;
+      migrateRecords();
       saveState();
       isSyncing = false;
       renderAll();

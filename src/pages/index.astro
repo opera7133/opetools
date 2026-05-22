@@ -1,4 +1,9 @@
-<!doctype html>
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import "../styles/global.css";
+---
+
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -10,16 +15,13 @@
     <meta property="og:description" content="Various tools for me to use" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
-    <link rel="stylesheet" href="styles/tailwind.css" />
   </head>
   <body class="bg-gray-100 text-gray-800 leading-relaxed">
-    <!-- START HEADER -->
-    <!-- END HEADER -->
-
+    <Header />
     <main class="max-w-4xl mx-auto py-12 px-8">
       <div class="flex flex-col gap-6">
         <a
-          href="envelope.html"
+          href="/envelope"
           class="border border-gray-300 p-4 no-underline text-gray-800 transition-colors hover:border-gray-800 hover:bg-gray-200 flex flex-row items-center"
         >
           <p class="mr-4 text-4xl text-gray-600">&gt;</p>
@@ -30,7 +32,7 @@
         </a>
 
         <a
-          href="pukiwiki.html"
+          href="/pukiwiki"
           class="border border-gray-300 p-4 no-underline text-gray-800 transition-colors hover:border-gray-800 hover:bg-gray-200 flex flex-row items-center"
         >
           <p class="mr-4 text-4xl text-gray-600">&gt;</p>
@@ -41,7 +43,7 @@
         </a>
 
         <a
-          href="foods.html"
+          href="/foods"
           class="border border-gray-300 p-4 no-underline text-gray-800 transition-colors hover:border-gray-800 hover:bg-gray-200 flex flex-row items-center"
         >
           <p class="mr-4 text-4xl text-gray-600">&gt;</p>
@@ -54,13 +56,26 @@
         </a>
 
         <a
-          href="timer.html"
+          href="/timer"
           class="border border-gray-300 p-4 no-underline text-gray-800 transition-colors hover:border-gray-800 hover:bg-gray-200 flex flex-row items-center"
         >
           <p class="mr-4 text-4xl text-gray-600">&gt;</p>
           <div>
             <h2 class="text-xl font-semibold mb-2">timer</h2>
             <p class="text-sm text-gray-600">プレゼンタイマー</p>
+          </div>
+        </a>
+
+        <a
+          href="/train"
+          class="border border-gray-300 p-4 no-underline text-gray-800 transition-colors hover:border-gray-800 hover:bg-gray-200 flex flex-row items-center"
+        >
+          <p class="mr-4 text-4xl text-gray-600">&gt;</p>
+          <div>
+            <h2 class="text-xl font-semibold mb-2">train</h2>
+            <p class="text-sm text-gray-600">
+              鉄道路線の種別ごとの停車駅を表示するツール
+            </p>
           </div>
         </a>
 
@@ -89,8 +104,6 @@
         </a>
       </div>
     </main>
-
-    <!-- START FOOTER -->
-    <!-- END FOOTER -->
+    <Footer />
   </body>
 </html>

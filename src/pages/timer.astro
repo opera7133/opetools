@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+---
+
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -10,7 +16,6 @@
     <meta property="og:description" content="プレゼンタイマー" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
-    <link rel="stylesheet" href="styles/tailwind.css" />
     <style>
       .timer-display {
         font-size: 4rem;
@@ -293,18 +298,15 @@
     </style>
   </head>
   <body class="bg-gray-100 text-gray-800 m-0 p-0">
-    <!-- START HEADER -->
-    <!-- END HEADER -->
+    <Header />
 
     <!-- フルスクリーン拡大表示モーダル -->
     <div class="fullscreen-modal" id="fullscreenModal">
       <div class="fullscreen-content">
         <div class="fullscreen-timer" id="fullscreenTimer">00:00</div>
         <div class="fullscreen-progress">
-          <div
-            class="fullscreen-progress-fill"
-            id="fullscreenProgressFill"
-          ></div>
+          <div class="fullscreen-progress-fill" id="fullscreenProgressFill">
+          </div>
         </div>
         <div class="fullscreen-status" id="fullscreenStatus">準備完了</div>
         <div class="fullscreen-controls">
@@ -465,10 +467,9 @@
       </div>
     </main>
 
-    <!-- START FOOTER -->
-    <!-- END FOOTER -->
+    <Footer />
 
-    <script>
+    <script is:inline>
       let timerInterval = null;
       let remainingTime = 300; // デフォルト5分
       let totalTime = 300;
@@ -486,7 +487,7 @@
         const minutes = Math.floor(remainingTime / 60);
         const seconds = Math.floor(remainingTime % 60);
         const timeStr = `${String(minutes).padStart(2, "0")}:${String(
-          seconds
+          seconds,
         ).padStart(2, "0")}`;
 
         const timerDisplay = document.getElementById("timerDisplay");
@@ -505,7 +506,7 @@
 
         // フルスクリーンプログレスバーの更新
         const fullscreenProgressFill = document.getElementById(
-          "fullscreenProgressFill"
+          "fullscreenProgressFill",
         );
         if (fullscreenProgressFill) {
           fullscreenProgressFill.style.width = progress + "%";
@@ -552,8 +553,9 @@
       };
 
       const playBellSound = () => {
-        const audioContext = new (window.AudioContext ||
-          window.webkitAudioContext)();
+        const audioContext = new (
+          window.AudioContext || window.webkitAudioContext
+        )();
         const volume = bellVolume / 100;
 
         // ベル音の周波数
@@ -574,7 +576,7 @@
           gainNode.gain.setValueAtTime(volume, currentTime);
           gainNode.gain.exponentialRampToValueAtTime(
             0.01,
-            currentTime + duration
+            currentTime + duration,
           );
 
           oscillator.start(currentTime);

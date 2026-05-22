@@ -1,3 +1,10 @@
+---
+import "../styles/global.css";
+import "../styles/foods.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+---
+
 <!doctype html>
 <html lang="ja">
   <head>
@@ -13,13 +20,9 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
-    <link rel="stylesheet" href="styles/tailwind.css" />
-    <link rel="stylesheet" href="foods.css" />
   </head>
   <body class="bg-gray-100 text-gray-800 m-0 p-0">
-    <!-- START HEADER -->
-    <!-- END HEADER -->
-
+    <Header />
     <main class="max-w-3xl mx-auto py-10 px-4">
       <div class="card" style="margin-bottom: 20px">
         <div
@@ -221,9 +224,9 @@
                   style="border-color: #86efac"
                 />
                 <p style="font-size: 0.75rem; color: #15803d; margin-top: 8px">
-                  ※作った料理は「食品管理」に【作り置き】として自動追加されます。<br />
-                  作成時の食費は 0円
-                  として記録され、次回自炊時に選んで消費すると食べた日の食費として計上されます。
+                  ※作った料理は「食品管理」に【作り置き】として自動追加されます。<br
+                  />
+                  作成時の食費は 0円 として記録され、次回自炊時に選んで消費すると食べた日の食費として計上されます。
                 </p>
               </div>
             </div>
@@ -292,8 +295,7 @@
               >
                 <span
                   class="section-title"
-                  style="margin: 0; font-size: 0.85rem"
-                  >注文した商品</span
+                  style="margin: 0; font-size: 0.85rem">注文した商品</span
                 >
                 <button
                   class="btn btn-secondary btn-sm"
@@ -446,8 +448,23 @@
           <div class="form-group">
             <label>同期サーバー</label>
             <div style="display:flex;gap:12px;">
-              <label><input type="radio" name="syncServer" value="v1" onclick="toggleSyncServer()" /> 旧 (jsonhosting.com)</label>
-              <label><input type="radio" name="syncServer" value="v2" onclick="toggleSyncServer()" checked /> 新 (専用サーバー / D1)</label>
+              <label
+                ><input
+                  type="radio"
+                  name="syncServer"
+                  value="v1"
+                  onclick="toggleSyncServer()"
+                /> 旧 (jsonhosting.com)</label
+              >
+              <label
+                ><input
+                  type="radio"
+                  name="syncServer"
+                  value="v2"
+                  onclick="toggleSyncServer()"
+                  checked
+                /> 新 (専用サーバー / D1)</label
+              >
             </div>
           </div>
           <div class="form-group">
@@ -459,10 +476,7 @@
             />
           </div>
           <div style="margin-bottom: 14px">
-            <button
-              class="btn btn-secondary btn-sm"
-              onclick="copySyncToken()"
-            >
+            <button class="btn btn-secondary btn-sm" onclick="copySyncToken()">
               📋 トークンをコピー
             </button>
           </div>
@@ -475,9 +489,18 @@
               value="https://tools.ainznino.workers.dev"
             />
           </div>
-          <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="syncAutoDL" onchange="toggleAutoSyncDL(this.checked)" />
-            <label for="syncAutoDL" style="margin:0;">起動時に自動ダウンロード（同期）する</label>
+          <div
+            class="form-group"
+            style="display:flex; align-items:center; gap:8px;"
+          >
+            <input
+              type="checkbox"
+              id="syncAutoDL"
+              onchange="toggleAutoSyncDL(this.checked)"
+            />
+            <label for="syncAutoDL" style="margin:0;"
+              >起動時に自動ダウンロード（同期）する</label
+            >
           </div>
           <div
             style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap"
@@ -495,7 +518,8 @@
           <p
             id="syncStatus"
             style="font-size: 0.85rem; font-weight: bold; margin-top: 12px"
-          ></p>
+          >
+          </p>
         </div>
       </div>
     </main>
@@ -596,16 +620,31 @@
           <label>タイトル / メモ</label>
           <input type="text" id="editRecordNote" />
         </div>
-        <div id="editRecordIngredientsArea" style="display:none; margin-top:16px;">
+        <div
+          id="editRecordIngredientsArea"
+          style="display:none; margin-top:16px;"
+        >
           <hr />
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div
+            style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"
+          >
             <span class="section-title" style="margin:0;">使用した材料</span>
-            <button class="btn btn-secondary btn-sm" onclick="openFoodPickerModal(true)">＋ 食品を追加</button>
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick="openFoodPickerModal(true)">＋ 食品を追加</button
+            >
           </div>
           <div id="editSelectedIngredients"></div>
-          <div style="display:flex; justify-content:space-between; margin-top:10px;">
-            <span style="font-size:0.85rem;color:var(--color-text-muted);">合計コスト</span>
-            <span id="editRecordTotalLabel" style="font-weight:bold;color:var(--color-primary);">¥0</span>
+          <div
+            style="display:flex; justify-content:space-between; margin-top:10px;"
+          >
+            <span style="font-size:0.85rem;color:var(--color-text-muted);"
+              >合計コスト</span
+            >
+            <span
+              id="editRecordTotalLabel"
+              style="font-weight:bold;color:var(--color-primary);">¥0</span
+            >
           </div>
         </div>
         <div class="modal-actions" style="margin-top:16px;">
@@ -622,9 +661,7 @@
       </div>
     </div>
 
-    <!-- START FOOTER -->
-    <!-- END FOOTER -->
-
-    <script src="foods.js"></script>
+    <Footer />
+    <script is:inline src="foods.js"></script>
   </body>
 </html>

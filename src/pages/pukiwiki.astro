@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+---
+
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
@@ -10,11 +16,9 @@
     <meta property="og:description" content="主にpukiwiki関連のツール" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
-    <link rel="stylesheet" href="styles/tailwind.css" />
   </head>
   <body class="bg-gray-100 text-gray-800">
-    <!-- START HEADER -->
-    <!-- END HEADER -->
+    <Header />
 
     <main class="max-w-4xl mx-auto py-12 px-8">
       <h2 class="text-3xl font-bold mb-4">pukiwiki</h2>
@@ -56,7 +60,7 @@
       </div>
     </main>
 
-    <script>
+    <script is:inline>
       function cutSoundCloudId() {
         const code = document.getElementById("sccode");
         const id = new RegExp("tracks/([0-9]+)&color=");
@@ -74,7 +78,6 @@
       }
     </script>
 
-    <!-- START FOOTER -->
-    <!-- END FOOTER -->
+    <Footer />
   </body>
 </html>

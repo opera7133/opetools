@@ -1,4 +1,9 @@
-<!DOCTYPE html>
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+---
+
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -10,12 +15,11 @@
     <meta property="og:description" content="角2封筒の宛名印刷用ツール" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
-    <link rel="stylesheet" href="styles/tailwind.css" />
     <style>
       /* --- 基本リセットとフォント --- */
       body {
-        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "HGP明朝B",
-          serif;
+        font-family:
+          "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "HGP明朝B", serif;
       }
 
       /* --- 縦書き共通設定 --- */
@@ -234,8 +238,8 @@
         font-size: 14pt;
         font-weight: bold;
         text-align: center;
-        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "HGP明朝B",
-          serif;
+        font-family:
+          "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "HGP明朝B", serif;
         white-space: nowrap;
       }
 
@@ -282,8 +286,7 @@
     </style>
   </head>
   <body class="bg-gray-100 text-gray-800 m-0 p-0">
-    <!-- START HEADER -->
-    <!-- END HEADER -->
+    <Header />
     <div class="container">
       <div class="input-panel bg-white p-5 rounded-lg shadow-md w-80 h-fit">
         <h2 class="mt-0 text-lg text-gray-700">宛名入力</h2>
@@ -456,10 +459,9 @@
       </div>
     </div>
 
-    <!-- START FOOTER -->
-    <!-- END FOOTER -->
+    <Footer />
 
-    <script>
+    <script is:inline>
       let deliveryNotices = [];
 
       function addDeliveryNotice() {
@@ -532,7 +534,7 @@
             digitEl.innerText = cleanZip[i] || "";
             digitEl.classList.toggle(
               "with-border",
-              showZipBorder && cleanZip[i]
+              showZipBorder && cleanZip[i],
             );
           }
         }

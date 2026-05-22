@@ -1,5 +1,13 @@
+---
+import { twMerge } from "tailwind-merge";
+const { class: className, ...rest } = Astro.props;
+---
+
 <footer
-  class="border-t border-gray-200 py-8 px-8 text-center text-gray-600 text-sm"
+  class={twMerge(
+    "border-t border-gray-200 py-8 px-8 text-center text-gray-600 text-sm",
+    className,
+  )}
 >
   <p>
     See source code on
@@ -14,8 +22,7 @@
     Licensed under
     <a
       href="https://opensource.org/licenses/MIT"
-      class="text-gray-600 hover:text-gray-800 underline"
-      >MIT License</a
+      class="text-gray-600 hover:text-gray-800 underline">MIT License</a
     >
   </p>
 </footer>

@@ -1,7 +1,7 @@
 import type { LineData } from '../types';
 
-export const tokaidoNagoya: LineData = {
-  id: 'tokaido-nagoya',
+export const jrTokaidoNagoya: LineData = {
+  id: 'jr-tokaido-nagoya',
   name: '東海道線 (名古屋地区)',
   company: 'JR東海',
   stations: [
@@ -49,6 +49,22 @@ export const tokaidoNagoya: LineData = {
     { id: 'maibara', name: '米原', kana: 'まいばら', romaji: 'Maibara', code: 'CA83' },
   ],
   types: [
+    {
+      id: 'ltd-exp-hida',
+      name: '特急ひだ',
+      color: '#EE6D01',
+      stops: {
+        'nagoya': 'terminal',
+        'owari-ichinomiya': {
+          type: 'rare',
+          remark: '一部列車が停車'
+        },
+        'gifu': {
+          type: 'stop',
+          throughTo: { lineId: 'jr-central-takayama', lineName: '高山本線・富山方面' }
+        }
+      }
+    },
     {
       id: 'special-rapid',
       name: '特別快速',

@@ -1,23 +1,41 @@
 ---
 import { meitetsuNagoya } from "../../data/train-master/meitetsu/nagoya";
-import { tokaidoNagoya } from "../../data/train-master/jr-central/tokaido-nagoya";
-import { tokaidoShizuoka } from "../../data/train-master/jr-central/tokaido-shizuoka";
-import { tokaidoAkasaka } from "../../data/train-master/jr-central/tokaido-akasaka";
+import { jrTokaidoNagoya } from "../../data/train-master/jr-central/tokaido-nagoya";
+import { jrTokaidoShizuoka } from "../../data/train-master/jr-central/tokaido-shizuoka";
+import { jrTokaidoAkasaka } from "../../data/train-master/jr-central/tokaido-akasaka";
 import { jrCentralChuo } from "../../data/train-master/jr-central/chuo";
-import { iida } from "../../data/train-master/jr-central/iida";
+import { jrIida } from "../../data/train-master/jr-central/iida";
 import { tokaidoShinkansen } from "../../data/train-master/jr-central/shinkansen";
+import { jrGotemba } from "../../data/train-master/jr-central/gotemba";
+import { jrMinobu } from "../../data/train-master/jr-central/minobu";
+import { jrTaketoyo } from "../../data/train-master/jr-central/taketoyo";
+import { jrCentralTakayama } from "../../data/train-master/jr-central/takayama";
+import { jrTaita } from "../../data/train-master/jr-central/taita";
+import { jrCentralKansai } from "../../data/train-master/jr-central/kansai";
+import { jrCentralKisei } from "../../data/train-master/jr-central/kisei";
+import { jrMeisho } from "../../data/train-master/jr-central/meisho";
+import { jrSangu } from "../../data/train-master/jr-central/sangu";
 import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
 import "../../styles/global.css";
 
 const lines = [
   meitetsuNagoya,
-  tokaidoNagoya,
-  tokaidoShizuoka,
-  tokaidoAkasaka,
+  tokaidoShinkansen,
+  jrTokaidoNagoya,
+  jrTokaidoShizuoka,
+  jrTokaidoAkasaka,
+  jrGotemba,
+  jrMinobu,
+  jrIida,
+  jrTaketoyo,
   jrCentralChuo,
-  iida,
-  tokaidoShinkansen
+  jrCentralTakayama,
+  jrTaita,
+  jrCentralKansai,
+  jrCentralKisei,
+  jrSangu,
+  jrMeisho,
 ];
 
 // Group lines by railway company
@@ -36,7 +54,7 @@ const linesByCompany = lines.reduce((acc, line) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>train || opetools</title>
     <meta name="description" content="登録されている鉄道路線の一覧を表示します。" />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
   <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
     <Header class="bg-gray-100" />

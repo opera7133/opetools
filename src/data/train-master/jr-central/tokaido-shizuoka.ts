@@ -1,7 +1,7 @@
 import type { LineData } from '../types';
 
-export const tokaidoShizuoka: LineData = {
-  id: 'tokaido-shizuoka',
+export const jrTokaidoShizuoka: LineData = {
+  id: 'jr-tokaido-shizuoka',
   name: '東海道線 (静岡地区)',
   company: 'JR東海',
   stations: [
@@ -50,6 +50,19 @@ export const tokaidoShizuoka: LineData = {
     { id: 'toyohashi', name: '豊橋', kana: 'とよはし', romaji: 'Toyohashi', code: 'CA42' },
   ],
   types: [
+    {
+      id: 'ltd-exp-fujikawa',
+      name: '特急ふじかわ',
+      color: '#EE6D01',
+      stops: {
+        'fuji': {
+          type: 'stop',
+          throughTo: { lineId: 'jr-minobu', lineName: '身延線方面' }
+        },
+        'shimizu': 'stop',
+        'shizuoka': 'terminal',
+      }
+    },
     {
       id: 'home-liner',
       name: 'ホームライナー',

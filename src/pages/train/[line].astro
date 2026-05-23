@@ -1,24 +1,42 @@
 ---
 import { meitetsuNagoya } from "../../data/train-master/meitetsu/nagoya";
-import { tokaidoNagoya } from "../../data/train-master/jr-central/tokaido-nagoya";
-import { tokaidoShizuoka } from "../../data/train-master/jr-central/tokaido-shizuoka";
-import { tokaidoAkasaka } from "../../data/train-master/jr-central/tokaido-akasaka";
+import { jrTokaidoNagoya } from "../../data/train-master/jr-central/tokaido-nagoya";
+import { jrTokaidoShizuoka } from "../../data/train-master/jr-central/tokaido-shizuoka";
+import { jrTokaidoAkasaka } from "../../data/train-master/jr-central/tokaido-akasaka";
 import { jrCentralChuo } from "../../data/train-master/jr-central/chuo";
-import { iida } from "../../data/train-master/jr-central/iida";
+import { jrIida } from "../../data/train-master/jr-central/iida";
 import { tokaidoShinkansen } from "../../data/train-master/jr-central/shinkansen";
+import { jrGotemba } from "../../data/train-master/jr-central/gotemba";
+import { jrMinobu } from "../../data/train-master/jr-central/minobu";
+import { jrTaketoyo } from "../../data/train-master/jr-central/taketoyo";
+import { jrCentralTakayama } from "../../data/train-master/jr-central/takayama";
+import { jrTaita } from "../../data/train-master/jr-central/taita";
+import { jrCentralKansai } from "../../data/train-master/jr-central/kansai";
+import { jrCentralKisei } from "../../data/train-master/jr-central/kisei";
+import { jrMeisho } from "../../data/train-master/jr-central/meisho";
+import { jrSangu } from "../../data/train-master/jr-central/sangu";
 import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
 import "../../styles/global.css";
 
 export async function getStaticPaths() {
   const lines = [
+    tokaidoShinkansen,
     meitetsuNagoya,
-    tokaidoNagoya,
-    tokaidoShizuoka,
-    tokaidoAkasaka,
+    jrTokaidoNagoya,
+    jrTokaidoShizuoka,
+    jrTokaidoAkasaka,
     jrCentralChuo,
-    iida,
-    tokaidoShinkansen
+    jrIida,
+    jrGotemba,
+    jrMinobu,
+    jrTaketoyo,
+    jrCentralTakayama,
+    jrTaita,
+    jrCentralKansai,
+    jrCentralKisei,
+    jrMeisho,
+    jrSangu
   ];
   return lines.map((line) => ({
     params: { line: line.id },
@@ -66,7 +84,7 @@ const typeServiceRanges = activeLine.types.map((type) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{activeLine.name} 停車駅案内 || train || opetools</title>
     <meta name="description" content={`${activeLine.name}の列車種別ごとの停車駅案内図です。`} />
-    <link rel="icon" type="image/png" href="../favicon.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
   <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
     <Header class="bg-gray-100" />
@@ -142,13 +160,13 @@ const typeServiceRanges = activeLine.types.map((type) => {
       </div>
 
       <!-- Main Station Grid Table -->
-      <div class="bg-slate-800/30 rounded-2xl border border-slate-700/50 shadow-xl overflow-x-auto">
+      <div class="bg-slate-800/30 rounded-2xl border border-slate-700/50 shadow-xl overflow-auto">
         <div class="min-w-200 p-6">
 
           <!-- Grid Header (Train Type Columns) -->
-          <div class="flex items-end border-b border-slate-700 pb-4 mb-4">
+          <div class="flex items-end border-b border-slate-700 pb-4 mb-4 sticky top-0 bg-[#0f172a] z-20">
             <!-- Left Header: Station Info spacer -->
-            <div class="w-72 pr-4 shrink-0">
+            <div class="w-72 px-4 shrink-0 sticky left-0 z-30 bg-[#0f172a]/50 rounded-r-lg">
               <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">駅名 / ナンバリング</span>
             </div>
 
@@ -179,7 +197,7 @@ const typeServiceRanges = activeLine.types.map((type) => {
               return (
                 <div class="flex items-center group/row hover:bg-slate-800/40 rounded-lg transition-colors duration-150">
                   <!-- 1. Station Info (width: 72 -> 288px) -->
-                  <div class="w-72 flex items-center gap-3 px-2 shrink-0">
+                  <div class="w-72 flex items-center gap-3 px-2 shrink-0 sticky left-0 z-10 bg-[#0f172a]/95 backdrop-blur-xs group-hover/row:bg-slate-800/90 rounded-r-lg transition-colors">
                     {station.code ? (
                       <span class="text-xs font-mono font-bold px-2 py-1 bg-slate-700 text-slate-200 rounded border border-slate-600/50 min-w-12.5 text-center">
                         {station.code}
@@ -192,7 +210,7 @@ const typeServiceRanges = activeLine.types.map((type) => {
                         {station.name}
                       </div>
                       <div class="text-[11px] text-slate-400 font-medium group-hover/row:text-slate-300">
-                        {station.kana} / {station.romaji}
+                        {station.kana}
                       </div>
                     </div>
                   </div>

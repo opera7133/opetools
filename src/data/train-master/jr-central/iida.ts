@@ -1,7 +1,7 @@
 import type { LineData } from '../types';
 
-export const iida: LineData = {
-  id: 'iida',
+export const jrIida: LineData = {
+  id: 'jr-iida',
   name: '飯田線',
   company: 'JR東海',
   stations: [
@@ -122,7 +122,7 @@ export const iida: LineData = {
     {
       id: 'rapid-misuzu',
       name: '快速みすず',
-      color: '#009944', // Green
+      color: '#1E90FF', // Green
       stops: {
         'iida': 'terminal',
         'sakuramachi': {
@@ -182,7 +182,7 @@ export const iida: LineData = {
     {
       id: 'rapid-1',
       name: '快速',
-      color: '#009944', // Green
+      color: '#1E90FF', // Green
       stops: {
         'toyohashi': 'terminal',
         'kozakai': 'stop',
@@ -224,7 +224,7 @@ export const iida: LineData = {
     {
       id: 'rapid-2',
       name: '快速',
-      color: '#009944', // Green
+      color: '#1E90FF', // Green
       stops: {
         'komagane': 'terminal',
         'miyada': 'stop',

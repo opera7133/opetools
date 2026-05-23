@@ -1,7 +1,7 @@
 import type { LineData } from '../types';
 
-export const tokaidoAkasaka: LineData = {
-  id: 'tokaido-akasaka',
+export const jrTokaidoAkasaka: LineData = {
+  id: 'jr-tokaido-akasaka',
   name: '東海道線 (美濃赤坂支線)',
   company: 'JR東海',
   stations: [

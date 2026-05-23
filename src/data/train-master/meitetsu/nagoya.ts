@@ -68,6 +68,22 @@ export const meitetsuNagoya: LineData = {
   ],
   types: [
     {
+      id: 'mu-sky',
+      name: 'ミュースカイ',
+      color: '#F9A900', // Yellow
+      stops: {
+        'jingu-mae': {
+          type: 'stop',
+          throughTo: { lineId: 'meitetsu-tokoname', lineName: '常滑線・中部国際空港方面' }
+        },
+        'kanayama': 'stop',
+        'meitetsu-nagoya': 'stop',
+        'konomiya': 'stop',
+        'meitetsu-ichinomiya': 'stop',
+        'meitetsu-gifu': 'terminal',
+      }
+    },
+    {
       id: 'rapid-ltd-exp',
       name: '快速特急',
       color: '#C51B40', // Crimson red
@@ -91,18 +107,21 @@ export const meitetsuNagoya: LineData = {
       color: '#E03837', // Red
       stops: {
         'toyohashi': 'terminal',
-        'kou': 'stop',
+        'kou': {
+          type: 'stop',
+          throughTo: { lineId: 'meitetsu-toyokawa', lineName: '豊川線方面' }
+        },
         'higashi-okazaki': 'stop',
         'shin-anjo': 'stop',
         'chiryu': 'stop',
         'jingu-mae': {
           type: 'stop',
-          throughTo: { lineId: 'meitetsu-tokoname', lineName: '常滑線 (中部国際空港方面)' }
+          throughTo: { lineId: 'meitetsu-tokoname', lineName: '常滑線・中部国際空港方面' }
         },
         'kanayama': 'stop',
         'meitetsu-nagoya': {
           type: 'stop',
-          throughTo: { lineId: 'meitetsu-inuyama', lineName: '犬山線 (犬山方面)' }
+          throughTo: { lineId: 'meitetsu-inuyama', lineName: '犬山線・犬山方面' }
         },
         'konomiya': 'stop',
         'meitetsu-ichinomiya': 'stop',
@@ -135,11 +154,17 @@ export const meitetsuNagoya: LineData = {
       stops: {
         'toyohashi': 'terminal',
         'ina': 'stop',
-        'kou': 'stop',
+        'kou': {
+          type: 'stop',
+          throughTo: { lineId: 'meitetsu-toyokawa', lineName: '豊川線方面' }
+        },
         'motojuku': 'stop',
         'miai': 'stop',
         'higashi-okazaki': 'stop',
-        'shin-anjo': 'stop',
+        'shin-anjo': {
+          type: 'stop',
+          throughTo: { lineId: 'meitetsu-nishio', lineName: '西尾線方面' }
+        },
         'chiryu': 'stop',
         'zengo': 'stop',
         'narumi': 'stop',
@@ -172,7 +197,10 @@ export const meitetsuNagoya: LineData = {
       color: '#009945',
       stops: {
         'ina': 'terminal',
-        'kou': 'stop',
+        'kou': {
+          type: 'stop',
+          throughTo: { lineId: 'meitetsu-toyokawa', lineName: '豊川線方面' }
+        },
         'motojuku': 'stop',
         'fujikawa': 'stop',
         'miai': 'stop',

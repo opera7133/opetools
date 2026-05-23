@@ -85,7 +85,7 @@ export const jrCentralChuo: LineData = {
     {
       id: 'rapid',
       name: '快速',
-      color: '#009944', // Green
+      color: '#1E90FF', // Blue
       stops: {
         'nagoya': 'terminal',
         'kanayama': 'stop',
@@ -108,7 +108,7 @@ export const jrCentralChuo: LineData = {
     {
       id: 'semi-rapid',
       name: '区間快速',
-      color: '#1E90FF', // Blue
+      color: '#009944', // Green
       stops: {
         'nagoya': 'terminal',
         'kanayama': 'stop',

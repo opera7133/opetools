@@ -34,11 +34,11 @@ function autoSyncUpload() {
 }
 
 function migrateRecords() {
-  state.records.forEach(r => {
+  state.records.forEach((r) => {
     if (r.ingredients) {
-      r.ingredients.forEach(ing => {
-        if (ing.usageType !== 'amount') {
-          const food = state.foods.find(f => f.id === ing.foodId);
+      r.ingredients.forEach((ing) => {
+        if (ing.usageType !== "amount") {
+          const food = state.foods.find((f) => f.id === ing.foodId);
           if (food) {
             if (food.price > 0 && ing.cost !== undefined) {
               let est = (ing.cost / food.price) * food.quantity;
@@ -55,7 +55,7 @@ function migrateRecords() {
                 ing.usage = rem * ((parseFloat(ing.usage) || 0) / 100);
               }
             }
-            ing.usageType = 'amount';
+            ing.usageType = "amount";
           }
         }
       });
@@ -83,7 +83,7 @@ function loadState() {
       editKey: "",
       proxyUrl: "",
       autoDownload: false,
-      serverVersion: "v2"
+      serverVersion: "v2",
     };
   if (!state.currentMonth) {
     const d = new Date();
@@ -92,15 +92,16 @@ function loadState() {
 
   if (document.getElementById("syncToken")) {
     const s = state.syncConfig;
-    if (s.id && s.editKey) document.getElementById("syncToken").value = `${s.id}:${s.editKey}`;
+    if (s.id && s.editKey)
+      document.getElementById("syncToken").value = `${s.id}:${s.editKey}`;
     else document.getElementById("syncToken").value = "";
-    
+
     document.getElementById("syncProxyUrl").value =
       state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
-      
+
     const sVer = s.serverVersion || "v2";
     const rads = document.getElementsByName("syncServer");
-    rads.forEach(r => r.checked = (r.value === sVer));
+    rads.forEach((r) => (r.checked = r.value === sVer));
   }
   if (document.getElementById("syncAutoDL")) {
     document.getElementById("syncAutoDL").checked =
@@ -265,7 +266,9 @@ function togglePickerFood(id, el) {
   }
 }
 function confirmFoodPicker() {
-  const targetList = isPickerForEdit ? editModalIngredients : selectedIngredients;
+  const targetList = isPickerForEdit
+    ? editModalIngredients
+    : selectedIngredients;
   pickerSelectedIds.forEach((id) => {
     if (!targetList.find((i) => i.foodId === id)) {
       targetList.push({
@@ -276,13 +279,15 @@ function confirmFoodPicker() {
     }
   });
   // Remove deselected
-  const newTargetList = targetList.filter((i) => pickerSelectedIds.has(i.foodId));
-  
+  const newTargetList = targetList.filter((i) =>
+    pickerSelectedIds.has(i.foodId),
+  );
+
   if (isPickerForEdit) editModalIngredients = newTargetList;
   else selectedIngredients = newTargetList;
 
   closeModal("foodPickerModal");
-  
+
   if (isPickerForEdit) {
     renderEditSelectedIngredients();
     recalcEditRecordTotal();
@@ -409,20 +414,22 @@ function recalcCookingTotal() {
 function renderEditSelectedIngredients() {
   const el = document.getElementById("editSelectedIngredients");
   if (editModalIngredients.length === 0) {
-    el.innerHTML = '<div class="empty-state" style="padding:16px;"><p>食品がありません</p></div>';
+    el.innerHTML =
+      '<div class="empty-state" style="padding:16px;"><p>食品がありません</p></div>';
     return;
   }
-  el.innerHTML = editModalIngredients.map((ing, idx) => {
-    const food = state.foods.find(f => f.id === ing.foodId);
-    if(!food) return "";
-    const cost = calcIngredientCost(food, ing);
-    const usageAmount = getUsageAmount(food, ing);
-    return `<div class="ingredient-row" style="margin-bottom:8px; border:1px solid #e5e7eb; padding:8px; display:flex; flex-direction:column; gap:4px;">
+  el.innerHTML = editModalIngredients
+    .map((ing, idx) => {
+      const food = state.foods.find((f) => f.id === ing.foodId);
+      if (!food) return "";
+      const cost = calcIngredientCost(food, ing);
+      const usageAmount = getUsageAmount(food, ing);
+      return `<div class="ingredient-row" style="margin-bottom:8px; border:1px solid #e5e7eb; padding:8px; display:flex; flex-direction:column; gap:4px;">
       <div style="font-weight:bold;">${esc(food.name)} <span style="font-weight:normal; font-size:0.8rem;">(¥${food.price}/${food.quantity}${esc(food.unit)})</span></div>
       <div class="ing-usage" style="display:flex; gap:8px; align-items:center;">
         ${
           ing.usageType === "fraction"
-            ? `<div class="fraction-input"><input type="number" value="${ing.usageNumer??1}" onchange="updateEditIngUsage(${idx},'numer',this.value)" style="width:42px;padding:3px;"/><span class="fraction-sep">/</span><input type="number" value="${ing.usageDenom??2}" onchange="updateEditIngUsage(${idx},'denom',this.value)" style="width:42px;padding:3px;"/></div>`
+            ? `<div class="fraction-input"><input type="number" value="${ing.usageNumer ?? 1}" onchange="updateEditIngUsage(${idx},'numer',this.value)" style="width:42px;padding:3px;"/><span class="fraction-sep">/</span><input type="number" value="${ing.usageDenom ?? 2}" onchange="updateEditIngUsage(${idx},'denom',this.value)" style="width:42px;padding:3px;"/></div>`
             : `<input class="usage-input" type="number" value="${ing.usage}" min="0" step="0.1" onchange="updateEditIngUsage(${idx},'value',this.value)" style="width:60px;padding:3px;"/>`
         }
         <select onchange="updateEditIngUsageType(${idx},this.value)" style="padding:3px;">
@@ -435,19 +442,23 @@ function renderEditSelectedIngredients() {
         <button class="btn-icon danger" onclick="removeEditIngredient(${idx})">✕</button>
       </div>
     </div>`;
-  }).join("");
+    })
+    .join("");
 }
 
 function updateEditIngUsage(idx, key, val) {
-  if (key === "value" || key === "percent") editModalIngredients[idx].usage = parseFloat(val) || 0;
-  else if (key === "numer") editModalIngredients[idx].usageNumer = parseInt(val) || 1;
-  else if (key === "denom") editModalIngredients[idx].usageDenom = parseInt(val) || 1;
+  if (key === "value" || key === "percent")
+    editModalIngredients[idx].usage = parseFloat(val) || 0;
+  else if (key === "numer")
+    editModalIngredients[idx].usageNumer = parseInt(val) || 1;
+  else if (key === "denom")
+    editModalIngredients[idx].usageDenom = parseInt(val) || 1;
   renderEditSelectedIngredients();
   recalcEditRecordTotal();
 }
 function updateEditIngUsageType(idx, type) {
   editModalIngredients[idx].usageType = type;
-  if(type === "percent") editModalIngredients[idx].usage = 100;
+  if (type === "percent") editModalIngredients[idx].usage = 100;
   else if (type === "decimal") editModalIngredients[idx].usage = 0.5;
   renderEditSelectedIngredients();
   recalcEditRecordTotal();
@@ -459,13 +470,12 @@ function removeEditIngredient(idx) {
 }
 function recalcEditRecordTotal() {
   let total = 0;
-  editModalIngredients.forEach(ing => {
-    const food = state.foods.find(f => f.id === ing.foodId);
-    if(food) total += calcIngredientCost(food, ing);
+  editModalIngredients.forEach((ing) => {
+    const food = state.foods.find((f) => f.id === ing.foodId);
+    if (food) total += calcIngredientCost(food, ing);
   });
   document.getElementById("editRecordTotalLabel").textContent = `¥${total}`;
 }
-
 
 // ========== Eating out Items ==========
 function addEatingOutItem() {
@@ -856,7 +866,6 @@ function deleteRecord(id) {
   renderAll();
 }
 
-
 function openRecordEditModal(id) {
   const r = state.records.find((x) => x.id === id);
   if (!r) return;
@@ -864,7 +873,7 @@ function openRecordEditModal(id) {
   document.getElementById("editRecordDate").value = r.date;
   document.getElementById("editRecordTime").value = r.mealTime;
   document.getElementById("editRecordCost").value = r.totalCost || 0;
-  
+
   const ingArea = document.getElementById("editRecordIngredientsArea");
   if (r.type === "cooking" || r.type === "prepmake") {
     document.getElementById("editRecordNote").value = r.memo || "";
@@ -888,50 +897,55 @@ function saveRecordEdit() {
 
   if (r.type === "cooking" || r.type === "prepmake") {
     r.memo = document.getElementById("editRecordNote").value.trim();
-    
+
     // Resolve new ingredients first
-    const resolvedNewIngredients = editModalIngredients.map(ing => {
-       const food = state.foods.find(f => f.id === ing.foodId);
-       let usageAmount = 0;
-       let cost = 0;
-       if (food) {
-           usageAmount = getUsageAmount(food, ing);
-           cost = calcIngredientCost(food, ing);
-       }
-       return {
-           foodId: ing.foodId,
-           usage: usageAmount,
-           usageType: "amount",
-           cost
-       };
+    const resolvedNewIngredients = editModalIngredients.map((ing) => {
+      const food = state.foods.find((f) => f.id === ing.foodId);
+      let usageAmount = 0;
+      let cost = 0;
+      if (food) {
+        usageAmount = getUsageAmount(food, ing);
+        cost = calcIngredientCost(food, ing);
+      }
+      return {
+        foodId: ing.foodId,
+        usage: usageAmount,
+        usageType: "amount",
+        cost,
+      };
     });
-    
+
     // Reverse old ingredients stock
     if (r.ingredients) {
-      r.ingredients.forEach(oldIng => {
-        const food = state.foods.find(f => f.id === oldIng.foodId);
+      r.ingredients.forEach((oldIng) => {
+        const food = state.foods.find((f) => f.id === oldIng.foodId);
         if (food) {
-          food.remaining = (food.remaining ?? food.quantity) + (oldIng.usage || 0);
+          food.remaining =
+            (food.remaining ?? food.quantity) + (oldIng.usage || 0);
         }
       });
     }
-    
+
     // Apply new ingredients
     let newTotalCost = 0;
-    resolvedNewIngredients.forEach(ing => {
-       const food = state.foods.find(f => f.id === ing.foodId);
-       if (food) {
-           food.remaining = Math.max(0, (food.remaining ?? food.quantity) - ing.usage);
-       }
-       newTotalCost += ing.cost;
+    resolvedNewIngredients.forEach((ing) => {
+      const food = state.foods.find((f) => f.id === ing.foodId);
+      if (food) {
+        food.remaining = Math.max(
+          0,
+          (food.remaining ?? food.quantity) - ing.usage,
+        );
+      }
+      newTotalCost += ing.cost;
     });
-    
+
     r.ingredients = resolvedNewIngredients;
-    r.totalCost = (r.type === "prepmake") ? 0 : newTotalCost; 
+    r.totalCost = r.type === "prepmake" ? 0 : newTotalCost;
     // ※ prepmake cost is theoretically 0 in record, but if we updated the prep item food price, it could get complicated.
     // For now, we keep it simple.
   } else {
-    r.totalCost = parseInt(document.getElementById("editRecordCost").value) || 0;
+    r.totalCost =
+      parseInt(document.getElementById("editRecordCost").value) || 0;
     r.restaurantName = document.getElementById("editRecordNote").value.trim();
   }
 
@@ -959,36 +973,119 @@ function renderSummary() {
 }
 
 // ========== Charts ==========
+let mealTimeChartInstance = null;
+let typeChartInstance = null;
+let weeklyChartInstance = null;
+
 function renderCharts() {
-  // ... (省略せずに記述しますが、既存のものとほぼ同じ)
+  if (typeof Chart === "undefined") return;
+
   const monthRecords = state.records.filter((r) => isInCurrentMonth(r.date));
-  // max is unused if 0
+
+  // 1. Meal Time Chart
+  const mealTimeContainer = document.getElementById("mealTimeChartContainer");
+  if (mealTimeChartInstance) {
+    mealTimeChartInstance.destroy();
+    mealTimeChartInstance = null;
+  }
+
   const mealGroups = { morning: 0, lunch: 0, dinner: 0, other: 0 };
   monthRecords.forEach((r) => {
     mealGroups[r.mealTime] = (mealGroups[r.mealTime] || 0) + (r.totalCost || 0);
   });
-  const mealMax = Math.max(1, ...Object.values(mealGroups));
-  const mealColors = {
-    morning: "#f59e0b",
-    lunch: "#3b82f6",
-    dinner: "#6366f1",
-    other: "#8b5cf6",
-  };
-  document.getElementById("mealTimeChart").innerHTML = Object.entries(
-    mealGroups,
-  )
-    .map(
-      ([k, v]) => `
-          <div class="bar-row">
-            <span class="bar-label">${MEAL_LABELS[k]}</span>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((v / mealMax) * 100)}%;background:${mealColors[k]};"></div></div>
-            <span class="bar-amount">¥${v.toLocaleString()}</span>
-          </div>
-        `,
-    )
-    .join("");
+  const mealTotal = Object.values(mealGroups).reduce((a, b) => a + b, 0);
 
-  // Type chart (prepmake is 0 mostly, but added to cooking or left alone. separate prepmake isn't very useful unless cost > 0)
+  if (mealTotal === 0) {
+    mealTimeContainer.innerHTML = `<div class="empty-chart-message" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--color-text-muted);font-size:0.85rem;">今月の記録がありません</div>`;
+  } else {
+    mealTimeContainer.innerHTML = `<canvas id="mealTimeChart"></canvas>`;
+    const ctx = document.getElementById("mealTimeChart").getContext("2d");
+    mealTimeChartInstance = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["朝食", "昼食", "夕食", "その他"],
+        datasets: [
+          {
+            data: [
+              mealGroups.morning,
+              mealGroups.lunch,
+              mealGroups.dinner,
+              mealGroups.other,
+            ],
+            backgroundColor: ["#f59e0b", "#3b82f6", "#6366f1", "#8b5cf6"],
+            borderColor: "#ffffff",
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              generateLabels: function (chart) {
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map(function (label, i) {
+                    const meta = chart.getDatasetMeta(0);
+                    const style = meta.controller.getStyle(i);
+                    const val = data.datasets[0].data[i] || 0;
+                    const pct = mealTotal > 0 ? ((val / mealTotal) * 100).toFixed(1) : "0.0";
+                    return {
+                      text: ` ${label}: ¥${val.toLocaleString()} (${pct}%)`,
+                      fillStyle: style.backgroundColor,
+                      strokeStyle: style.borderColor,
+                      lineWidth: style.borderWidth,
+                      hidden: isNaN(data.datasets[0].data[i]) || meta.data[i].hidden,
+                      index: i
+                    };
+                  });
+                }
+                return [];
+              },
+              font: {
+                family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+                size: 11,
+                weight: "600",
+              },
+              color: "#4b5563",
+              padding: 12,
+            },
+          },
+          tooltip: {
+            backgroundColor: "rgba(17, 24, 39, 0.9)",
+            titleFont: {
+              family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+              size: 12,
+            },
+            bodyFont: {
+              family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+              size: 12,
+            },
+            callbacks: {
+              label: function (context) {
+                const label = context.label || "";
+                const val = context.parsed || 0;
+                const pct = ((val / mealTotal) * 100).toFixed(1);
+                return ` ${label}: ¥${val.toLocaleString()} (${pct}%)`;
+              },
+            },
+          },
+        },
+        cutout: "60%",
+      },
+    });
+  }
+
+  // 2. Type Chart
+  const typeContainer = document.getElementById("typeChartContainer");
+  if (typeChartInstance) {
+    typeChartInstance.destroy();
+    typeChartInstance = null;
+  }
+
   let cooking = 0,
     eatingOut = 0,
     prepmake = 0;
@@ -997,69 +1094,243 @@ function renderCharts() {
     else if (r.type === "eatingout") eatingOut += r.totalCost || 0;
     else prepmake += r.totalCost || 0;
   });
-  const typeMax = Math.max(1, cooking, eatingOut, prepmake);
-  const typeRows = [
-    ["自炊", cooking, "#16a34a"],
-    ["外食", eatingOut, "#f59e0b"],
-  ];
-  if (prepmake > 0) typeRows.push(["作り置き", prepmake, "#4338ca"]);
-  document.getElementById("typeChart").innerHTML = typeRows
-    .map(
-      ([label, val, color]) => `
-          <div class="bar-row">
-            <span class="bar-label">${label}</span>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((val / typeMax) * 100)}%;background:${color};"></div></div>
-            <span class="bar-amount">¥${val.toLocaleString()}</span>
-          </div>
-        `,
-    )
-    .join("");
+  const typeTotal = cooking + eatingOut + prepmake;
 
-  // Weekly chart
+  if (typeTotal === 0) {
+    typeContainer.innerHTML = `<div class="empty-chart-message" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--color-text-muted);font-size:0.85rem;">今月の記録がありません</div>`;
+  } else {
+    typeContainer.innerHTML = `<canvas id="typeChart"></canvas>`;
+    const labels = ["自炊", "外食"];
+    const data = [cooking, eatingOut];
+    const colors = ["#16a34a", "#f59e0b"];
+    if (prepmake > 0) {
+      labels.push("作り置き");
+      data.push(prepmake);
+      colors.push("#4338ca");
+    }
+
+    const ctx = document.getElementById("typeChart").getContext("2d");
+    typeChartInstance = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            data: data,
+            backgroundColor: colors,
+            borderColor: "#ffffff",
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              generateLabels: function (chart) {
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map(function (label, i) {
+                    const meta = chart.getDatasetMeta(0);
+                    const style = meta.controller.getStyle(i);
+                    const val = data.datasets[0].data[i] || 0;
+                    const pct = typeTotal > 0 ? ((val / typeTotal) * 100).toFixed(1) : "0.0";
+                    return {
+                      text: ` ${label}: ¥${val.toLocaleString()} (${pct}%)`,
+                      fillStyle: style.backgroundColor,
+                      strokeStyle: style.borderColor,
+                      lineWidth: style.borderWidth,
+                      hidden: isNaN(data.datasets[0].data[i]) || meta.data[i].hidden,
+                      index: i
+                    };
+                  });
+                }
+                return [];
+              },
+              font: {
+                family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+                size: 11,
+                weight: "600",
+              },
+              color: "#4b5563",
+              padding: 12,
+            },
+          },
+          tooltip: {
+            backgroundColor: "rgba(17, 24, 39, 0.9)",
+            titleFont: {
+              family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+              size: 12,
+            },
+            bodyFont: {
+              family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+              size: 12,
+            },
+            callbacks: {
+              label: function (context) {
+                const label = context.label || "";
+                const val = context.parsed || 0;
+                const pct = ((val / typeTotal) * 100).toFixed(1);
+                return ` ${label}: ¥${val.toLocaleString()} (${pct}%)`;
+              },
+            },
+          },
+        },
+        cutout: "60%",
+      },
+    });
+  }
+
+  // 3. Weekly Chart
+  const weeklyContainer = document.getElementById("weeklyChartContainer");
+  if (weeklyChartInstance) {
+    weeklyChartInstance.destroy();
+    weeklyChartInstance = null;
+  }
+
   const weekData = [0, 0, 0, 0, 0];
   monthRecords.forEach((r) => {
     const day = new Date(r.date + "T00:00:00").getDate();
     const weekIdx = Math.min(4, Math.floor((day - 1) / 7));
     weekData[weekIdx] += r.totalCost || 0;
   });
-  const weekMax = Math.max(1, ...weekData);
-  const weekColors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
-  document.getElementById("weeklyChart").innerHTML = weekData
-    .map(
-      (v, i) => `
-          <div class="bar-row">
-            <span class="bar-label">第${i + 1}週</span>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((v / weekMax) * 100)}%;background:${weekColors[i]};"></div></div>
-            <span class="bar-amount">¥${v.toLocaleString()}</span>
-          </div>
-        `,
-    )
-    .join("");
+  const weeklyTotal = weekData.reduce((a, b) => a + b, 0);
+
+  if (weeklyTotal === 0) {
+    weeklyContainer.innerHTML = `<div class="empty-chart-message" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--color-text-muted);font-size:0.85rem;">今月の記録がありません</div>`;
+  } else {
+    weeklyContainer.innerHTML = `<canvas id="weeklyChart"></canvas>`;
+    const ctx = document.getElementById("weeklyChart").getContext("2d");
+    weeklyChartInstance = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: ["第1週", "第2週", "第3週", "第4週", "第5週"],
+        datasets: [
+          {
+            label: "支出",
+            data: weekData,
+            backgroundColor: "rgba(22, 163, 74, 0.8)",
+            borderColor: "#16a34a",
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            right: 65, // Add padding to avoid clipping the end value labels
+          },
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: "rgba(17, 24, 39, 0.9)",
+            titleFont: {
+              family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+              size: 12,
+            },
+            bodyFont: {
+              family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+              size: 12,
+            },
+            callbacks: {
+              label: function (context) {
+                const val = context.parsed.x || 0;
+                return ` 支出: ¥${val.toLocaleString()}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: {
+              color: "#f3f4f6",
+            },
+            ticks: {
+              font: {
+                family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+                size: 10,
+              },
+              color: "#6b7280",
+              callback: function (value) {
+                return "¥" + value.toLocaleString();
+              },
+            },
+          },
+          y: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              font: {
+                family: '"Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif',
+                size: 11,
+                weight: "600",
+              },
+              color: "#4b5563",
+            },
+          },
+        },
+      },
+      plugins: [
+        {
+          id: "barLabels",
+          afterDatasetsDraw(chart) {
+            const { ctx, data } = chart;
+            ctx.save();
+            ctx.font = '600 11px "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif';
+            ctx.fillStyle = "#4b5563";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            chart.getDatasetMeta(0).data.forEach((bar, index) => {
+              const val = data.datasets[0].data[index];
+              if (val > 0) {
+                ctx.fillText(`¥${val.toLocaleString()}`, bar.x + 8, bar.y);
+              }
+            });
+            ctx.restore();
+          },
+        },
+      ],
+    });
+  }
 }
 
 // ========== Cloud Sync ==========
 
-function toggleSyncServer() {} 
+function toggleSyncServer() {}
 
 function parseSyncToken(token) {
-    let id = "", key = "";
-    if (!token) return {id, key};
-    if (token.startsWith("{")) {
-        try {
-            const parsed = JSON.parse(token);
-            id = parsed.id || "";
-            key = parsed.editKey || parsed.key || "";
-        } catch(e){}
-    } else if (token.includes(":")) {
-        const parts = token.split(":");
-        id = parts[0];
-        key = parts.slice(1).join(":");
-    } else if (token.includes("_")) {
-        const parts = token.split("_");
-        id = parts[0];
-        key = parts.slice(1).join("_");
-    }
-    return {id, key};
+  let id = "",
+    key = "";
+  if (!token) return { id, key };
+  if (token.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(token);
+      id = parsed.id || "";
+      key = parsed.editKey || parsed.key || "";
+    } catch (e) {}
+  } else if (token.includes(":")) {
+    const parts = token.split(":");
+    id = parts[0];
+    key = parts.slice(1).join(":");
+  } else if (token.includes("_")) {
+    const parts = token.split("_");
+    id = parts[0];
+    key = parts.slice(1).join("_");
+  }
+  return { id, key };
 }
 
 function copySyncToken() {
@@ -1069,9 +1340,12 @@ function copySyncToken() {
     return;
   }
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(token).then(() => {
+    navigator.clipboard
+      .writeText(token)
+      .then(() => {
         alert("コピーしました：\n" + token);
-    }).catch((e) => prompt("以下のテキストをコピーしてください", token));
+      })
+      .catch((e) => prompt("以下のテキストをコピーしてください", token));
   } else {
     prompt("以下のテキストをコピーしてください", token);
   }
@@ -1079,41 +1353,45 @@ function copySyncToken() {
 
 function saveSyncConfig() {
   const token = document.getElementById("syncToken").value.trim();
-  const {id, key} = parseSyncToken(token);
-  
+  const { id, key } = parseSyncToken(token);
+
   let serverVersion = "v2";
   const rads = document.getElementsByName("syncServer");
-  rads.forEach(r => { if(r.checked) serverVersion = r.value; });
+  rads.forEach((r) => {
+    if (r.checked) serverVersion = r.value;
+  });
 
   state.syncConfig = {
     id: id || token, // if not parseable cleanly, just store
     editKey: key,
     proxyUrl: document.getElementById("syncProxyUrl").value.trim(),
-    serverVersion
+    serverVersion,
   };
   saveState();
-  
+
   const statusEl = document.getElementById("syncStatus");
   statusEl.textContent = "設定を保存しました。";
   statusEl.style.color = "var(--color-primary)";
 }
 
 function getSyncEndpoint(idStr = null) {
-  const proxyUrl = state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
+  const proxyUrl =
+    state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
   const serverVersion = state.syncConfig.serverVersion || "v2";
-  const baseUrl = proxyUrl ? proxyUrl.replace(/\/$/, "") : "https://jsonhosting.com";
-  
+  const baseUrl = proxyUrl
+    ? proxyUrl.replace(/\/$/, "")
+    : "https://jsonhosting.com";
+
   const path = serverVersion === "v2" ? "/api/v2/data" : "/api/json";
   if (idStr) return `${baseUrl}${path}/${idStr}`;
   return `${baseUrl}${path}`;
 }
 
-
 async function syncUpload() {
   const tokenInput = document.getElementById("syncToken");
   const proxyInput = document.getElementById("syncProxyUrl");
   const tokenStr = tokenInput.value.trim();
-  const {id, key: editKey} = parseSyncToken(tokenStr);
+  const { id, key: editKey } = parseSyncToken(tokenStr);
   const statusEl = document.getElementById("syncStatus");
 
   statusEl.textContent = "アップロード中...";
@@ -1146,11 +1424,18 @@ async function syncUpload() {
       if (!res.ok) throw new Error("新規作成失敗");
       const data = await res.json();
       tokenInput.value = `${data.id}:${data.editKey}`;
-      
+
       let serverVersion = "v2";
       const rads = document.getElementsByName("syncServer");
-      rads.forEach(r => { if(r.checked) serverVersion = r.value; });
-      state.syncConfig = { id: data.id, editKey: data.editKey, proxyUrl: proxyInput.value.trim(), serverVersion };
+      rads.forEach((r) => {
+        if (r.checked) serverVersion = r.value;
+      });
+      state.syncConfig = {
+        id: data.id,
+        editKey: data.editKey,
+        proxyUrl: proxyInput.value.trim(),
+        serverVersion,
+      };
 
       saveState();
       statusEl.textContent = "新規作成してアップロードしました！";
@@ -1165,8 +1450,8 @@ async function syncUpload() {
 async function syncDownload(silent = false) {
   let id = state.syncConfig.id;
   if (!id) {
-     const t = parseSyncToken(document.getElementById("syncToken").value.trim());
-     id = t.id;
+    const t = parseSyncToken(document.getElementById("syncToken").value.trim());
+    id = t.id;
   }
   const statusEl = document.getElementById("syncStatus");
   if (!id) {
@@ -1184,7 +1469,7 @@ async function syncDownload(silent = false) {
 
   try {
     // キャッシュを防ぐためにタイムスタンプを付与
-    const res = await fetch(getSyncEndpoint(id)+`?t=${Date.now()}`);
+    const res = await fetch(getSyncEndpoint(id) + `?t=${Date.now()}`);
     if (!res.ok) throw new Error("ダウンロード失敗");
     const data = (await res.json()).content;
 

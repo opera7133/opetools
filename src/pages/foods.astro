@@ -12,7 +12,7 @@ import Header from "../components/Header.astro";
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>foods || opera7133/opetools</title>
     <meta name="description" content="毎日の食費を記録・管理するツール" />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta property="og:title" content="foods || opera7133/opetools" />
     <meta
       property="og:description"
@@ -20,6 +20,7 @@ import Header from "../components/Header.astro";
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
+    <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body class="bg-gray-100 text-gray-800 m-0 p-0">
     <Header />
@@ -409,23 +410,43 @@ import Header from "../components/Header.astro";
 
       <!-- === CHART TAB === -->
       <div class="tab-panel" id="panel-chart">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">食事タイミング別 支出</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">食事タイミング別 支出</span>
+            </div>
+            <div
+              id="mealTimeChartContainer"
+              class="chart-container"
+              style="position: relative; height: 260px; width: 100%;"
+            >
+              <canvas id="mealTimeChart"></canvas>
+            </div>
           </div>
-          <div class="bar-chart" id="mealTimeChart"></div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">自炊 vs 外食</span>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">自炊 vs 外食</span>
+            </div>
+            <div
+              id="typeChartContainer"
+              class="chart-container"
+              style="position: relative; height: 260px; width: 100%;"
+            >
+              <canvas id="typeChart"></canvas>
+            </div>
           </div>
-          <div class="bar-chart" id="typeChart"></div>
         </div>
         <div class="card">
           <div class="card-header">
             <span class="card-title">週別支出 (今月)</span>
           </div>
-          <div class="bar-chart" id="weeklyChart"></div>
+          <div
+            id="weeklyChartContainer"
+            class="chart-container"
+            style="position: relative; height: 280px; width: 100%;"
+          >
+            <canvas id="weeklyChart"></canvas>
+          </div>
         </div>
       </div>
 

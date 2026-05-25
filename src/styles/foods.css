@@ -504,40 +504,10 @@
       }
 
       /* --- Chart --- */
-      .bar-chart {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .bar-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.8rem;
-      }
-      .bar-label {
-        width: 60px;
-        text-align: right;
+      .empty-chart-message {
         color: var(--color-text-muted);
-        font-weight: 600;
-        flex-shrink: 0;
-      }
-      .bar-track {
-        flex: 1;
-        background: #f3f4f6;
-        height: 20px;
-        border-radius: 99px;
-        overflow: hidden;
-      }
-      .bar-fill {
-        height: 100%;
-        border-radius: 99px;
-        transition: width 0.4s ease;
-      }
-      .bar-amount {
-        width: 60px;
-        font-weight: 700;
-        color: var(--color-text);
+        font-size: 0.85rem;
+        font-weight: 500;
       }
 
       /* --- Misc --- */

@@ -111,8 +111,6 @@ function loadState() {
     } catch (e) {
       console.error("Failed to load local state", e);
     }
-  } else {
-    injectSampleData();
   }
 }
 
@@ -127,7 +125,7 @@ function saveState() {
     autoSyncUpload();
   }
 }
-
+// 一応残しておく
 function injectSampleData() {
   state.shops = [
     {

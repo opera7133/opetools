@@ -1,0 +1,639 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/retail.css";
+---
+
+<Layout
+  title="retail || opera7133/opetools"
+  description="店ごとの食材の値段比較・底値帳"
+  bodyClass="bg-gray-100 text-gray-800 m-0 p-0"
+>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+    slot="head"
+  />
+  <script
+    is:inline
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+    slot="head"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js" slot="head"
+  ></script>
+
+  <main class="max-w-4xl mx-auto py-10 px-4">
+    <!-- Header -->
+    <div class="card mb-4">
+      <div
+        style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;"
+      >
+        <div>
+          <h1 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 4px">
+            🏪 底値帳 & 価格比較
+          </h1>
+          <p
+            style="font-size: 0.82rem; color: var(--color-text-muted); margin: 0;"
+          >
+            店ごとの各種食材の値段を管理し、買い物の参考にします
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Nav -->
+    <div class="tab-nav">
+      <button
+        class="tab-btn active"
+        onclick="switchTab('compare', this)"
+        id="tab-compare"
+      >
+        🔍 比較・検索
+      </button>
+      <button
+        class="tab-btn"
+        onclick="switchTab('add-price', this)"
+        id="tab-add-price"
+      >
+        💸 価格登録
+      </button>
+      <button class="tab-btn" onclick="switchTab('shops', this)" id="tab-shops">
+        🏪 店舗管理
+      </button>
+      <button class="tab-btn" onclick="switchTab('sync', this)" id="tab-sync">
+        ☁️ 同期設定
+      </button>
+    </div>
+
+    <!-- === TAB 1: COMPARE === -->
+    <div class="tab-panel active" id="panel-compare">
+      <div class="card">
+        <div
+          style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;"
+        >
+          <input
+            type="text"
+            id="itemSearch"
+            placeholder="食材名で検索... (例: 玉ねぎ)"
+            oninput="renderItems()"
+            style="flex: 1; min-width: 200px;"
+          />
+          <select
+            id="categoryFilter"
+            onchange="renderItems()"
+            style="width: 180px;"
+          >
+            <option value="">すべてのカテゴリ</option>
+          </select>
+          <button class="btn btn-primary" onclick="openAddItemModal()">
+            ＋ 食材を追加
+          </button>
+        </div>
+      </div>
+
+      <div id="itemsGrid" class="item-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- === TAB 2: ADD PRICE === -->
+    <div class="tab-panel" id="panel-add-price">
+      <div class="form-row">
+        <!-- Left: Registry Form -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">価格を記録する</span>
+          </div>
+
+          <div class="form-group">
+            <label for="priceItemId"
+              >比較食材 <span style="color:var(--color-danger)">*</span></label
+            >
+            <div style="display:flex;gap:8px;">
+              <select id="priceItemId" style="flex:1;">
+                <!-- Options rendered dynamically -->
+              </select>
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick="openAddItemModal()">新規食材</button
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="priceShopId"
+              >店舗 <span style="color:var(--color-danger)">*</span></label
+            >
+            <div style="display:flex;gap:8px;">
+              <select id="priceShopId" style="flex:1;">
+                <!-- Options rendered dynamically -->
+              </select>
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick="openAddShopModal()">新規店舗</button
+              >
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="priceCost"
+                >価格 (円) <span style="color:var(--color-danger)">*</span
+                ></label
+              >
+              <input
+                type="number"
+                id="priceCost"
+                placeholder="例: 500"
+                min="1"
+                oninput="updateCalculatedPrice()"
+              />
+            </div>
+            <div class="form-group">
+              <label for="priceQuantity"
+                >購入量 <span style="color:var(--color-danger)">*</span></label
+              >
+              <input
+                type="number"
+                id="priceQuantity"
+                placeholder="例: 400"
+                min="0.001"
+                step="any"
+                value="1"
+                oninput="updateCalculatedPrice()"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="priceUnit"
+                >単位 <span style="color:var(--color-danger)">*</span></label
+              >
+              <select id="priceUnit" onchange="updateCalculatedPrice()">
+                <option value="g">g (グラム)</option>
+                <option value="ml">ml (ミリリットル)</option>
+                <option value="個" selected>個</option>
+                <option value="本">本</option>
+                <option value="枚">枚</option>
+                <option value="パック">パック</option>
+                <option value="袋">袋</option>
+                <option value="缶">缶</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="priceDate"
+                >記録日付 <span style="color:var(--color-danger)">*</span
+                ></label
+              >
+              <input type="date" id="priceDate" />
+            </div>
+          </div>
+
+          <div
+            style="background: #f8fafc; border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center;"
+          >
+            <span
+              style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; display: block; margin-bottom: 4px;"
+              >比較用計算値 (底値判定)</span
+            >
+            <span
+              id="priceCalcFeedback"
+              style="font-size: 1.1rem; font-weight: 800; color: var(--color-primary);"
+              >¥0</span
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="priceNote">メモ・詳細 (任意)</label>
+            <input
+              type="text"
+              id="priceNote"
+              placeholder="例: セール品, 特大パック"
+            />
+          </div>
+
+          <button
+            class="btn btn-primary"
+            style="width:100%;margin-top:8px;"
+            onclick="submitPrice()"
+          >
+            価格を登録
+          </button>
+
+          <p
+            id="priceRegisterStatus"
+            style="font-size: 0.85rem; font-weight: bold; margin-top: 12px; text-align: center; height: 18px;"
+          >
+          </p>
+        </div>
+
+        <!-- Right: Recent Log List -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">最近登録した価格 (最大10件)</span>
+          </div>
+          <div id="recentPricesList" style="width:100%;overflow-x:scroll;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === TAB 3: SHOPS === -->
+    <div class="tab-panel" id="panel-shops">
+      <div class="card">
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"
+        >
+          <span class="card-title">🏪 登録店舗マップ</span>
+          <button class="btn btn-primary" onclick="openAddShopModal()">
+            ＋ 店舗を追加
+          </button>
+        </div>
+        <div id="list-map" class="map-container mb-4">
+          <!-- Main shops map -->
+        </div>
+      </div>
+
+      <div id="shopsList" class="shop-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- === TAB 4: SYNC === -->
+    <div class="tab-panel" id="panel-sync">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">☁️ クラウド同期設定</span>
+        </div>
+        <p
+          style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 16px; line-height: 1.5;"
+        >
+          別のデバイスとお買い物・店舗価格データを同期できます。データはクラウド上の安全なデータベースにバックアップされます。
+        </p>
+
+        <div class="form-group">
+          <label>同期サーバー</label>
+          <div style="display:flex; gap:16px;">
+            <label
+              style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;"
+            >
+              <input
+                type="radio"
+                name="syncServer"
+                value="v1"
+                onclick="toggleSyncServer()"
+              /> 旧 (jsonhosting.com)
+            </label>
+            <label
+              style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;"
+            >
+              <input
+                type="radio"
+                name="syncServer"
+                value="v2"
+                onclick="toggleSyncServer()"
+                checked
+              /> 新 (専用 D1 サーバー)
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="syncToken">同期トークン (Sync Token)</label>
+          <input
+            type="text"
+            id="syncToken"
+            placeholder="例: id:editKey (または既存のキー)"
+          />
+        </div>
+
+        <div class="mb-4">
+          <button class="btn btn-secondary btn-sm" onclick="copySyncToken()">
+            📋 トークンをコピー
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="syncProxyUrl">Proxy Worker URL (CORS回避用)</label>
+          <input
+            type="text"
+            id="syncProxyUrl"
+            placeholder="例: https://xxx.workers.dev"
+            value="https://tools.ainznino.workers.dev"
+          />
+        </div>
+
+        <div
+          class="form-group"
+          style="display:flex; align-items:center; gap:8px;"
+        >
+          <input type="checkbox" id="syncAutoDL" />
+          <label for="syncAutoDL" style="margin:0; cursor:pointer;"
+            >起動時に自動ダウンロードする</label
+          >
+        </div>
+
+        <div
+          style="display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap;"
+        >
+          <button class="btn btn-secondary" onclick="saveSyncConfig()">
+            キーを保存
+          </button>
+          <button class="btn btn-primary" onclick="syncUpload()">
+            ↑ クラウドへ保存
+          </button>
+          <button class="btn btn-primary" onclick="syncDownload()">
+            ↓ クラウドから復元
+          </button>
+        </div>
+
+        <p
+          id="syncStatus"
+          style="font-size: 0.85rem; font-weight: bold; margin-top: 16px;"
+        >
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- === MODAL: ADD FOOD ITEM === -->
+  <div class="modal-overlay" id="itemModal">
+    <form class="modal" id="itemForm">
+      <div class="modal-title" id="modalItemTitle">🥬 食材を新規登録</div>
+      <input type="hidden" id="itemId" />
+
+      <div class="form-group">
+        <label for="itemName"
+          >食材・商品名 <span style="color:var(--color-danger)">*</span></label
+        >
+        <input
+          type="text"
+          id="itemName"
+          placeholder="例: 玉ねぎ, 豚細切れ肉, 卵"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="itemCategory">カテゴリ</label>
+        <input
+          type="text"
+          id="itemCategory"
+          placeholder="例: 野菜, 肉類, 乳製品, 調味料"
+          list="defaultCategories"
+        />
+        <datalist id="defaultCategories">
+          <option value="野菜"></option>
+          <option value="肉類"></option>
+          <option value="魚介類"></option>
+          <option value="乳製品"></option>
+          <option value="調味料"></option>
+          <option value="主食・麺類"></option>
+          <option value="飲料"></option>
+          <option value="その他"></option>
+        </datalist>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeItemModal()"
+          >キャンセル</button
+        >
+        <button class="btn btn-primary" onclick="saveItem()">保存する</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- === MODAL: ADD/EDIT SHOP === -->
+  <div class="modal-overlay" id="shopModal">
+    <form class="modal" id="shopForm">
+      <div class="modal-title" id="modalShopTitle">店舗を追加</div>
+      <input type="hidden" id="shopId" />
+
+      <div class="form-group">
+        <label for="shopName"
+          >店舗名 <span style="color:var(--color-danger)">*</span></label
+        >
+        <input
+          type="text"
+          id="shopName"
+          placeholder="例: イオン〇〇店, 道の駅〇〇"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="shopLogoUrl">ロゴ画像URL (任意)</label>
+        <input
+          type="text"
+          id="shopLogoUrl"
+          placeholder="例: https://example.com/logo.png"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="shopMemo">メモ・営業時間など (任意)</label>
+        <textarea
+          id="shopMemo"
+          placeholder="例: 毎週火曜特売日, 9:00〜21:00営業"
+          rows="2"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>📍 地図位置設定</label>
+        <p
+          style="font-size:0.75rem;color:var(--color-text-muted);margin:0 0 6px;"
+        >
+          住所を検索するか、地図上をクリックして店のある場所を設定します
+        </p>
+        <div id="form-map" class="map-container relative mb-4">
+          <div class="map-search-bar">
+            <input
+              type="text"
+              id="shopAddressQuery"
+              placeholder="住所・駅名で検索..."
+              onkeydown="if(event.key==='Enter') { searchShopAddress(); event.preventDefault(); }"
+            />
+            <button type="button" onclick="searchShopAddress()">検索</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="shopLat">緯度 (Latitude)</label>
+            <input
+              type="number"
+              id="shopLat"
+              readonly
+              style="background:#f1f5f9;"
+            />
+          </div>
+          <div>
+            <label for="shopLng">経度 (Longitude)</label>
+            <input
+              type="number"
+              id="shopLng"
+              readonly
+              style="background:#f1f5f9;"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeShopModal()"
+          >キャンセル</button
+        >
+        <button class="btn btn-primary" onclick="saveShop()">保存する</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- === MODAL: ITEM PRICES DETAILS & CHART === -->
+  <div class="modal-overlay" id="itemDetailsModal">
+    <div class="modal" style="width:min(700px, 95vw);">
+      <div class="modal-title" id="modalDetailsTitle">🥬 価格履歴</div>
+
+      <!-- Trend chart -->
+      <div class="card mb-4" style="padding: 16px;">
+        <div
+          style="font-size:0.85rem;font-weight:700;color:var(--color-text-muted);margin-bottom:8px;"
+        >
+          📈 価格推移チャート
+        </div>
+        <div
+          id="detailsChartContainer"
+          style="position: relative; height: 260px; width: 100%;"
+        >
+          <canvas id="detailsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Price logs table -->
+      <div
+        style="font-size:0.85rem;font-weight:700;color:var(--color-text-muted);margin-bottom:8px;"
+      >
+        📋 すべての記録履歴
+      </div>
+      <div
+        id="detailsPricesList"
+        style="max-height: 250px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 8px;"
+      >
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeItemDetailsModal()"
+          >閉じる</button
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- === MODAL: EDIT PRICE RECORD === -->
+  <div class="modal-overlay" id="priceEditModal">
+    <div class="modal">
+      <div class="modal-title">💸 価格記録を編集</div>
+      <input type="hidden" id="editPriceId" />
+
+      <div class="form-group">
+        <label for="editPriceItemId"
+          >比較食材 <span style="color:var(--color-danger)">*</span></label
+        >
+        <select id="editPriceItemId" style="width:100%;">
+          <!-- Options rendered dynamically -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="editPriceShopId"
+          >店舗 <span style="color:var(--color-danger)">*</span></label
+        >
+        <select id="editPriceShopId" style="width:100%;">
+          <!-- Options rendered dynamically -->
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editPriceCost"
+            >価格 (円) <span style="color:var(--color-danger)">*</span></label
+          >
+          <input
+            type="number"
+            id="editPriceCost"
+            min="1"
+            oninput="updateEditCalculatedPrice()"
+          />
+        </div>
+        <div class="form-group">
+          <label for="editPriceQuantity"
+            >購入量 <span style="color:var(--color-danger)">*</span></label
+          >
+          <input
+            type="number"
+            id="editPriceQuantity"
+            min="0.001"
+            step="any"
+            oninput="updateEditCalculatedPrice()"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editPriceUnit"
+            >単位 <span style="color:var(--color-danger)">*</span></label
+          >
+          <select id="editPriceUnit" onchange="updateEditCalculatedPrice()">
+            <option value="g">g (グラム)</option>
+            <option value="ml">ml (ミリリットル)</option>
+            <option value="個">個</option>
+            <option value="本">本</option>
+            <option value="枚">枚</option>
+            <option value="パック">パック</option>
+            <option value="袋">袋</option>
+            <option value="缶">缶</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="editPriceDate"
+            >記録日付 <span style="color:var(--color-danger)">*</span></label
+          >
+          <input type="date" id="editPriceDate" />
+        </div>
+      </div>
+
+      <div
+        style="background: #f8fafc; border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center;"
+      >
+        <span
+          style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; display: block; margin-bottom: 4px;"
+          >比較用計算値 (底値判定)</span
+        >
+        <span
+          id="editPriceCalcFeedback"
+          style="font-size: 1.1rem; font-weight: 800; color: var(--color-primary);"
+          >¥0</span
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="editPriceNote">メモ・詳細 (任意)</label>
+        <input type="text" id="editPriceNote" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closePriceEditModal()"
+          >キャンセル</button
+        >
+        <button class="btn btn-primary" onclick="savePriceEdit()"
+          >保存する</button
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Client-side logic -->
+  <script is:inline src="/retail.js"></script>
+</Layout>

@@ -15,9 +15,7 @@ import { jrCentralKansai } from "../../data/train-master/jr-central/kansai";
 import { jrCentralKisei } from "../../data/train-master/jr-central/kisei";
 import { jrMeisho } from "../../data/train-master/jr-central/meisho";
 import { jrSangu } from "../../data/train-master/jr-central/sangu";
-import Header from "../../components/Header.astro";
-import Footer from "../../components/Footer.astro";
-import "../../styles/global.css";
+import Layout from "../../layouts/Layout.astro";
 
 const lines = [
   meitetsuNagoya,
@@ -48,72 +46,65 @@ const linesByCompany = lines.reduce((acc, line) => {
 }, {} as Record<string, typeof lines>);
 ---
 
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>train || opetools</title>
-    <meta name="description" content="登録されている鉄道路線の一覧を表示します。" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-  </head>
-  <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
-    <Header class="bg-gray-100" />
+<Layout
+  title="train || opetools"
+  description="登録されている鉄道路線の一覧を表示します。"
+  bodyClass="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans"
+  headerClass="bg-gray-100"
+  footerClass="bg-gray-100"
+>
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-12">
+    <div class="mb-10 text-center md:text-left">
+      <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
+        鉄道路線一覧
+      </h1>
+      <p class="text-slate-400 text-sm leading-relaxed">
+        停車駅データを保有する路線の一覧です。路線を選択すると、種別ごとの詳細な停車駅案内図（グリッドマップ）を表示できます。
+      </p>
+    </div>
 
-    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-12">
-      <div class="mb-10 text-center md:text-left">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
-          鉄道路線一覧
-        </h1>
-        <p class="text-slate-400 text-sm leading-relaxed">
-          停車駅データを保有する路線の一覧です。路線を選択すると、種別ごとの詳細な停車駅案内図（グリッドマップ）を表示できます。
-        </p>
-      </div>
+    <div class="space-y-12">
+      {Object.entries(linesByCompany).map(([company, companyLines]) => (
+        <section class="space-y-4">
+          <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2 mb-4">
+            {company}
+          </h2>
+          <div class="grid gap-4 sm:grid-cols-2">
+            {companyLines.map((line) => (
+              <a
+                href={`/train/${line.id}`}
+                class="block p-5 bg-slate-800/40 hover:bg-slate-850 border border-slate-700/40 hover:border-slate-600 rounded-2xl transition-all duration-300 group shadow-lg shadow-slate-950/20"
+              >
+                <div class="flex justify-between items-start mb-3">
+                  <h3 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                    {line.name}
+                  </h3>
+                  <span class="text-[10px] font-mono px-2 py-0.5 bg-slate-850 text-slate-400 rounded-full border border-slate-750">
+                    {line.stations.length} 駅
+                  </span>
+                </div>
 
-      <div class="space-y-12">
-        {Object.entries(linesByCompany).map(([company, companyLines]) => (
-          <section class="space-y-4">
-            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2 mb-4">
-              {company}
-            </h2>
-            <div class="grid gap-4 sm:grid-cols-2">
-              {companyLines.map((line) => (
-                <a
-                  href={`/train/${line.id}`}
-                  class="block p-5 bg-slate-800/40 hover:bg-slate-850 border border-slate-700/40 hover:border-slate-600 rounded-2xl transition-all duration-300 group shadow-lg shadow-slate-950/20"
-                >
-                  <div class="flex justify-between items-start mb-3">
-                    <h3 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-                      {line.name}
-                    </h3>
-                    <span class="text-[10px] font-mono px-2 py-0.5 bg-slate-850 text-slate-400 rounded-full border border-slate-750">
-                      {line.stations.length} 駅
+                <!-- Mini route summary / Stations list preview -->
+                <p class="text-xs text-slate-400 line-clamp-1 mb-4">
+                  区間: {line.stations[0]?.name} 〜 {line.stations[line.stations.length - 1]?.name}
+                </p>
+
+                <!-- Available Types badges preview -->
+                <div class="flex flex-wrap gap-1.5">
+                  {line.types.map((type) => (
+                    <span
+                      class="text-[10px] px-2 py-0.5 rounded font-bold text-white/95"
+                      style={`background-color: ${type.color}`}
+                    >
+                      {type.name}
                     </span>
-                  </div>
-
-                  <!-- Mini route summary / Stations list preview -->
-                  <p class="text-xs text-slate-400 line-clamp-1 mb-4">
-                    区間: {line.stations[0]?.name} 〜 {line.stations[line.stations.length - 1]?.name}
-                  </p>
-
-                  <!-- Available Types badges preview -->
-                  <div class="flex flex-wrap gap-1.5">
-                    {line.types.map((type) => (
-                      <span
-                        class="text-[10px] px-2 py-0.5 rounded font-bold text-white/95"
-                        style={`background-color: ${type.color}`}
-                      >
-                        {type.name}
-                      </span>
-                    ))}
-                  </div>
-                </a>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-    </main>
-
-    <Footer class="bg-gray-100" />
-  </body>
-</html>
+                  ))}
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </main>
+</Layout>

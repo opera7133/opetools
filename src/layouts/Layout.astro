@@ -1,0 +1,53 @@
+---
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogType?: string;
+  ogImage?: string;
+  bodyClass?: string;
+  headerClass?: string;
+  footerClass?: string;
+}
+
+const {
+  title,
+  description = "Various tools for me to use",
+  ogTitle,
+  ogDescription,
+  ogType = "website",
+  ogImage = "https://tools.wmsci.com/favicon.png",
+  bodyClass = "bg-gray-100 text-gray-800 leading-relaxed",
+  headerClass,
+  footerClass,
+} = Astro.props;
+
+const finalOgTitle = ogTitle || title;
+const finalOgDescription = ogDescription || description;
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta property="og:title" content={finalOgTitle} />
+    <meta property="og:description" content={finalOgDescription} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:image" content={ogImage} />
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <Header class={headerClass} />
+    <slot />
+    <Footer class={footerClass} />
+  </body>
+</html>

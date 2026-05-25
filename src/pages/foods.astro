@@ -1,688 +1,671 @@
 ---
-import "../styles/global.css";
+import Layout from "../layouts/Layout.astro";
 import "../styles/foods.css";
-import Footer from "../components/Footer.astro";
-import Header from "../components/Header.astro";
 ---
 
-<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>foods || opera7133/opetools</title>
-    <meta name="description" content="毎日の食費を記録・管理するツール" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <meta property="og:title" content="foods || opera7133/opetools" />
-    <meta
-      property="og:description"
-      content="毎日の食費を記録・管理するツール"
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://tools.wmsci.com/favicon.png" />
-    <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  </head>
-  <body class="bg-gray-100 text-gray-800 m-0 p-0">
-    <Header />
-    <main class="max-w-3xl mx-auto py-10 px-4">
-      <div class="card" style="margin-bottom: 20px">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-          "
-        >
-          <div>
-            <h1 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 4px">
-              🍽 食費管理
-            </h1>
-            <p
-              style="
-                font-size: 0.82rem;
-                color: var(--color-text-muted);
-                margin: 0;
-              "
-            >
-              毎日の食費を記録・管理するツール
-            </p>
-          </div>
-          <div class="month-nav">
-            <button id="prevMonth" onclick="changeMonth(-1)">‹</button>
-            <span class="month-label" id="currentMonthLabel"></span>
-            <button id="nextMonth" onclick="changeMonth(1)">›</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Summary row -->
+<Layout
+  title="foods || opera7133/opetools"
+  description="毎日の食費を記録・管理するツール"
+  bodyClass="bg-gray-100 text-gray-800 m-0 p-0"
+>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js" slot="head"></script>
+  <main class="max-w-3xl mx-auto py-10 px-4">
+    <div class="card" style="margin-bottom: 20px">
       <div
         style="
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-          gap: 12px;
-          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 10px;
         "
       >
-        <div class="stat-card">
-          <span class="stat-label">今月の合計</span>
-          <span class="stat-value" id="statMonthTotal">¥0</span>
+        <div>
+          <h1 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 4px">
+            🍽 食費管理
+          </h1>
+          <p
+            style="
+              font-size: 0.82rem;
+              color: var(--color-text-muted);
+              margin: 0;
+            "
+          >
+            毎日の食費を記録・管理するツール
+          </p>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">今日の合計</span>
-          <span class="stat-value" id="statToday">¥0</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">1日平均</span>
-          <span class="stat-value" id="statAvg">¥0</span>
+        <div class="month-nav">
+          <button id="prevMonth" onclick="changeMonth(-1)">‹</button>
+          <span class="month-label" id="currentMonthLabel"></span>
+          <button id="nextMonth" onclick="changeMonth(1)">›</button>
         </div>
       </div>
+    </div>
 
-      <!-- Tab nav -->
-      <div class="tab-nav">
-        <button
-          class="tab-btn active"
-          onclick="switchTab('records', this)"
-          id="tab-records"
-        >
-          📋 記録
-        </button>
-        <button class="tab-btn" onclick="switchTab('add', this)" id="tab-add">
-          ➕ 追加
-        </button>
-        <button
-          class="tab-btn"
-          onclick="switchTab('foods', this)"
-          id="tab-foods"
-        >
-          🛒 食品管理
-        </button>
-        <button
-          class="tab-btn"
-          onclick="switchTab('chart', this)"
-          id="tab-chart"
-        >
-          📊 分析
-        </button>
-        <button
-          class="tab-btn"
-          onclick="switchTab('settings', this)"
-          id="tab-settings"
-        >
-          ⚙️ 設定
-        </button>
+    <!-- Summary row -->
+    <div
+      style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      "
+    >
+      <div class="stat-card">
+        <span class="stat-label">今月の合計</span>
+        <span class="stat-value" id="statMonthTotal">¥0</span>
       </div>
-
-      <!-- === RECORDS TAB === -->
-      <div class="tab-panel active" id="panel-records">
-        <div id="recordList"></div>
+      <div class="stat-card">
+        <span class="stat-label">今日の合計</span>
+        <span class="stat-value" id="statToday">¥0</span>
       </div>
+      <div class="stat-card">
+        <span class="stat-label">1日平均</span>
+        <span class="stat-value" id="statAvg">¥0</span>
+      </div>
+    </div>
 
-      <!-- === ADD TAB === -->
-      <div class="tab-panel" id="panel-add">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">食事を記録する</span>
+    <!-- Tab nav -->
+    <div class="tab-nav">
+      <button
+        class="tab-btn active"
+        onclick="switchTab('records', this)"
+        id="tab-records"
+      >
+        📋 記録
+      </button>
+      <button class="tab-btn" onclick="switchTab('add', this)" id="tab-add">
+        ➕ 追加
+      </button>
+      <button
+        class="tab-btn"
+        onclick="switchTab('foods', this)"
+        id="tab-foods"
+      >
+        🛒 食品管理
+      </button>
+      <button
+        class="tab-btn"
+        onclick="switchTab('chart', this)"
+        id="tab-chart"
+      >
+        📊 分析
+      </button>
+      <button
+        class="tab-btn"
+        onclick="switchTab('settings', this)"
+        id="tab-settings"
+      >
+        ⚙️ 設定
+      </button>
+    </div>
+
+    <!-- === RECORDS TAB === -->
+    <div class="tab-panel active" id="panel-records">
+      <div id="recordList"></div>
+    </div>
+
+    <!-- === ADD TAB === -->
+    <div class="tab-panel" id="panel-add">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">食事を記録する</span>
+        </div>
+
+        <!-- Date & Meal time -->
+        <div class="form-row form-group">
+          <div>
+            <label for="addDate">日付</label>
+            <input type="date" id="addDate" />
           </div>
-
-          <!-- Date & Meal time -->
-          <div class="form-row form-group">
-            <div>
-              <label for="addDate">日付</label>
-              <input type="date" id="addDate" />
-            </div>
-            <div>
-              <label>食事のタイミング</label>
-              <div class="type-toggle">
-                <button
-                  class="active"
-                  onclick="selectMealTime('morning', this)"
-                  id="mtMorning"
-                >
-                  ☀ 朝
-                </button>
-                <button onclick="selectMealTime('lunch', this)" id="mtLunch">
-                  🌤 昼
-                </button>
-                <button onclick="selectMealTime('dinner', this)" id="mtDinner">
-                  🌙 夜
-                </button>
-                <button onclick="selectMealTime('other', this)" id="mtOther">
-                  🍩 その他
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Type: cooking / eating out / prepmake -->
-          <div class="form-group">
-            <label>種別</label>
+          <div>
+            <label>食事のタイミング</label>
             <div class="type-toggle">
               <button
                 class="active"
-                onclick="selectMealType('cooking', this)"
-                id="typeCooking"
+                onclick="selectMealTime('morning', this)"
+                id="mtMorning"
               >
-                🍳 自炊
+                ☀ 朝
               </button>
-              <button
-                onclick="selectMealType('eatingout', this)"
-                id="typeEatingout"
-              >
-                🍜 外食
+              <button onclick="selectMealTime('lunch', this)" id="mtLunch">
+                🌤 昼
               </button>
-              <button
-                onclick="selectMealType('prepmake', this)"
-                id="typePrepmake"
-              >
-                🍱 作り置き作成
+              <button onclick="selectMealTime('dinner', this)" id="mtDinner">
+                🌙 夜
+              </button>
+              <button onclick="selectMealTime('other', this)" id="mtOther">
+                🍩 その他
               </button>
             </div>
           </div>
+        </div>
 
-          <!-- Cooking & PrepMake section -->
-          <div id="sectionCooking">
-            <div class="form-group" id="fgCookingMemo">
-              <label>メモ（任意）</label>
+        <!-- Type: cooking / eating out / prepmake -->
+        <div class="form-group">
+          <label>種別</label>
+          <div class="type-toggle">
+            <button
+              class="active"
+              onclick="selectMealType('cooking', this)"
+              id="typeCooking"
+            >
+              🍳 自炊
+            </button>
+            <button
+              onclick="selectMealType('eatingout', this)"
+              id="typeEatingout"
+            >
+              🍜 外食
+            </button>
+            <button
+              onclick="selectMealType('prepmake', this)"
+              id="typePrepmake"
+            >
+              🍱 作り置き作成
+            </button>
+          </div>
+        </div>
+
+        <!-- Cooking & PrepMake section -->
+        <div id="sectionCooking">
+          <div class="form-group" id="fgCookingMemo">
+            <label>メモ（任意）</label>
+            <input
+              type="text"
+              id="cookingMemo"
+              placeholder="例: 野菜炒め定食"
+            />
+          </div>
+          <div class="form-group" id="fgPrepMake" style="display: none">
+            <div
+              style="
+                background: #f0fdf4;
+                border: 1px solid #bbf7d0;
+                padding: 12px;
+                border-radius: 8px;
+                margin-bottom: 12px;
+              "
+            >
+              <label style="color: #166534"
+                >完成品の名前
+                <span style="color: var(--color-danger)">*</span></label
+              >
               <input
                 type="text"
-                id="cookingMemo"
-                placeholder="例: 野菜炒め定食"
+                id="prepName"
+                placeholder="例: カレー"
+                style="margin-bottom: 8px; border-color: #86efac"
               />
-            </div>
-            <div class="form-group" id="fgPrepMake" style="display: none">
-              <div
-                style="
-                  background: #f0fdf4;
-                  border: 1px solid #bbf7d0;
-                  padding: 12px;
-                  border-radius: 8px;
-                  margin-bottom: 12px;
-                "
+              <label style="color: #166534"
+                >出来上がる食数
+                <span style="color: var(--color-danger)">*</span></label
               >
-                <label style="color: #166534"
-                  >完成品の名前
-                  <span style="color: var(--color-danger)">*</span></label
-                >
-                <input
-                  type="text"
-                  id="prepName"
-                  placeholder="例: カレー"
-                  style="margin-bottom: 8px; border-color: #86efac"
-                />
-                <label style="color: #166534"
-                  >出来上がる食数
-                  <span style="color: var(--color-danger)">*</span></label
-                >
-                <input
-                  type="number"
-                  id="prepServings"
-                  value="4"
-                  min="0.1"
-                  step="0.5"
-                  style="border-color: #86efac"
-                />
-                <p style="font-size: 0.75rem; color: #15803d; margin-top: 8px">
-                  ※作った料理は「食品管理」に【作り置き】として自動追加されます。<br
-                  />
-                  作成時の食費は 0円 として記録され、次回自炊時に選んで消費すると食べた日の食費として計上されます。
-                </p>
-              </div>
-            </div>
-            <hr />
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 10px;
-              "
-            >
-              <span class="section-title" style="margin: 0">使用した材料</span>
-              <button
-                class="btn btn-secondary btn-sm"
-                onclick="openFoodPickerModal()"
-              >
-                ＋ 食品を追加
-              </button>
-            </div>
-            <div id="selectedIngredients">
-              <div class="empty-state" style="padding: 24px">
-                <div class="empty-icon">🧺</div>
-                <p>食品を追加してください</p>
-              </div>
-            </div>
-            <hr />
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-              "
-            >
-              <span
-                id="labelCookingTotal"
-                style="font-size: 0.85rem; color: var(--color-text-muted)"
-                >合計（計算値）</span
-              >
-              <span
-                id="cookingTotal"
-                style="
-                  font-size: 1.1rem;
-                  font-weight: 800;
-                  color: var(--color-primary);
-                "
-                >¥0</span
-              >
-            </div>
-          </div>
-
-          <!-- Eating out section -->
-          <div id="sectionEatingout" style="display: none">
-            <div class="form-group">
-              <label for="restaurantName">店名</label>
-              <input type="text" id="restaurantName" placeholder="例: すき家" />
-            </div>
-            <div id="eatingoutItems">
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  margin-bottom: 8px;
-                "
-              >
-                <span
-                  class="section-title"
-                  style="margin: 0; font-size: 0.85rem">注文した商品</span
-                >
-                <button
-                  class="btn btn-secondary btn-sm"
-                  onclick="addEatingOutItem()"
-                >
-                  ＋ 商品追加
-                </button>
-              </div>
-              <div id="eatingoutItemList"></div>
-            </div>
-            <hr />
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-              "
-            >
-              <span style="font-size: 0.85rem; color: var(--color-text-muted)"
-                >合計</span
-              >
-              <span
-                id="eatingOutTotal"
-                style="
-                  font-size: 1.1rem;
-                  font-weight: 800;
-                  color: var(--color-primary);
-                "
-                >¥0</span
-              >
-            </div>
-          </div>
-
-          <div style="margin-top: 20px">
-            <button
-              class="btn btn-primary"
-              style="width: 100%"
-              onclick="submitRecord()"
-            >
-              記録を保存
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- === FOODS TAB === -->
-      <div class="tab-panel" id="panel-foods">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">食品を登録</span>
-          </div>
-          <div class="form-row form-group">
-            <div>
-              <label for="newFoodName">食品名</label>
-              <input type="text" id="newFoodName" placeholder="例: 鶏もも肉" />
-            </div>
-            <div>
-              <label for="newFoodPrice">価格（円）</label>
               <input
                 type="number"
-                id="newFoodPrice"
-                placeholder="例: 480"
-                min="0"
+                id="prepServings"
+                value="4"
+                min="0.1"
+                step="0.5"
+                style="border-color: #86efac"
               />
+              <p style="font-size: 0.75rem; color: #15803d; margin-top: 8px">
+                ※作った料理は「食品管理」に【作り置き】として自動追加されます。<br
+                />
+                作成時の食費は 0円 として記録され、次回自炊時に選んで消費すると食べた日の食費として計上されます。
+              </p>
             </div>
           </div>
-          <div class="form-row form-group">
-            <div>
-              <label for="newFoodQuantity">購入量</label>
-              <input
-                type="number"
-                id="newFoodQuantity"
-                placeholder="例: 400"
-                min="0"
-                step="0.1"
-              />
-            </div>
-            <div>
-              <label for="newFoodUnit">単位</label>
-              <select id="newFoodUnit">
-                <option value="g">g</option>
-                <option value="ml">ml</option>
-                <option value="個">個</option>
-                <option value="枚">枚</option>
-                <option value="袋">袋</option>
-                <option value="本">本</option>
-                <option value="パック">パック</option>
-                <option value="食">食</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="newFoodDate">購入日</label>
-            <input type="date" id="newFoodDate" />
-          </div>
-          <div class="form-group">
-            <label for="newFoodNote">メモ（任意）</label>
-            <input
-              type="text"
-              id="newFoodNote"
-              placeholder="例: 業務スーパー購入"
-            />
-          </div>
-          <button class="btn btn-primary" onclick="addFood()">
-            食品を追加
-          </button>
-        </div>
-
-        <div id="foodList"></div>
-      </div>
-
-      <!-- === CHART TAB === -->
-      <div class="tab-panel" id="panel-chart">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">食事タイミング別 支出</span>
-            </div>
-            <div
-              id="mealTimeChartContainer"
-              class="chart-container"
-              style="position: relative; height: 260px; width: 100%;"
-            >
-              <canvas id="mealTimeChart"></canvas>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">自炊 vs 外食</span>
-            </div>
-            <div
-              id="typeChartContainer"
-              class="chart-container"
-              style="position: relative; height: 260px; width: 100%;"
-            >
-              <canvas id="typeChart"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">週別支出 (今月)</span>
-          </div>
+          <hr />
           <div
-            id="weeklyChartContainer"
-            class="chart-container"
-            style="position: relative; height: 280px; width: 100%;"
-          >
-            <canvas id="weeklyChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- === SETTINGS TAB === -->
-      <div class="tab-panel" id="panel-settings">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">☁️ クラウド同期</span>
-          </div>
-          <p
             style="
-              font-size: 0.85rem;
-              color: var(--color-text-muted);
-              margin-bottom: 12px;
-              line-height: 1.5;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 10px;
             "
           >
-            別の端末とデータを同期できます。データはクラウドに保存されます。
-          </p>
-          <div class="form-group">
-            <label>同期サーバー</label>
-            <div style="display:flex;gap:12px;">
-              <label
-                ><input
-                  type="radio"
-                  name="syncServer"
-                  value="v1"
-                  onclick="toggleSyncServer()"
-                /> 旧 (jsonhosting.com)</label
-              >
-              <label
-                ><input
-                  type="radio"
-                  name="syncServer"
-                  value="v2"
-                  onclick="toggleSyncServer()"
-                  checked
-                /> 新 (専用サーバー / D1)</label
-              >
+            <span class="section-title" style="margin: 0">使用した材料</span>
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick="openFoodPickerModal()"
+            >
+              ＋ 食品を追加
+            </button>
+          </div>
+          <div id="selectedIngredients">
+            <div class="empty-state" style="padding: 24px">
+              <div class="empty-icon">🧺</div>
+              <p>食品を追加してください</p>
             </div>
           </div>
-          <div class="form-group">
-            <label>同期トークン (Sync Token)</label>
-            <input
-              type="text"
-              id="syncToken"
-              placeholder="例: id:editKey (旧形式のJSONも可)"
-            />
-          </div>
-          <div style="margin-bottom: 14px">
-            <button class="btn btn-secondary btn-sm" onclick="copySyncToken()">
-              📋 トークンをコピー
-            </button>
-          </div>
-          <div class="form-group">
-            <label>Proxy Worker URL</label>
-            <input
-              type="text"
-              id="syncProxyUrl"
-              placeholder="例: https://xxx.workers.dev (CORS回避用)"
-              value="https://tools.ainznino.workers.dev"
-            />
-          </div>
+          <hr />
           <div
-            class="form-group"
-            style="display:flex; align-items:center; gap:8px;"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+            "
           >
-            <input
-              type="checkbox"
-              id="syncAutoDL"
-              onchange="toggleAutoSyncDL(this.checked)"
-            />
-            <label for="syncAutoDL" style="margin:0;"
-              >起動時に自動ダウンロード（同期）する</label
+            <span
+              id="labelCookingTotal"
+              style="font-size: 0.85rem; color: var(--color-text-muted)"
+              >合計（計算値）</span
+            >
+            <span
+              id="cookingTotal"
+              style="
+                font-size: 1.1rem;
+                font-weight: 800;
+                color: var(--color-primary);
+              "
+              >¥0</span
             >
           </div>
+        </div>
+
+        <!-- Eating out section -->
+        <div id="sectionEatingout" style="display: none">
+          <div class="form-group">
+            <label for="restaurantName">店名</label>
+            <input type="text" id="restaurantName" placeholder="例: すき家" />
+          </div>
+          <div id="eatingoutItems">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 8px;
+              "
+            >
+              <span
+                class="section-title"
+                style="margin: 0; font-size: 0.85rem">注文した商品</span
+              >
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick="addEatingOutItem()"
+              >
+                ＋ 商品追加
+              </button>
+            </div>
+            <div id="eatingoutItemList"></div>
+          </div>
+          <hr />
           <div
-            style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+            "
           >
-            <button class="btn btn-secondary" onclick="saveSyncConfig()">
-              キーをローカル保存
-            </button>
-            <button class="btn btn-primary" onclick="syncUpload()">
-              ↑ クラウドにアップロード (新規作成)
-            </button>
-            <button class="btn btn-primary" onclick="syncDownload()">
-              ↓ クラウドから読込
-            </button>
+            <span style="font-size: 0.85rem; color: var(--color-text-muted)"
+              >合計</span
+            >
+            <span
+              id="eatingOutTotal"
+              style="
+                font-size: 1.1rem;
+                font-weight: 800;
+                color: var(--color-primary);
+              "
+              >¥0</span
+            >
           </div>
-          <p
-            id="syncStatus"
-            style="font-size: 0.85rem; font-weight: bold; margin-top: 12px"
-          >
-          </p>
         </div>
-      </div>
-    </main>
 
-    <!-- === Food Picker Modal === -->
-    <div class="modal-overlay" id="foodPickerModal">
-      <div class="modal">
-        <div class="modal-title">🛒 食品を選択</div>
-        <div id="foodPickerList"></div>
-        <div class="modal-actions">
+        <div style="margin-top: 20px">
           <button
-            class="btn btn-secondary"
-            onclick="closeModal('foodPickerModal')"
+            class="btn btn-primary"
+            style="width: 100%"
+            onclick="submitRecord()"
           >
-            キャンセル
-          </button>
-          <button class="btn btn-primary" onclick="confirmFoodPicker()">
-            追加
+            記録を保存
           </button>
         </div>
       </div>
     </div>
 
-    <!-- === Food Edit Modal === -->
-    <div class="modal-overlay" id="foodEditModal">
-      <div class="modal">
-        <div class="modal-title">食品を編集</div>
-        <div class="form-row form-group">
-          <div>
-            <label>食品名</label>
-            <input type="text" id="editFoodName" />
-          </div>
-          <div>
-            <label>購入日</label>
-            <input type="date" id="editFoodDate" />
-          </div>
+    <!-- === FOODS TAB === -->
+    <div class="tab-panel" id="panel-foods">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">食品を登録</span>
         </div>
         <div class="form-row form-group">
           <div>
-            <label>価格（円）</label>
-            <input type="number" id="editFoodPrice" min="0" />
+            <label for="newFoodName">食品名</label>
+            <input type="text" id="newFoodName" placeholder="例: 鶏もも肉" />
           </div>
           <div>
-            <label>購入量</label>
-            <input type="number" id="editFoodQuantity" min="0" step="0.1" />
+            <label for="newFoodPrice">価格（円）</label>
+            <input
+              type="number"
+              id="newFoodPrice"
+              placeholder="例: 480"
+              min="0"
+            />
           </div>
         </div>
         <div class="form-row form-group">
           <div>
-            <label>現在の残量</label>
-            <input type="number" id="editFoodRemaining" min="0" step="0.1" />
+            <label for="newFoodQuantity">購入量</label>
+            <input
+              type="number"
+              id="newFoodQuantity"
+              placeholder="例: 400"
+              min="0"
+              step="0.1"
+            />
           </div>
           <div>
-            <label>単位</label>
-            <input type="text" id="editFoodUnit" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>メモ</label>
-          <input type="text" id="editFoodNote" />
-        </div>
-        <div class="modal-actions">
-          <button
-            class="btn btn-secondary"
-            onclick="closeModal('foodEditModal')"
-          >
-            キャンセル
-          </button>
-          <button class="btn btn-primary" onclick="saveFoodEdit()">保存</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- === Record Edit Modal === -->
-    <div class="modal-overlay" id="recordEditModal">
-      <div class="modal">
-        <div class="modal-title">記録を編集</div>
-        <div class="form-row form-group">
-          <div>
-            <label>日付</label>
-            <input type="date" id="editRecordDate" />
-          </div>
-          <div>
-            <label>タイミング</label>
-            <select id="editRecordTime">
-              <option value="morning">朝</option>
-              <option value="lunch">昼</option>
-              <option value="dinner">夜</option>
-              <option value="other">その他</option>
+            <label for="newFoodUnit">単位</label>
+            <select id="newFoodUnit">
+              <option value="g">g</option>
+              <option value="ml">ml</option>
+              <option value="個">個</option>
+              <option value="枚">枚</option>
+              <option value="袋">袋</option>
+              <option value="本">本</option>
+              <option value="パック">パック</option>
+              <option value="食">食</option>
             </select>
           </div>
         </div>
         <div class="form-group">
-          <label>金額 (円)</label>
-          <input type="number" id="editRecordCost" min="0" />
+          <label for="newFoodDate">購入日</label>
+          <input type="date" id="newFoodDate" />
         </div>
         <div class="form-group">
-          <label>タイトル / メモ</label>
-          <input type="text" id="editRecordNote" />
+          <label for="newFoodNote">メモ（任意）</label>
+          <input
+            type="text"
+            id="newFoodNote"
+            placeholder="例: 業務スーパー購入"
+          />
+        </div>
+        <button class="btn btn-primary" onclick="addFood()">
+          食品を追加
+        </button>
+      </div>
+
+      <div id="foodList"></div>
+    </div>
+
+    <!-- === CHART TAB === -->
+    <div class="tab-panel" id="panel-chart">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">食事タイミング別 支出</span>
+          </div>
+          <div
+            id="mealTimeChartContainer"
+            class="chart-container"
+            style="position: relative; height: 260px; width: 100%;"
+          >
+            <canvas id="mealTimeChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">自炊 vs 外食</span>
+          </div>
+          <div
+            id="typeChartContainer"
+            class="chart-container"
+            style="position: relative; height: 260px; width: 100%;"
+          >
+            <canvas id="typeChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">週別支出 (今月)</span>
         </div>
         <div
-          id="editRecordIngredientsArea"
-          style="display:none; margin-top:16px;"
+          id="weeklyChartContainer"
+          class="chart-container"
+          style="position: relative; height: 280px; width: 100%;"
         >
-          <hr />
-          <div
-            style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"
-          >
-            <span class="section-title" style="margin:0;">使用した材料</span>
-            <button
-              class="btn btn-secondary btn-sm"
-              onclick="openFoodPickerModal(true)">＋ 食品を追加</button
-            >
-          </div>
-          <div id="editSelectedIngredients"></div>
-          <div
-            style="display:flex; justify-content:space-between; margin-top:10px;"
-          >
-            <span style="font-size:0.85rem;color:var(--color-text-muted);"
-              >合計コスト</span
-            >
-            <span
-              id="editRecordTotalLabel"
-              style="font-weight:bold;color:var(--color-primary);">¥0</span
-            >
-          </div>
-        </div>
-        <div class="modal-actions" style="margin-top:16px;">
-          <button
-            class="btn btn-secondary"
-            onclick="closeModal('recordEditModal')"
-          >
-            キャンセル
-          </button>
-          <button class="btn btn-primary" onclick="saveRecordEdit()">
-            保存
-          </button>
+          <canvas id="weeklyChart"></canvas>
         </div>
       </div>
     </div>
 
-    <Footer />
-    <script is:inline src="/foods.js"></script>
-  </body>
-</html>
+    <!-- === SETTINGS TAB === -->
+    <div class="tab-panel" id="panel-settings">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">☁️ クラウド同期</span>
+        </div>
+        <p
+          style="
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            margin-bottom: 12px;
+            line-height: 1.5;
+          "
+        >
+          別の端末とデータを同期できます。データはクラウドに保存されます。
+        </p>
+        <div class="form-group">
+          <label>同期サーバー</label>
+          <div style="display:flex;gap:12px;">
+            <label
+              ><input
+                type="radio"
+                name="syncServer"
+                value="v1"
+                onclick="toggleSyncServer()"
+              /> 旧 (jsonhosting.com)</label
+            >
+            <label
+              ><input
+                type="radio"
+                name="syncServer"
+                value="v2"
+                onclick="toggleSyncServer()"
+                checked
+              /> 新 (専用サーバー / D1)</label
+            >
+          </div>
+        </div>
+        <div class="form-group">
+          <label>同期トークン (Sync Token)</label>
+          <input
+            type="text"
+            id="syncToken"
+            placeholder="例: id:editKey (旧形式のJSONも可)"
+          />
+        </div>
+        <div style="margin-bottom: 14px">
+          <button class="btn btn-secondary btn-sm" onclick="copySyncToken()">
+            📋 トークンをコピー
+          </button>
+        </div>
+        <div class="form-group">
+          <label>Proxy Worker URL</label>
+          <input
+            type="text"
+            id="syncProxyUrl"
+            placeholder="例: https://xxx.workers.dev (CORS回避用)"
+            value="https://tools.ainznino.workers.dev"
+          />
+        </div>
+        <div
+          class="form-group"
+          style="display:flex; align-items:center; gap:8px;"
+        >
+          <input
+            type="checkbox"
+            id="syncAutoDL"
+            onchange="toggleAutoSyncDL(this.checked)"
+          />
+          <label for="syncAutoDL" style="margin:0;"
+            >起動時に自動ダウンロード（同期）する</label
+          >
+        </div>
+        <div
+          style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap"
+        >
+          <button class="btn btn-secondary" onclick="saveSyncConfig()">
+            キーをローカル保存
+          </button>
+          <button class="btn btn-primary" onclick="syncUpload()">
+            ↑ クラウドにアップロード (新規作成)
+          </button>
+          <button class="btn btn-primary" onclick="syncDownload()">
+            ↓ クラウドから読込
+          </button>
+        </div>
+        <p
+          id="syncStatus"
+          style="font-size: 0.85rem; font-weight: bold; margin-top: 12px"
+        >
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- === Food Picker Modal === -->
+  <div class="modal-overlay" id="foodPickerModal">
+    <div class="modal">
+      <div class="modal-title">🛒 食品を選択</div>
+      <div id="foodPickerList"></div>
+      <div class="modal-actions">
+        <button
+          class="btn btn-secondary"
+          onclick="closeModal('foodPickerModal')"
+        >
+          キャンセル
+        </button>
+        <button class="btn btn-primary" onclick="confirmFoodPicker()">
+          追加
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- === Food Edit Modal === -->
+  <div class="modal-overlay" id="foodEditModal">
+    <div class="modal">
+      <div class="modal-title">食品を編集</div>
+      <div class="form-row form-group">
+        <div>
+          <label>食品名</label>
+          <input type="text" id="editFoodName" />
+        </div>
+        <div>
+          <label>購入日</label>
+          <input type="date" id="editFoodDate" />
+        </div>
+      </div>
+      <div class="form-row form-group">
+        <div>
+          <label>価格（円）</label>
+          <input type="number" id="editFoodPrice" min="0" />
+        </div>
+        <div>
+          <label>購入量</label>
+          <input type="number" id="editFoodQuantity" min="0" step="0.1" />
+        </div>
+      </div>
+      <div class="form-row form-group">
+        <div>
+          <label>現在の残量</label>
+          <input type="number" id="editFoodRemaining" min="0" step="0.1" />
+        </div>
+        <div>
+          <label>単位</label>
+          <input type="text" id="editFoodUnit" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>メモ</label>
+        <input type="text" id="editFoodNote" />
+      </div>
+      <div class="modal-actions">
+        <button
+          class="btn btn-secondary"
+          onclick="closeModal('foodEditModal')"
+        >
+          キャンセル
+        </button>
+        <button class="btn btn-primary" onclick="saveFoodEdit()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- === Record Edit Modal === -->
+  <div class="modal-overlay" id="recordEditModal">
+    <div class="modal">
+      <div class="modal-title">記録を編集</div>
+      <div class="form-row form-group">
+        <div>
+          <label>日付</label>
+          <input type="date" id="editRecordDate" />
+        </div>
+        <div>
+          <label>タイミング</label>
+          <select id="editRecordTime">
+            <option value="morning">朝</option>
+            <option value="lunch">昼</option>
+            <option value="dinner">夜</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>金額 (円)</label>
+        <input type="number" id="editRecordCost" min="0" />
+      </div>
+      <div class="form-group">
+        <label>タイトル / メモ</label>
+        <input type="text" id="editRecordNote" />
+      </div>
+      <div
+        id="editRecordIngredientsArea"
+        style="display:none; margin-top:16px;"
+      >
+        <hr />
+        <div
+          style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"
+        >
+          <span class="section-title" style="margin:0;">使用した材料</span>
+          <button
+            class="btn btn-secondary btn-sm"
+            onclick="openFoodPickerModal(true)">＋ 食品を追加</button
+          >
+        </div>
+        <div id="editSelectedIngredients"></div>
+        <div
+          style="display:flex; justify-content:space-between; margin-top:10px;"
+        >
+          <span style="font-size:0.85rem;color:var(--color-text-muted);"
+            >合計コスト</span
+          >
+          <span
+            id="editRecordTotalLabel"
+            style="font-weight:bold;color:var(--color-primary);">¥0</span
+          >
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button
+          class="btn btn-secondary"
+          onclick="closeModal('recordEditModal')"
+        >
+          キャンセル
+        </button>
+        <button class="btn btn-primary" onclick="saveRecordEdit()">
+          保存
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline src="/foods.js"></script>
+</Layout>

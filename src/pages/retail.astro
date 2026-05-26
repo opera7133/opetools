@@ -216,6 +216,7 @@ import "../styles/retail.css";
           </div>
 
           <button
+            type="button"
             class="btn btn-primary"
             style="width:100%;margin-top:8px;"
             onclick="submitPrice()"
@@ -398,10 +399,14 @@ import "../styles/retail.css";
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeItemModal()"
-          >キャンセル</button
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick="closeItemModal()">キャンセル</button
         >
-        <button class="btn btn-primary" onclick="saveItem()">保存する</button>
+        <button type="button" class="btn btn-primary" onclick="saveItem()"
+          >保存する</button
+        >
       </div>
     </form>
   </div>
@@ -481,10 +486,14 @@ import "../styles/retail.css";
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeShopModal()"
-          >キャンセル</button
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick="closeShopModal()">キャンセル</button
         >
-        <button class="btn btn-primary" onclick="saveShop()">保存する</button>
+        <button type="button" class="btn btn-primary" onclick="saveShop()"
+          >保存する</button
+        >
       </div>
     </form>
   </div>

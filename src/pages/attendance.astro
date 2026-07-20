@@ -1,0 +1,570 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/attendance.css";
+---
+
+<Layout
+  title="attendance || opera7133/opetools"
+  description="授業ごとの出席コードを記録・管理するツール"
+  bodyClass="bg-gray-100 text-gray-800 m-0 p-0"
+>
+  <main class="attendance-container">
+    <!-- Header Card -->
+    <div class="card mb-4">
+      <div
+        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
+        <div>
+          <h1 class="text-2xl font-bold flex items-center gap-2">
+            📅 出席コード管理
+          </h1>
+          <p class="text-sm text-gray-600 mt-1">
+            授業ごとの出席コードを記録し、確認・共有しやすくするツール
+          </p>
+        </div>
+        <div class="text-right flex flex-col items-end">
+          <div
+            class="text-sm font-semibold text-gray-700 bg-gray-200 px-3 py-1 rounded-md"
+            id="currentTimeDisplay"
+          >
+            読み込み中...
+          </div>
+          <span class="badge badge-primary mt-1" id="currentQuarterBadge">
+            Q1 (前期1)
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Entry Panel / Active Class (Sticky/Highlight on Dashboard) -->
+    <div
+      id="quickEntryPanel"
+      class="card border-indigo-400 bg-indigo-50/30 hidden"
+    >
+      <h2
+        class="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-2"
+      >
+        <span
+          class="animate-pulse inline-block w-2.5 h-2.5 rounded-full bg-indigo-600"
+        ></span>
+        現在開講中の授業
+      </h2>
+      <div
+        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
+        <div>
+          <h3 class="text-xl font-bold text-gray-850" id="quickClassName">
+            アルゴリズムとデータ構造
+          </h3>
+          <p class="text-sm text-indigo-700" id="quickClassTime">
+            2限 (10:30 - 12:00)
+          </p>
+        </div>
+        <div class="flex items-center gap-2 grow md:max-w-md justify-end">
+          <div class="w-full relative">
+            <input
+              type="text"
+              id="quickAttendanceCode"
+              class="form-input w-full pr-16 text-lg font-mono font-bold tracking-widest text-center"
+              placeholder="出席コード"
+            />
+            <button
+              class="absolute right-1.5 top-1.5 btn btn-primary py-1 px-3 text-xs"
+              id="quickSaveBtn"
+              onclick="saveQuickAttendance()"
+            >
+              保存
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        id="quickSaveStatus"
+        class="mt-2 text-xs font-semibold text-gray-600 hidden"
+      >
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-container">
+      <button class="tab-btn active" onclick="switchTab('dashboard', this)">
+        📋 ダッシュボード
+      </button>
+      <button class="tab-btn" onclick="switchTab('history', this)">
+        🔍 出席履歴・検索
+      </button>
+      <button class="tab-btn" onclick="switchTab('timetable', this)">
+        ⚙️ 時間割設定
+      </button>
+      <button class="tab-btn" onclick="switchTab('exceptions', this)">
+        ⚠️ 例外設定
+      </button>
+      <button class="tab-btn" onclick="switchTab('sync', this)">
+        ☁️ クラウド同期
+      </button>
+    </div>
+
+    <!-- Tab Contents -->
+
+    <!-- 1. Dashboard -->
+    <div id="tab-content-dashboard" class="tab-pane fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Today's Timeline -->
+        <div class="md:col-span-2 card">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="card-title m-0">🗓 本日の授業予定</h2>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-secondary btn-sm" onclick="adjustDate(-1)">
+                ◀ 前日
+              </button>
+              <span
+                class="font-bold text-sm bg-gray-100 px-2 py-1 rounded"
+                id="timelineDateLabel"
+              >
+                2026年7月20日 (月)
+              </span>
+              <button class="btn btn-secondary btn-sm" onclick="adjustDate(1)">
+                翌日 ▶
+              </button>
+              <button
+                class="btn btn-secondary btn-sm text-indigo-600 font-semibold"
+                onclick="resetToToday()"
+              >
+                今日
+              </button>
+            </div>
+          </div>
+          <div id="timelineContainer" class="flex flex-col">
+            <!-- Timeline items will be injected here by JS -->
+          </div>
+        </div>
+
+        <!-- Sidebar Quick Controls -->
+        <div class="card">
+          <h2 class="card-title text-base">ℹ️ 情報と設定</h2>
+          <div class="text-sm flex flex-col gap-3">
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <span class="block text-xs text-gray-500 font-semibold"
+                >現在判定されたクォーター</span
+              >
+              <span class="font-bold text-indigo-700" id="infoQuarter">Q1</span>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <span class="block text-xs text-gray-500 font-semibold"
+                >本日の適用曜日</span
+              >
+              <span class="font-bold text-gray-800" id="infoAppliedDay"
+                >月曜日</span
+              >
+              <span
+                class="text-xs text-orange-600 font-semibold hidden block mt-1"
+                id="infoExceptionAlert"
+              >
+                ⚠️ 例外ルール適用中
+              </span>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 font-bold mb-1"
+                >表示シミュレーション</label
+              >
+              <div class="flex flex-col gap-1.5">
+                <input
+                  type="datetime-local"
+                  id="simTimeInput"
+                  class="form-input text-xs py-1"
+                  onchange="applySimulatedTime()"
+                />
+                <button
+                  class="btn btn-secondary btn-sm w-full text-xs"
+                  onclick="resetSimulatedTime()"
+                >
+                  シミュレーション解除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. History -->
+    <div id="tab-content-history" class="tab-pane fade-in hidden">
+      <div class="card">
+        <h2 class="card-title">🔍 出席コード履歴・検索</h2>
+        <div class="flex flex-col md:flex-row gap-3 mb-4">
+          <input
+            type="text"
+            id="historySearch"
+            class="form-input grow"
+            placeholder="授業名、出席コード、日付などで検索..."
+            oninput="renderHistory()"
+          />
+          <select
+            id="historyFilterQuarter"
+            class="form-input md:w-48"
+            onchange="renderHistory()"
+          >
+            <option value="all">すべての学期</option>
+            <option value="q1">前期1 (Q1)</option>
+            <option value="q2">前期2 (Q2)</option>
+            <option value="q3">後期1 (Q3)</option>
+            <option value="q4">後期2 (Q4)</option>
+          </select>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-100 border-b border-gray-200">
+                <th class="p-3 font-semibold text-gray-700">日付</th>
+                <th class="p-3 font-semibold text-gray-700">時限</th>
+                <th class="p-3 font-semibold text-gray-700">授業名</th>
+                <th class="p-3 font-semibold text-gray-700">出席コード</th>
+                <th class="p-3 font-semibold text-gray-700">操作</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- History rows will be injected by JS -->
+            </tbody>
+          </table>
+          <div
+            id="historyEmptyState"
+            class="text-center py-8 text-gray-500 font-semibold hidden"
+          >
+            該当する出席コードが見つかりません。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Timetable Config -->
+    <div id="tab-content-timetable" class="tab-pane fade-in hidden">
+      <!-- Period Time Settings -->
+      <div class="card">
+        <h2 class="card-title">⏰ 時限の開始・終了時間設定</h2>
+        <p class="text-xs text-gray-500 mb-3">
+          各時限の標準時間を設定します。自動判定に利用されます。
+        </p>
+        <div
+          class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1"
+          id="periodTimesConfig"
+        >
+          <!-- period time slots injected by JS -->
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button class="btn btn-primary" onclick="savePeriodTimes()">
+            時限設定を保存
+          </button>
+        </div>
+      </div>
+
+      <!-- Quarter Date Range Settings -->
+      <div class="card">
+        <h2 class="card-title">📅 学期（クォーター）の日付範囲</h2>
+        <p class="text-xs text-gray-500 mb-3">
+          日付から学期を自動判定するための日付範囲を設定します。
+        </p>
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
+          id="quarterDatesConfig"
+        >
+          <!-- quarter dates config injected by JS -->
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button class="btn btn-primary" onclick="saveQuarterDates()">
+            学期日程を保存
+          </button>
+        </div>
+      </div>
+
+      <!-- Timetable Scheduler Editor -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="card-title m-0">🏫 時間割の入力</h2>
+          <select
+            id="editTimetableQuarter"
+            class="form-input w-48"
+            onchange="renderTimetableGrid()"
+          >
+            <option value="q1">前期1 (Q1) の時間割</option>
+            <option value="q2">前期2 (Q2) の時間割</option>
+            <option value="q3">後期1 (Q3) の時間割</option>
+            <option value="q4">後期2 (Q4) の時間割</option>
+          </select>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">
+          月曜日から金曜日までの通常授業を入力してください。空欄は授業なしになります。
+        </p>
+
+        <div class="timetable-wrapper">
+          <table class="timetable-table">
+            <thead>
+              <tr>
+                <th class="w-20">時限</th>
+                <th>月曜日</th>
+                <th>火曜日</th>
+                <th>水曜日</th>
+                <th>木曜日</th>
+                <th>金曜日</th>
+              </tr>
+            </thead>
+            <tbody id="timetableGridBody">
+              <!-- grid fields injected by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-4 flex justify-between items-center">
+          <span
+            class="text-xs text-emerald-600 font-semibold"
+            id="timetableSaveMessage"></span>
+          <button class="btn btn-primary" onclick="saveTimetableGrid()">
+            時間割を保存
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Exceptions -->
+    <div id="tab-content-exceptions" class="tab-pane fade-in hidden">
+      <!-- Add Exception Form -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card md:col-span-1">
+          <h2 class="card-title">➕ 例外の追加</h2>
+          <form id="exceptionForm" onsubmit="addException(event)">
+            <div class="form-group">
+              <label>日付</label>
+              <input
+                type="date"
+                id="exceptionDate"
+                class="form-input"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>例外タイプ</label>
+              <select
+                id="exceptionType"
+                class="form-input"
+                onchange="toggleExceptionFields()"
+                required
+              >
+                <option value="holiday">全休 (祝日・休校日)</option>
+                <option value="cancel">休講 (特定の時限のみ)</option>
+                <option value="reschedule">臨時授業・時間変更 (新規追加)</option
+                >
+                <option value="substitution"
+                  >曜日振替 (他曜日の時間割を適用)</option
+                >
+              </select>
+            </div>
+
+            <!-- Fields shown for cancel and reschedule -->
+            <div id="exceptionPeriodGroup" class="form-group hidden">
+              <label>対象時限</label>
+              <select id="exceptionPeriod" class="form-input">
+                <option value="1">1限</option>
+                <option value="2">2限</option>
+                <option value="3">3限</option>
+                <option value="4">4限</option>
+                <option value="5">5限</option>
+                <option value="6">6限</option>
+              </select>
+            </div>
+
+            <!-- Field shown for reschedule -->
+            <div id="exceptionClassNameGroup" class="form-group hidden">
+              <label>授業名</label>
+              <input
+                type="text"
+                id="exceptionClassName"
+                class="form-input"
+                placeholder="例: 特別講義"
+              />
+            </div>
+
+            <!-- Field shown for substitution -->
+            <div id="exceptionSubDayGroup" class="form-group hidden">
+              <label>適用する曜日</label>
+              <select id="exceptionSubDay" class="form-input">
+                <option value="1">月曜日</option>
+                <option value="2">火曜日</option>
+                <option value="3">水曜日</option>
+                <option value="4">木曜日</option>
+                <option value="5">金曜日</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full mt-2">
+              例外を追加する
+            </button>
+          </form>
+        </div>
+
+        <!-- Exception List -->
+        <div class="card md:col-span-2">
+          <h2 class="card-title">⚠️ 登録済みの例外一覧</h2>
+          <p class="text-xs text-gray-500 mb-3">
+            祝日、曜日振替、休講などの例外ルール一覧です。
+          </p>
+          <div class="overflow-y-auto max-h-100">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-100 border-b border-gray-200">
+                  <th class="p-3 font-semibold text-gray-700">日付</th>
+                  <th class="p-3 font-semibold text-gray-700">内容</th>
+                  <th class="p-3 font-semibold text-gray-700">操作</th>
+                </tr>
+              </thead>
+              <tbody id="exceptionsTableBody">
+                <!-- Exceptions list rows will be injected by JS -->
+              </tbody>
+            </table>
+            <div
+              id="exceptionsEmptyState"
+              class="text-center py-8 text-gray-500 font-semibold hidden"
+            >
+              登録された例外はありません。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Cloud Sync -->
+    <div id="tab-content-sync" class="tab-pane fade-in hidden">
+      <div class="card">
+        <h2 class="card-title">☁️ クラウド同期設定 (jsonhosting.com)</h2>
+        <p class="text-sm text-gray-600 mb-4">
+          別の端末とデータを同期できます。データはクラウドに保存されます。
+        </p>
+
+        <div class="form-group">
+          <label>同期サーバー</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" name="syncServer" value="v1" checked />
+              旧 (jsonhosting.com / v1 API)
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" name="syncServer" value="v2" />
+              新 (専用サーバー / v2 API)
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>同期トークン (Sync Token)</label>
+          <input
+            type="text"
+            id="syncToken"
+            class="form-input font-mono text-sm"
+            placeholder="例: id:editKey"
+          />
+        </div>
+
+        <div class="mb-4">
+          <button class="btn btn-secondary btn-sm" onclick="copySyncToken()">
+            📋 トークンをコピー
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>Proxy Worker URL</label>
+          <input
+            type="text"
+            id="syncProxyUrl"
+            class="form-input font-mono text-sm"
+            placeholder="例: https://xxx.workers.dev (CORS回避用)"
+            value="https://tools.ainznino.workers.dev"
+          />
+        </div>
+
+        <div class="form-group flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="syncAutoDL"
+            class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+          />
+          <label for="syncAutoDL" class="m-0 select-none"
+            >起動時に自動ダウンロード（同期）する</label
+          >
+        </div>
+
+        <div class="flex gap-3 mt-6 flex-wrap">
+          <button class="btn btn-secondary" onclick="saveSyncConfig()">
+            設定をローカル保存
+          </button>
+          <button class="btn btn-primary" onclick="syncUpload()">
+            ↑ クラウドにアップロード (同期更新)
+          </button>
+          <button class="btn btn-primary" onclick="syncDownload()">
+            ↓ クラウドから読み込み
+          </button>
+        </div>
+        <p id="syncStatus" class="mt-4 text-sm font-semibold text-gray-700"></p>
+      </div>
+
+      <!-- Backup Export/Import -->
+      <div class="card">
+        <h2 class="card-title">💾 バックアップとデータ管理</h2>
+        <p class="text-xs text-gray-500 mb-4">
+          ブラウザのローカルストレージデータをJSONファイルとしてエクスポートまたはインポートします。
+        </p>
+        <div class="flex gap-3 flex-wrap">
+          <button class="btn btn-secondary" onclick="exportDataJSON()">
+            📥 JSONとしてエクスポート
+          </button>
+          <label class="btn btn-secondary cursor-pointer">
+            📤 JSONからインポート
+            <input
+              type="file"
+              id="importFile"
+              class="hidden"
+              accept=".json"
+              onchange="importDataJSON(event)"
+            />
+          </label>
+          <button class="btn btn-danger" onclick="resetAllData()">
+            ⚠️ 全てのデータをリセット
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Edit Attendance Code Dialog (Modal) -->
+  <div
+    id="attendanceModal"
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden"
+  >
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 m-4 fade-in">
+      <h3 class="text-lg font-bold text-gray-800 mb-2" id="modalTitle">
+        出席コードの入力・編集
+      </h3>
+      <p class="text-xs text-gray-500 mb-4" id="modalSubTitle">
+        2026-07-20 2限: アルゴリズム
+      </p>
+
+      <div class="form-group mb-6">
+        <label for="modalCodeInput">出席コード</label>
+        <input
+          type="text"
+          id="modalCodeInput"
+          class="form-input text-lg font-mono font-bold tracking-widest text-center"
+          placeholder="コードを入力"
+        />
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button class="btn btn-secondary" onclick="closeAttendanceModal()">
+          キャンセル
+        </button>
+        <button class="btn btn-primary" onclick="saveModalAttendance()">
+          保存する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline src="/attendance.js"></script>
+</Layout>

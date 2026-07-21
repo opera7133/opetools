@@ -268,6 +268,10 @@ function setAttendanceCode(dateStr, periodId, className, code) {
     timestamp: new Date().toISOString(),
   };
   saveState();
+
+  if (state.syncConfig && state.syncConfig.id && state.syncConfig.editKey) {
+    syncUpload(true);
+  }
 }
 
 function getAttendanceCode(dateStr, periodId) {
@@ -1104,15 +1108,27 @@ function getSyncEndpoint(idStr = null) {
   return `${baseUrl}${path}`;
 }
 
-async function syncUpload() {
-  const tokenInput = document.getElementById("syncToken");
-  const proxyInput = document.getElementById("syncProxyUrl");
-  const tokenStr = tokenInput.value.trim();
-  const { id, key: editKey } = parseSyncToken(tokenStr);
+async function syncUpload(silent = false) {
+  let id = "";
+  let editKey = "";
+
+  if (silent) {
+    id = state.syncConfig.id;
+    editKey = state.syncConfig.editKey;
+  } else {
+    const tokenInput = document.getElementById("syncToken");
+    const tokenStr = tokenInput ? tokenInput.value.trim() : "";
+    const parsed = parseSyncToken(tokenStr);
+    id = parsed.id;
+    editKey = parsed.key;
+  }
+
   const statusEl = document.getElementById("syncStatus");
 
-  statusEl.textContent = "アップロード中...";
-  statusEl.className = "mt-4 text-sm font-semibold text-indigo-600";
+  if (!silent && statusEl) {
+    statusEl.textContent = "アップロード中...";
+    statusEl.className = "mt-4 text-sm font-semibold text-indigo-600";
+  }
 
   try {
     const payload = JSON.stringify({
@@ -1134,12 +1150,19 @@ async function syncUpload() {
         body: payload,
       });
       if (!res.ok) throw new Error("アップロードに失敗しました");
-      statusEl.textContent =
-        "同期完了！アップロードしました (" +
-        new Date().toLocaleTimeString() +
-        ")";
-      statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
+      if (!silent && statusEl) {
+        statusEl.textContent =
+          "同期完了！アップロードしました (" +
+          new Date().toLocaleTimeString() +
+          ")";
+        statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
+      }
     } else {
+      if (silent) return; // Don't auto-create bin in background
+
+      const tokenInput = document.getElementById("syncToken");
+      const proxyInput = document.getElementById("syncProxyUrl");
+
       // Create new JSON hosting bin
       const res = await fetch(getSyncEndpoint(), {
         method: "POST",
@@ -1148,28 +1171,34 @@ async function syncUpload() {
       });
       if (!res.ok) throw new Error("新規作成に失敗しました");
       const data = await res.json();
-      tokenInput.value = `${data.id}:${data.editKey}`;
+      if (tokenInput) {
+        tokenInput.value = `${data.id}:${data.editKey}`;
+      }
 
       const serverVersion = document.querySelector(
         'input[name="syncServer"]:checked',
-      ).value;
+      )?.value || "v1";
       state.syncConfig = {
         id: data.id,
         editKey: data.editKey,
-        proxyUrl: proxyInput.value.trim(),
+        proxyUrl: proxyInput ? proxyInput.value.trim() : "",
         serverVersion,
-        autoDownload: document.getElementById("syncAutoDL").checked,
+        autoDownload: document.getElementById("syncAutoDL")?.checked || false,
       };
       saveState();
 
-      statusEl.textContent =
-        "新規の同期トークンを作成し、データをアップロードしました！";
-      statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
+      if (statusEl) {
+        statusEl.textContent =
+          "新規の同期トークンを作成し、データをアップロードしました！";
+        statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
+      }
     }
   } catch (err) {
     console.error(err);
-    statusEl.textContent = "エラー: " + err.message;
-    statusEl.className = "mt-4 text-sm font-semibold text-red-600";
+    if (!silent && statusEl) {
+      statusEl.textContent = "エラー: " + err.message;
+      statusEl.className = "mt-4 text-sm font-semibold text-red-600";
+    }
   }
 }
 

@@ -562,8 +562,7 @@ import "../styles/attendance.css";
           📖 出席コード管理 使い方ガイド
         </h2>
         <p class="text-sm text-indigo-700 mb-4">
-          本ツールは、大学授業の出席コードを簡単に記録・一元管理し、複数端末での同期や教務システム（Kyomu
-          Portal）からの自動連携を行えるWebアプリケーションです。
+          本ツールは、大学授業の出席コードを簡単に記録・一元管理し、複数端末での同期や教務システムからの自動連携を行えるWebアプリケーションです。
         </p>
         <div class="flex flex-wrap gap-2 text-xs font-semibold">
           <a
@@ -586,9 +585,13 @@ import "../styles/attendance.css";
 
       <!-- Sample Data Banner in Guide -->
       <div class="card bg-emerald-50/60 border-emerald-200 mb-4">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div
+          class="flex flex-col md:flex-row md:items-center justify-between gap-3"
+        >
           <div>
-            <h3 class="text-base font-bold text-emerald-950 flex items-center gap-2 m-0">
+            <h3
+              class="text-base font-bold text-emerald-950 flex items-center gap-2 m-0"
+            >
               🧪 動作テスト用 サンプルデータ (JSON)
             </h3>
             <p class="text-xs text-emerald-800 mt-1 mb-0">
@@ -748,14 +751,20 @@ import "../styles/attendance.css";
             <span
               >クラウド同期が未設定の状態では、同期トークン欄は空欄になっています。最初の端末で「<strong
                 >↑ クラウドにアップロード (同期更新)</strong
-              >」を押すとクラウド上に領域が新規作成され、<strong>同期トークン</strong
-              >（例: <code>id:editKey</code>）が自動発行・表示され、ローカルストレージにも自動保存されます。</span
+              >」を押すとクラウド上に領域が新規作成され、<strong
+                >同期トークン</strong
+              >（例: <code>id:editKey</code
+              >）が自動発行・表示され、ローカルストレージにも自動保存されます。</span
             >
           </div>
           <div class="flex items-start gap-2">
-            <span class="badge badge-primary shrink-0 mt-0.5">他端末での設定</span>
+            <span class="badge badge-primary shrink-0 mt-0.5"
+              >他端末での設定</span
+            >
             <span
-              >「📋 トークンをコピー」でトークンを取得し、同期したいもう一方の端末で本サイトを開き、「同期トークン」欄に同じトークンを貼り付けて「設定をローカル保存」または「↓ クラウドから読み込み」を押します。</span
+              >「📋
+              トークンをコピー」でトークンを取得し、同期したいもう一方の端末で本サイトを開き、「同期トークン」欄に同じトークンを貼り付けて「設定をローカル保存」または「↓
+              クラウドから読み込み」を押します。</span
             >
           </div>
           <div class="flex items-start gap-2">
@@ -788,8 +797,7 @@ import "../styles/attendance.css";
           <span class="badge badge-success text-xs font-normal">自動連携</span>
         </h2>
         <p class="text-sm text-gray-600 my-3">
-          豊橋技術科学大学の教務システム（Kyomu
-          Portal）で出席登録を行った際、入力した出席コードを自動的に本ツール（opetools
+          教務システムで出席登録を行った際、入力した出席コードを自動的に本ツール（opetools
           出席コード管理）へと送信・同期する拡張スクリプトです。
         </p>
 
@@ -898,14 +906,16 @@ import "../styles/attendance.css";
                     > または <a
                       href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"
                       target="_blank"
-                      class="text-indigo-600 underline">Tampermonkey</a>
+                      class="text-indigo-600 underline">Tampermonkey</a
+                    >
                   </li>
                   <li>
                     <strong>Firefox:</strong>
                     <a
                       href="https://addons.mozilla.org/ja/firefox/addon/violentmonkey/"
                       target="_blank"
-                      class="text-indigo-600 underline">Violentmonkey</a>
+                      class="text-indigo-600 underline">Violentmonkey</a
+                    >
                   </li>
                   <li>
                     <strong>Safari (Mac):</strong> Mac App Store より <a
@@ -964,11 +974,7 @@ import "../styles/attendance.css";
                       >同期トークン</strong
                     >（<code>id:editKey</code>）をコピーします。
                   </li>
-                  <li>
-                    豊橋技科大 教務システムの出席登録画面（<code
-                      >https://kyomu.office.tut.ac.jp/portal/...</code
-                    >）にアクセスします。
-                  </li>
+                  <li>教務システムの出席登録画面にアクセスします。</li>
                   <li>
                     ブラウザ右上の拡張機能アイコン（Violentmonkey等）をクリックし、メニュー内にある
                     <strong>「同期トークンの設定」</strong> を選択します。
@@ -1103,9 +1109,15 @@ import "../styles/attendance.css";
                 <div class="flex items-start gap-2">
                   <span class="badge badge-primary shrink-0">4</span>
                   <span
-                    >教務システムの出席登録画面を開き、ブラウザのメニュー(⋮)から 
-                    <strong>アドオン (Extensions) ➔ Violentmonkey ➔ 「同期トークンの設定」</strong> をタップします。<br />
-                    <span class="text-amber-800 font-semibold">※ Firefox for Android の場合は、「同期トークンの設定」を押した後に画面左上の「←（戻る）」ボタンを押すと入力ダイアログが表示されます。</span></span
+                    >教務システムの出席登録画面を開き、ブラウザのメニュー(⋮)から
+                    <strong
+                      >アドオン (Extensions) ➔ Violentmonkey ➔
+                      「同期トークンの設定」</strong
+                    > をタップします。<br />
+                    <span class="text-amber-800 font-semibold"
+                      >※ Firefox for Android
+                      の場合は、「同期トークンの設定」を押した後に画面左上の「←（戻る）」ボタンを押すと入力ダイアログが表示されます。</span
+                    ></span
                   >
                 </div>
               </div>
@@ -1119,49 +1131,49 @@ import "../styles/attendance.css";
                 class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
               />
               <p class="text-xs text-gray-500 mt-1.5 font-semibold">
-                【画面イメージ】スマホ (Android Firefox / Kiwi / iOS Safari) でのUserScript設定画面
+                【画面イメージ】スマホ (Android Firefox / Kiwi / iOS Safari)
+                でのUserScript設定画面
               </p>
             </div>
-          </div>
           </div>
         </div>
       </div>
     </div>
   </main>
+</Layout>
 
-  <!-- Edit Attendance Code Dialog (Modal) -->
-  <div
-    id="attendanceModal"
-    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden"
-  >
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 m-4 fade-in">
-      <h3 class="text-lg font-bold text-gray-800 mb-2" id="modalTitle">
-        出席コードの入力・編集
-      </h3>
-      <p class="text-xs text-gray-500 mb-4" id="modalSubTitle">
-        2026-07-20 2限: アルゴリズム
-      </p>
+<!-- Edit Attendance Code Dialog (Modal) -->
+<div
+  id="attendanceModal"
+  class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden"
+>
+  <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 m-4 fade-in">
+    <h3 class="text-lg font-bold text-gray-800 mb-2" id="modalTitle">
+      出席コードの入力・編集
+    </h3>
+    <p class="text-xs text-gray-500 mb-4" id="modalSubTitle">
+      2026-07-20 2限: アルゴリズム
+    </p>
 
-      <div class="form-group mb-6">
-        <label for="modalCodeInput">出席コード</label>
-        <input
-          type="text"
-          id="modalCodeInput"
-          class="form-input text-lg font-mono font-bold tracking-widest text-center"
-          placeholder="コードを入力"
-        />
-      </div>
+    <div class="form-group mb-6">
+      <label for="modalCodeInput">出席コード</label>
+      <input
+        type="text"
+        id="modalCodeInput"
+        class="form-input text-lg font-mono font-bold tracking-widest text-center"
+        placeholder="コードを入力"
+      />
+    </div>
 
-      <div class="flex justify-end gap-3">
-        <button class="btn btn-secondary" onclick="closeAttendanceModal()">
-          キャンセル
-        </button>
-        <button class="btn btn-primary" onclick="saveModalAttendance()">
-          保存する
-        </button>
-      </div>
+    <div class="flex justify-end gap-3">
+      <button class="btn btn-secondary" onclick="closeAttendanceModal()">
+        キャンセル
+      </button>
+      <button class="btn btn-primary" onclick="saveModalAttendance()">
+        保存する
+      </button>
     </div>
   </div>
+</div>
 
-  <script is:inline src="/attendance.js"></script>
-</Layout>
+<script is:inline src="/attendance.js"></script>

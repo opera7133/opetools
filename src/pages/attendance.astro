@@ -311,7 +311,15 @@ import "../styles/attendance.css";
           </select>
         </div>
         <p class="text-xs text-gray-500 mb-3">
-          月曜日から金曜日までの通常授業を入力してください。空欄は授業なしになります。
+          月曜日から金曜日までの通常授業を入力してください。空欄は授業なしになります。<br
+          />
+          <span class="text-indigo-600 font-semibold"
+            >💡 <a
+              href="#tab-content-guide"
+              onclick="switchTab('guide', document.querySelector('.nav-tab[onclick*=\'guide\']'))"
+              class="underline">UserScript</a
+            > を導入すると、教務システムの履修時間割表を開くだけで時間割を一括自動登録できます。</span
+          >
         </p>
 
         <div class="timetable-wrapper">
@@ -793,8 +801,8 @@ import "../styles/attendance.css";
           <span class="badge badge-success text-xs font-normal">自動連携</span>
         </h2>
         <p class="text-sm text-gray-600 my-3">
-          教務システムで出席登録を行った際、入力した出席コードを自動的に本ツール（opetools
-          出席コード管理）へと送信・同期する拡張スクリプトです。
+          教務システムで出席登録を行った際の出席コードや、履修時間割表に掲載された時間割データを自動的に本ツール（opetools
+          出席コード管理）へと送信・自動登録する拡張スクリプトです。
         </p>
 
         <!-- Script Info Box -->
@@ -998,12 +1006,20 @@ import "../styles/attendance.css";
               <div class="guide-step-num">4</div>
               <div class="guide-step-content">
                 <h4 class="font-bold text-gray-800 text-sm mb-1">
-                  自動同期の完了
+                  自動同期（出席コード＆時間割）の完了
                 </h4>
-                <p class="text-xs text-gray-600">
-                  設定後、教務システムで通常通り出席コードを入力して登録ボタンを押すと、自動的に
-                  opetools に出席コードが記録されます！
-                </p>
+                <div class="text-xs text-gray-600 space-y-2">
+                  <p>
+                    <strong>① 出席コードの自動同期:</strong>
+                    教務システムの出席登録画面で通常通り出席コードを入力して登録すると、自動的に
+                    opetools に出席コードが記録されます。
+                  </p>
+                  <p>
+                    <strong>② 時間割の一括自動同期:</strong>
+                    教務システムの「履修時間割」画面を開くと、時間割（Q1〜Q4、連続授業の重複除外処理済み）が自動的に
+                    opetools に送信・一括登録されます（画面上の「opetoolsに時間割を同期」ボタンや拡張機能メニューからも手動同期可能です）。
+                  </p>
+                </div>
               </div>
             </div>
           </div>

@@ -12,9 +12,9 @@ const DEFAULT_PERIODS = [
 
 const DEFAULT_QUARTERS = {
   q1: { name: "前期1 (Q1)", startDate: "2026-04-01", endDate: "2026-06-10" },
-  q2: { name: "前期2 (Q2)", startDate: "2026-06-11", endDate: "2026-07-31" },
-  q3: { name: "後期1 (Q3)", startDate: "2026-10-01", endDate: "2026-12-10" },
-  q4: { name: "後期2 (Q4)", startDate: "2026-12-11", endDate: "2027-02-28" },
+  q2: { name: "前期2 (Q2)", startDate: "2026-06-11", endDate: "2026-08-06" },
+  q3: { name: "後期1 (Q3)", startDate: "2026-10-05", endDate: "2026-12-02" },
+  q4: { name: "後期2 (Q4)", startDate: "2026-12-03", endDate: "2027-02-16" },
 };
 
 let state = {
@@ -305,6 +305,27 @@ function switchTab(tabId, element) {
   }
 
   renderAll();
+}
+
+function switchDeviceGuide(device) {
+  const pcBtn = document.getElementById("device-btn-pc");
+  const mobileBtn = document.getElementById("device-btn-mobile");
+  const pcPanel = document.getElementById("device-guide-pc");
+  const mobilePanel = document.getElementById("device-guide-mobile");
+
+  if (!pcBtn || !mobileBtn || !pcPanel || !mobilePanel) return;
+
+  if (device === "pc") {
+    pcBtn.classList.add("active");
+    mobileBtn.classList.remove("active");
+    pcPanel.classList.remove("hidden");
+    mobilePanel.classList.add("hidden");
+  } else {
+    mobileBtn.classList.add("active");
+    pcBtn.classList.remove("active");
+    mobilePanel.classList.remove("hidden");
+    pcPanel.classList.add("hidden");
+  }
 }
 
 function adjustDate(days) {
@@ -1040,6 +1061,39 @@ function importDataJSON(event) {
   reader.readAsText(file);
 }
 
+async function loadSampleData() {
+  if (
+    !confirm(
+      "サンプルデータ（登録済みの時間割・出席コード例）をアプリに読み込みますか？\n※現在ブラウザに保存されているデータが上書きされます。",
+    )
+  ) {
+    return;
+  }
+  try {
+    const res = await fetch("/attendance/opetools_attendance_example.json");
+    if (!res.ok) throw new Error("サンプルデータの読み込みに失敗しました。");
+    const parsed = await res.json();
+    if (parsed.timetables || parsed.records) {
+      state = {
+        quarters: parsed.quarters || state.quarters,
+        periods: parsed.periods || state.periods,
+        timetables: parsed.timetables || state.timetables,
+        exceptions: parsed.exceptions || state.exceptions,
+        records: parsed.records || state.records,
+        syncConfig: parsed.syncConfig || state.syncConfig,
+      };
+      saveState();
+      renderAll();
+      alert("サンプルデータを正常に読み込みました！");
+    } else {
+      throw new Error("無効なファイル形式です。");
+    }
+  } catch (err) {
+    alert("エラー: " + err.message);
+    console.error(err);
+  }
+}
+
 function resetAllData() {
   if (
     confirm(
@@ -1139,6 +1193,16 @@ async function syncUpload(silent = false) {
       records: state.records,
     });
 
+    const proxyInput = document.getElementById("syncProxyUrl");
+    const proxyUrl = proxyInput
+      ? proxyInput.value.trim()
+      : state.syncConfig.proxyUrl || "";
+    const serverVersion =
+      document.querySelector('input[name="syncServer"]:checked')?.value ||
+      "v1";
+    const autoDownload =
+      document.getElementById("syncAutoDL")?.checked || false;
+
     if (id && editKey) {
       // Update existing JSON hosting bin
       const res = await fetch(getSyncEndpoint(id), {
@@ -1150,6 +1214,17 @@ async function syncUpload(silent = false) {
         body: payload,
       });
       if (!res.ok) throw new Error("アップロードに失敗しました");
+
+      // Always save token & config to state and localStorage
+      state.syncConfig = {
+        id,
+        editKey,
+        proxyUrl,
+        serverVersion,
+        autoDownload,
+      };
+      saveState();
+
       if (!silent && statusEl) {
         statusEl.textContent =
           "同期完了！アップロードしました (" +
@@ -1160,9 +1235,6 @@ async function syncUpload(silent = false) {
     } else {
       if (silent) return; // Don't auto-create bin in background
 
-      const tokenInput = document.getElementById("syncToken");
-      const proxyInput = document.getElementById("syncProxyUrl");
-
       // Create new JSON hosting bin
       const res = await fetch(getSyncEndpoint(), {
         method: "POST",
@@ -1171,25 +1243,25 @@ async function syncUpload(silent = false) {
       });
       if (!res.ok) throw new Error("新規作成に失敗しました");
       const data = await res.json();
+      const newId = data.id || "";
+      const newKey = data.editKey || data.key || "";
+
       if (tokenInput) {
-        tokenInput.value = `${data.id}:${data.editKey}`;
+        tokenInput.value = `${newId}:${newKey}`;
       }
 
-      const serverVersion = document.querySelector(
-        'input[name="syncServer"]:checked',
-      )?.value || "v1";
       state.syncConfig = {
-        id: data.id,
-        editKey: data.editKey,
-        proxyUrl: proxyInput ? proxyInput.value.trim() : "",
+        id: newId,
+        editKey: newKey,
+        proxyUrl,
         serverVersion,
-        autoDownload: document.getElementById("syncAutoDL")?.checked || false,
+        autoDownload,
       };
       saveState();
 
       if (statusEl) {
         statusEl.textContent =
-          "新規の同期トークンを作成し、データをアップロードしました！";
+          "新規の同期トークンを作成し、ローカルに保存してデータをアップロードしました！";
         statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
       }
     }

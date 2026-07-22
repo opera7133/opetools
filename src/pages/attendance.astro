@@ -23,11 +23,19 @@ import "../styles/attendance.css";
           </p>
         </div>
         <div class="text-right flex flex-col items-end">
-          <div
-            class="text-sm font-semibold text-gray-700 bg-gray-200 px-3 py-1 rounded-md"
-            id="currentTimeDisplay"
-          >
-            読み込み中...
+          <div class="flex items-center gap-2">
+            <button
+              class="btn btn-secondary btn-sm flex items-center gap-1 text-indigo-700 font-semibold cursor-pointer"
+              onclick="switchTab('guide', document.getElementById('tab-btn-guide'))"
+            >
+              📖 使い方ガイド
+            </button>
+            <div
+              class="text-sm font-semibold text-gray-700 bg-gray-200 px-3 py-1 rounded-md"
+              id="currentTimeDisplay"
+            >
+              読み込み中...
+            </div>
           </div>
           <span class="badge badge-primary mt-1" id="currentQuarterBadge">
             Q1 (前期1)
@@ -86,22 +94,32 @@ import "../styles/attendance.css";
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="tab-container">
-      <button class="tab-btn active" onclick="switchTab('dashboard', this)">
-        📋 ダッシュボード
-      </button>
-      <button class="tab-btn" onclick="switchTab('history', this)">
-        🔍 出席履歴・検索
-      </button>
-      <button class="tab-btn" onclick="switchTab('timetable', this)">
-        ⚙️ 時間割設定
-      </button>
-      <button class="tab-btn" onclick="switchTab('exceptions', this)">
-        ⚠️ 例外設定
-      </button>
-      <button class="tab-btn" onclick="switchTab('sync', this)">
-        ☁️ クラウド同期
-      </button>
+    <div class="tab-wrapper">
+      <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('dashboard', this)">
+          📋 ダッシュボード
+        </button>
+        <button class="tab-btn" onclick="switchTab('history', this)">
+          🔍 出席履歴・検索
+        </button>
+        <button class="tab-btn" onclick="switchTab('timetable', this)">
+          ⚙️ 時間割設定
+        </button>
+        <button class="tab-btn" onclick="switchTab('exceptions', this)">
+          ⚠️ 例外設定
+        </button>
+        <button class="tab-btn" onclick="switchTab('sync', this)">
+          ☁️ クラウド同期
+        </button>
+        <button
+          id="tab-btn-guide"
+          class="tab-btn"
+          onclick="switchTab('guide', this)"
+        >
+          📖 使い方・UserScript
+        </button>
+      </div>
+      <div class="tab-scroll-hint-fade"></div>
     </div>
 
     <!-- Tab Contents -->
@@ -524,9 +542,588 @@ import "../styles/attendance.css";
               onchange="importDataJSON(event)"
             />
           </label>
+          <button class="btn btn-secondary" onclick="loadSampleData()">
+            🧪 サンプルデータを読み込む
+          </button>
           <button class="btn btn-danger" onclick="resetAllData()">
             ⚠️ 全てのデータをリセット
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Guide / How to Use & UserScript -->
+    <div id="tab-content-guide" class="tab-pane fade-in hidden">
+      <!-- Section 1: Overview & Quick Navigation -->
+      <div class="card bg-indigo-50/50 border-indigo-200">
+        <h2
+          class="text-xl font-bold text-indigo-900 flex items-center gap-2 mb-2"
+        >
+          📖 出席コード管理 使い方ガイド
+        </h2>
+        <p class="text-sm text-indigo-700 mb-4">
+          本ツールは、大学授業の出席コードを簡単に記録・一元管理し、複数端末での同期や教務システム（Kyomu
+          Portal）からの自動連携を行えるWebアプリケーションです。
+        </p>
+        <div class="flex flex-wrap gap-2 text-xs font-semibold">
+          <a
+            href="#guide-web-app"
+            class="btn btn-secondary btn-sm text-indigo-800"
+            >1. Webアプリの基本の使い方</a
+          >
+          <a
+            href="#guide-cloud-sync"
+            class="btn btn-secondary btn-sm text-indigo-800"
+            >2. クラウド同期の使い方</a
+          >
+          <a
+            href="#guide-userscript"
+            class="btn btn-secondary btn-sm text-indigo-800"
+            >3. 教務システム自動同期 UserScript</a
+          >
+        </div>
+      </div>
+
+      <!-- Sample Data Banner in Guide -->
+      <div class="card bg-emerald-50/60 border-emerald-200 mb-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-emerald-950 flex items-center gap-2 m-0">
+              🧪 動作テスト用 サンプルデータ (JSON)
+            </h3>
+            <p class="text-xs text-emerald-800 mt-1 mb-0">
+              あらかじめ時間割や出席コード例が登録されたサンプルデータを用意しています。お試し操作や動作確認にご活用ください。
+            </p>
+          </div>
+          <div class="flex gap-2 shrink-0 flex-wrap">
+            <a
+              href="/attendance/opetools_attendance_example.json"
+              download="opetools_attendance_example.json"
+              class="btn btn-secondary btn-sm text-xs font-semibold"
+            >
+              📥 サンプルJSONをダウンロード
+            </a>
+            <button
+              class="btn btn-success btn-sm text-xs font-semibold cursor-pointer"
+              onclick="loadSampleData()"
+            >
+              🚀 サンプルデータをアプリに自動読み込み
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Web App Basic Usage -->
+      <div id="guide-web-app" class="card">
+        <h2 class="card-title text-indigo-900 border-b pb-2">
+          📱 1. Webアプリの基本の使い方
+        </h2>
+
+        <div class="space-y-6 mt-4">
+          <!-- Step 1: Timetable -->
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-content">
+              <h3 class="font-bold text-base text-gray-800 mb-1">
+                【初回準備】時間割と学期（クォーター）の設定
+              </h3>
+              <p class="text-sm text-gray-600 mb-2">
+                はじめに「⚙️
+                時間割設定」タブを開き、各学期（Q1〜Q4）ごとに履修している授業名を入力して保存します。<br
+                />
+                また、各時限の開始・終了時刻やクォーターの日付範囲を設定しておくと、現在の時間に合わせた開講中授業の自動判定が行われます。
+              </p>
+
+              <!-- Screenshot 1 -->
+              <div class="my-3 text-center">
+                <img
+                  src="/attendance/timetable.png"
+                  alt="時間割設定画面 (Q1~Q4)"
+                  class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+                />
+                <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+                  【画面イメージ】時間割設定画面 (Q1~Q4)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Code Entry -->
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-content">
+              <h3 class="font-bold text-base text-gray-800 mb-1">
+                出席コードの入力・記録
+              </h3>
+              <p class="text-sm text-gray-600 mb-2">
+                授業が開始されると、「📋
+                ダッシュボード」最上部のハイライトエリアに現在開講中の授業名が自動表示されます。<br
+                />
+                出席コードを入力して「保存」ボタンを押すだけで記録が完了します。過去の日付や別の時限のコードを入力したい場合は、本日の授業予定一覧のカードをクリックするか、「🔍
+                出席履歴・検索」タブから編集できます。
+              </p>
+
+              <!-- Screenshot 2 -->
+              <div class="my-3 text-center">
+                <img
+                  src="/attendance/code-entry.png"
+                  alt="ダッシュボードと開講中授業入力パネル"
+                  class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+                />
+                <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+                  【画面イメージ】ダッシュボードと開講中授業入力パネル
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: History & Search -->
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-content">
+              <h3 class="font-bold text-base text-gray-800 mb-1">
+                過去の出席コードの確認・検索
+              </h3>
+              <p class="text-sm text-gray-600 mb-2">
+                「🔍
+                出席履歴・検索」タブで、過去に入力したすべての出席コードを一覧で確認できます。授業名や日付、コードの一部を入力して瞬時に検索・確認が可能です。
+              </p>
+
+              <!-- Screenshot 3 -->
+              <div class="my-3 text-center">
+                <img
+                  src="/attendance/history.png"
+                  alt="出席履歴・検索画面"
+                  class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+                />
+                <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+                  【画面イメージ】出席履歴・検索画面
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Exceptions -->
+          <div class="guide-step">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-content">
+              <h3 class="font-bold text-base text-gray-800 mb-1">
+                祝日・休講・曜日振替の例外設定
+              </h3>
+              <p class="text-sm text-gray-600 mb-2">
+                祝日や大学全体の休校（全休）、特定の授業の休講、月曜授業を実施する水曜日などの曜日振替がある場合は、「⚠️
+                例外設定」タブから例外を追加できます。これによりダッシュボードの表示が自動補正されます。
+              </p>
+
+              <!-- Screenshot 4 -->
+              <div class="my-3 text-center">
+                <img
+                  src="/attendance/exceptions.png"
+                  alt="例外設定画面"
+                  class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+                />
+                <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+                  【画面イメージ】例外設定画面
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Cloud Sync -->
+      <div id="guide-cloud-sync" class="card">
+        <h2 class="card-title text-indigo-900 border-b pb-2">
+          ☁️ 2. クラウド同期の使い方（複数端末での共有）
+        </h2>
+        <p class="text-sm text-gray-600 my-3">
+          PCとスマートフォンなど、複数のデバイスで同じ時間割や出席コードを共有できます。
+        </p>
+
+        <div
+          class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-sm space-y-3"
+        >
+          <div class="flex items-start gap-2">
+            <span class="badge badge-primary shrink-0 mt-0.5">初回設定</span>
+            <span
+              >クラウド同期が未設定の状態では、同期トークン欄は空欄になっています。最初の端末で「<strong
+                >↑ クラウドにアップロード (同期更新)</strong
+              >」を押すとクラウド上に領域が新規作成され、<strong>同期トークン</strong
+              >（例: <code>id:editKey</code>）が自動発行・表示され、ローカルストレージにも自動保存されます。</span
+            >
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="badge badge-primary shrink-0 mt-0.5">他端末での設定</span>
+            <span
+              >「📋 トークンをコピー」でトークンを取得し、同期したいもう一方の端末で本サイトを開き、「同期トークン」欄に同じトークンを貼り付けて「設定をローカル保存」または「↓ クラウドから読み込み」を押します。</span
+            >
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="badge badge-primary shrink-0 mt-0.5">自動同期</span>
+            <span
+              >「起動時に自動ダウンロード（同期）する」にチェックを入れて保存しておくと、サイトを開くたびに自動で最新データが読み込まれます。</span
+            >
+          </div>
+        </div>
+
+        <!-- Screenshot 5 -->
+        <div class="my-3 text-center">
+          <img
+            src="/attendance/cloud.png"
+            alt="クラウド同期設定画面"
+            class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+          />
+          <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+            【画面イメージ】クラウド同期設定画面
+          </p>
+        </div>
+      </div>
+
+      <!-- Section 4: UserScript Integration Guide -->
+      <div id="guide-userscript" class="card border-indigo-300">
+        <h2
+          class="card-title text-indigo-900 border-b pb-2 flex items-center justify-between"
+        >
+          <span>🚀 3. 教務システム自動同期 UserScript の使い方</span>
+          <span class="badge badge-success text-xs font-normal">自動連携</span>
+        </h2>
+        <p class="text-sm text-gray-600 my-3">
+          豊橋技術科学大学の教務システム（Kyomu
+          Portal）で出席登録を行った際、入力した出席コードを自動的に本ツール（opetools
+          出席コード管理）へと送信・同期する拡張スクリプトです。
+        </p>
+
+        <!-- Script Info Box -->
+        <div
+          class="bg-indigo-50/70 rounded-lg p-4 border border-indigo-200 mb-6 text-sm"
+        >
+          <div class="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+            🔗 UserScript 配布 URL
+          </div>
+          <div class="flex flex-col gap-2 text-xs">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white p-2.5 rounded border border-indigo-100"
+            >
+              <div>
+                <span class="font-bold text-gray-700 block"
+                  >Gist ページ (ソースコード・詳細):</span
+                >
+                <a
+                  href="https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-indigo-600 underline font-mono break-all"
+                >
+                  https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6
+                </a>
+              </div>
+              <a
+                href="https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-secondary btn-sm shrink-0"
+              >
+                Gistを開く ↗
+              </a>
+            </div>
+
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white p-2.5 rounded border border-indigo-100"
+            >
+              <div>
+                <span class="font-bold text-gray-700 block"
+                  >直接インストール URL (Raw):</span
+                >
+                <a
+                  href="https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6/raw/11160ae0dd8c18ec8cffb81ed63dae6d00a39ec6/kyomu.user.js"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-indigo-600 underline font-mono break-all"
+                >
+                  https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6/raw/11160ae0dd8c18ec8cffb81ed63dae6d00a39ec6/kyomu.user.js
+                </a>
+              </div>
+              <a
+                href="https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6/raw/11160ae0dd8c18ec8cffb81ed63dae6d00a39ec6/kyomu.user.js"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-primary btn-sm shrink-0"
+              >
+                ⚡ スクリプトをインストール
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- PC / Smartphone Tabs for UserScript Instructions -->
+        <div class="mb-4">
+          <div class="flex gap-2 border-b border-gray-200 pb-2 mb-4">
+            <button
+              id="device-btn-pc"
+              class="sub-tab-btn active"
+              onclick="switchDeviceGuide('pc')"
+            >
+              💻 PC (Windows / Mac / Linux) での使い方
+            </button>
+            <button
+              id="device-btn-mobile"
+              class="sub-tab-btn"
+              onclick="switchDeviceGuide('mobile')"
+            >
+              📱 スマートフォン (iOS / Android) での使い方
+            </button>
+          </div>
+
+          <!-- PC Instruction Panel -->
+          <div id="device-guide-pc" class="device-guide-panel space-y-5">
+            <div class="guide-step">
+              <div class="guide-step-num">1</div>
+              <div class="guide-step-content">
+                <h4 class="font-bold text-gray-800 text-sm mb-1">
+                  UserScript マネージャー拡張機能を導入する
+                </h4>
+                <p class="text-xs text-gray-600">
+                  お使いのPCブラウザに UserScript
+                  を実行するための拡張機能をインストールします。
+                </p>
+                <ul
+                  class="list-disc list-inside text-xs text-gray-600 mt-1 space-y-0.5"
+                >
+                  <li>
+                    <strong>Chrome / Edge / Brave:</strong>
+                    <a
+                      href="https://chromewebstore.google.com/detail/violentmonkey/jinjaccalgkegednnccohejagnlnfdag"
+                      target="_blank"
+                      class="text-indigo-600 underline">Violentmonkey</a
+                    > または <a
+                      href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"
+                      target="_blank"
+                      class="text-indigo-600 underline">Tampermonkey</a>
+                  </li>
+                  <li>
+                    <strong>Firefox:</strong>
+                    <a
+                      href="https://addons.mozilla.org/ja/firefox/addon/violentmonkey/"
+                      target="_blank"
+                      class="text-indigo-600 underline">Violentmonkey</a>
+                  </li>
+                  <li>
+                    <strong>Safari (Mac):</strong> Mac App Store より <a
+                      href="https://apps.apple.com/app/userscripts/id1463298887"
+                      target="_blank"
+                      class="text-indigo-600 underline">Userscripts</a
+                    > を導入
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="guide-step-num">2</div>
+              <div class="guide-step-content">
+                <h4 class="font-bold text-gray-800 text-sm mb-1">
+                  UserScript をインストールする
+                </h4>
+                <p class="text-xs text-gray-600 mb-2">
+                  拡張機能を入れたブラウザで、以下のインストール用URLをクリックします。自動的に拡張機能の確認画面が開くので「インストール」または「Confirm
+                  installation」をクリックしてください。
+                </p>
+                <a
+                  href="https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6/raw/11160ae0dd8c18ec8cffb81ed63dae6d00a39ec6/kyomu.user.js"
+                  target="_blank"
+                  class="btn btn-secondary btn-sm font-mono text-xs"
+                >
+                  👉 kyomu.user.js インストールリンク
+                </a>
+
+                <!-- Screenshot 6 -->
+                <div class="my-3 text-center">
+                  <img
+                    src="/attendance/userscript-install.png"
+                    alt="PCブラウザでのUserScriptインストール画面"
+                    class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+                  />
+                  <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+                    【画面イメージ】PCブラウザでのUserScriptインストール画面
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="guide-step-num">3</div>
+              <div class="guide-step-content">
+                <h4 class="font-bold text-gray-800 text-sm mb-1">
+                  教務システムで同期トークンを設定する
+                </h4>
+                <ol
+                  class="list-decimal list-inside text-xs text-gray-600 space-y-1"
+                >
+                  <li>
+                    本サイトの「☁️ クラウド同期」タブで自分の<strong
+                      >同期トークン</strong
+                    >（<code>id:editKey</code>）をコピーします。
+                  </li>
+                  <li>
+                    豊橋技科大 教務システムの出席登録画面（<code
+                      >https://kyomu.office.tut.ac.jp/portal/...</code
+                    >）にアクセスします。
+                  </li>
+                  <li>
+                    ブラウザ右上の拡張機能アイコン（Violentmonkey等）をクリックし、メニュー内にある
+                    <strong>「同期トークンの設定」</strong> を選択します。
+                  </li>
+                  <li>
+                    ダイアログにコピーした同期トークンを貼り付けて「OK」を押します。
+                  </li>
+                </ol>
+
+                <!-- Screenshot 7 -->
+                <div class="my-3 text-center">
+                  <img
+                    src="/attendance/userscript-token-set.png"
+                    alt="PC教務システムでの同期トークン設定メニュー"
+                    class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+                  />
+                  <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+                    【画面イメージ】PC教務システムでの同期トークン設定メニュー
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="guide-step-num">4</div>
+              <div class="guide-step-content">
+                <h4 class="font-bold text-gray-800 text-sm mb-1">
+                  自動同期の完了
+                </h4>
+                <p class="text-xs text-gray-600">
+                  設定後、教務システムで通常通り出席コードを入力して登録ボタンを押すと、自動的に
+                  opetools に出席コードが記録されます！
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smartphone Instruction Panel -->
+          <div
+            id="device-guide-mobile"
+            class="device-guide-panel space-y-5 hidden"
+          >
+            <div
+              class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 mb-3"
+            >
+              💡 スマートフォンでも拡張機能対応ブラウザ（iOS Safari +
+              Userscripts、Android Kiwi Browser /
+              Firefox）を利用することで、教務システムからの自動同期が可能です。
+            </div>
+
+            <div class="border-t pt-3">
+              <h4 class="font-bold text-indigo-900 text-sm mb-2">
+                🍎 iOS (iPhone / iPad - Safari) の場合
+              </h4>
+              <div class="space-y-3 text-xs text-gray-600">
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">1</span>
+                  <span
+                    >App Store から <a
+                      href="https://apps.apple.com/app/userscripts/id1463298887"
+                      target="_blank"
+                      class="text-indigo-600 underline font-semibold"
+                      >Userscripts</a
+                    > (無料・オープンソース) アプリをインストールします。</span
+                  >
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">2</span>
+                  <span
+                    >iPhoneの「設定」アプリ ➔ 「Safari」 ➔ 「拡張機能」 ➔
+                    「Userscripts」を選択し、スイッチを「オン」にして、ウェブサイトのアクセス権を「すべてのウェブサイトで許可」にします。</span
+                  >
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">3</span>
+                  <span
+                    >Safariで <a
+                      href="https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6/raw/11160ae0dd8c18ec8cffb81ed63dae6d00a39ec6/kyomu.user.js"
+                      target="_blank"
+                      class="text-indigo-600 underline font-semibold"
+                      >kyomu.user.js (Raw URL)</a
+                    > を開き、Userscripts拡張機能に保存・追加します。</span
+                  >
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">4</span>
+                  <span
+                    >教務システムの出席登録画面を開き、Safariのアドレスバー左側の拡張機能アイコン（<code
+                      >aA</code
+                    > または 🧩）から Userscripts メニューを開き、<strong
+                      >「同期トークンの設定」</strong
+                    > をタップしてトークンを入力します。</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t pt-4">
+              <h4 class="font-bold text-indigo-900 text-sm mb-2">
+                🤖 Android (Kiwi Browser / Firefox for Android) の場合
+              </h4>
+              <div class="space-y-3 text-xs text-gray-600">
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">1</span>
+                  <span
+                    >Google Play ストアから <strong class="text-gray-800"
+                      >Kiwi Browser</strong
+                    > または <strong class="text-gray-800"
+                      >Firefox for Android</strong
+                    > をインストールします。</span
+                  >
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">2</span>
+                  <span
+                    >ブラウザ内のChromeウェブストア/アドオンストアから <strong
+                      >Violentmonkey</strong
+                    > 拡張機能を追加します。</span
+                  >
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">3</span>
+                  <span
+                    ><a
+                      href="https://gist.github.com/opera7133/69a71703825c69d538c85e42a57a10f6/raw/11160ae0dd8c18ec8cffb81ed63dae6d00a39ec6/kyomu.user.js"
+                      target="_blank"
+                      class="text-indigo-600 underline font-semibold"
+                      >kyomu.user.js (Raw URL)</a
+                    > を開いてスクリプトをインストールします。</span
+                  >
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="badge badge-primary shrink-0">4</span>
+                  <span
+                    >教務システムの出席登録画面を開き、ブラウザのメニュー(⋮)から 
+                    <strong>アドオン (Extensions) ➔ Violentmonkey ➔ 「同期トークンの設定」</strong> をタップします。<br />
+                    <span class="text-amber-800 font-semibold">※ Firefox for Android の場合は、「同期トークンの設定」を押した後に画面左上の「←（戻る）」ボタンを押すと入力ダイアログが表示されます。</span></span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Screenshot 8 -->
+            <div class="my-3 text-center mt-4">
+              <img
+                src="/attendance/android-token-set.png"
+                alt="スマホでのUserScript設定画面"
+                class="rounded-xl border border-gray-200 shadow-md max-w-full h-auto mx-auto"
+              />
+              <p class="text-xs text-gray-500 mt-1.5 font-semibold">
+                【画面イメージ】スマホ (Android Firefox / Kiwi / iOS Safari) でのUserScript設定画面
+              </p>
+            </div>
+          </div>
+          </div>
         </div>
       </div>
     </div>

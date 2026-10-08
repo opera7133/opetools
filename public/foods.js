@@ -77,6 +77,7 @@ function loadState() {
       state = JSON.parse(raw);
     } catch (e) {}
   }
+  if (state.syncConfig?.proxyUrl?.replace(/\/$/, '') === 'https://tools.ainznino.workers.dev') state.syncConfig.proxyUrl = 'https://opetools-workers.ainznino.workers.dev';
   if (!state.foods) state.foods = [];
   if (!state.records) state.records = [];
   migrateRecords();
@@ -101,7 +102,7 @@ function loadState() {
     else document.getElementById("syncToken").value = "";
 
     document.getElementById("syncProxyUrl").value =
-      state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
+      state.syncConfig.proxyUrl || "https://opetools-workers.ainznino.workers.dev";
 
     const sVer = s.serverVersion || "v2";
     const rads = document.getElementsByName("syncServer");

@@ -95,7 +95,7 @@ function userscript() {
     fetch: async (url, options) => { calls.push({ url, options }); return Response.json(options?.method ? { success: true } : { content: { ...sampleAttendance(), courseIds: { '情報': 'shared' } }, revision: 3, notifications: [] }); },
   });
   let source = readFileSync(new URL('../kyomu.user.js', import.meta.url), 'utf8');
-  source = source.replace('// ========== Event Interception & Page Init ==========', 'globalThis.hooks = { parsePeriods, uploadToOpetools, uploadTimetableToOpetools };\n// ========== Event Interception & Page Init ==========');
+  source = source.replace('// ========== Event Interception & Page Init ==========', 'globalThis.hooks = { parsePeriods, uploadToOpetools, uploadTimetableToOpetools, getSharedCourseId, parseTimetableFromPage };\n// ========== Event Interception & Page Init ==========');
   vm.runInContext(source, ctx);
   return { ctx, calls, values, hooks: ctx.hooks };
 }
@@ -119,4 +119,37 @@ test('UserScript skips a shared correction when confirmation is declined', async
   const u = userscript(); u.ctx.confirm = () => false;
   u.ctx.fetch = async (url,options) => { u.calls.push({url,options}); return Response.json({ content:{ ...sampleAttendance(),courseIds:{情報:'shared'} },notifications:[{course_id:'shared',date:'2026-10-08',code:'old',revision:1}] }); };
   await u.hooks.uploadToOpetools('new','2026-10-08','3','情報'); assert.equal(u.calls.length,1);
+});
+
+// Synthetic selectors match the sample, without retaining its personal/hidden data.
+function subject(name, code='ABC123a', year='2026', href=null) {
+  const container={querySelector: selector=>({textContent:selector.includes('lblTermName')?'後期':code})};
+  return {textContent:name,closest:()=>container,querySelector:()=>code?{getAttribute:()=>href||`https://kyomu.office.tut.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?student=1&lct_year=${year}&lct_cd=${code}&je_cd=1`}:null};
+}
+test('shared IDs use offering year/code, exclude personal/language parameters, and reject missing/untrusted links',()=>{
+  const u=userscript();
+  assert.equal(u.hooks.getSharedCourseId(subject('科目')),'tut:2026:ABC123a');
+  assert.equal(u.hooks.getSharedCourseId(subject('科目','ABC123b')),'tut:2026:ABC123b');
+  assert.equal(u.hooks.getSharedCourseId(subject('科目','ABC123a','2027')),'tut:2027:ABC123a');
+  assert.equal(u.hooks.getSharedCourseId(subject('科目','')),null);
+  assert.equal(u.hooks.getSharedCourseId(subject('科目','ABC123a','2026','https://untrusted.example/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2026&lct_cd=ABC123a')),null);
+});
+test('timetable parsing deduplicates consecutive periods and refuses ambiguous same-name offerings',()=>{
+  const u=userscript(); const cells=new Map([
+    ['Mon3',[subject('連続科目')]],['Mon4',[subject('連続科目')]],
+    ['Tue2',[subject('同名科目','AAA')]],['Wed2',[subject('同名科目','BBB')]],
+  ]);
+  u.ctx.document.getElementById=id=>id==='ctl00_phContents_ddlTerm'?{options:[{text:'後期'}],selectedIndex:0}:cells.has(id.replace('ctl00_phContents_rrMain_ttTable_td',''))?{querySelectorAll:()=>cells.get(id.replace('ctl00_phContents_rrMain_ttTable_td',''))}:null;
+  const r=u.hooks.parseTimetableFromPage();assert.equal(r.parsedCourseIds['連続科目'],'tut:2026:ABC123a');assert.equal(r.parsedTimetables.q3[1][3],'連続科目');assert.equal(r.parsedTimetables.q3[1][4],'');assert.equal(r.parsedCourseIds['同名科目'],undefined);assert.deepEqual(plain(r.ambiguousNames),['同名科目']);
+});
+test('automatic IDs fill gaps, follow new academic years and preserve manual overrides',async()=>{
+  const u=userscript();u.ctx.fetch=async(url,options)=>{u.calls.push({url,options});return Response.json(options.method?{success:true}:{content:{...sampleAttendance(),courseIds:{旧年度:'tut:2025:OLD',手動:'custom:id',曖昧:'tut:2026:MIX'},autoCourseIds:{旧年度:'tut:2025:OLD',曖昧:'tut:2026:MIX'}},revision:3});};
+  await u.hooks.uploadTimetableToOpetools({q3:{}},['q3'],{新科目:'tut:2026:NEW',旧年度:'tut:2026:OLD',手動:'tut:2026:MANUAL'},['曖昧']);const p=JSON.parse(u.calls[1].options.body);
+  assert.equal(p.courseIds['新科目'],'tut:2026:NEW');assert.equal(p.courseIds['旧年度'],'tut:2026:OLD');assert.equal(p.courseIds['手動'],'custom:id');assert.equal(p.courseIds['曖昧'],undefined);assert.equal(p.autoCourseIds['手動'],undefined);
+});
+test('default Worker URL changes while custom URLs are preserved',()=>{
+  const a=app('attendance');assert.match(a.run("getSyncEndpoint('u')"),/^https:\/\/opetools-workers\.ainznino\.workers\.dev/);
+  for(const url of ['https://tools.ainznino.workers.dev','https://custom.example']){
+    a.storage.set('opetools_attendance_state',JSON.stringify({timetables:{},records:{},syncConfig:{id:'u',editKey:'k',proxyUrl:url}}));a.run('loadState()');assert.equal(a.run('state.syncConfig.proxyUrl'),url.includes('tools.ainznino')?'https://opetools-workers.ainznino.workers.dev':url);
+  }
 });

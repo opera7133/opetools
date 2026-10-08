@@ -23,6 +23,7 @@ function validateAttendanceData(data) {
   if (Object.keys(data.quarters || {}).some(key => !/^q[1-4]$/.test(key))) throw new Error('学期IDが不正です。');
   for (const q of Object.values(data.quarters || {})) if (!plain(q) || !validDate(q.startDate) || !validDate(q.endDate) || typeof q.name !== 'string') throw new Error('学期設定が不正です。');
   if (data.exceptions !== undefined && (!Array.isArray(data.exceptions) || data.exceptions.some(e => !plain(e) || !validDate(e.date) || !['holiday','cancel','substitution','reschedule'].includes(e.type)))) throw new Error('例外設定が不正です。');
+  if (data.autoCourseIds !== undefined && (!plain(data.autoCourseIds) || Object.entries(data.autoCourseIds).some(([name,id]) => typeof id !== 'string' || data.courseIds?.[name] !== id))) throw new Error('共有科目IDの自動設定情報が不正です。');
   if (data.courseIds !== undefined && (!plain(data.courseIds) || Object.values(data.courseIds).some(id => typeof id !== 'string' || (id && !/^[a-zA-Z0-9:_.-]{1,120}$/.test(id))))) throw new Error('共有科目IDが不正です。');
 }
 
@@ -48,6 +49,7 @@ const DEFAULT_QUARTERS = {
 let state = {
   schemaVersion: 2,
   courseIds: {},
+  autoCourseIds: {},
   pendingRecords: {},
   notifications: [],
   quarters: JSON.parse(JSON.stringify(DEFAULT_QUARTERS)),
@@ -63,7 +65,7 @@ let state = {
   syncConfig: {
     id: "",
     editKey: "",
-    proxyUrl: "https://tools.ainznino.workers.dev",
+    proxyUrl: "https://opetools-workers.ainznino.workers.dev",
     serverVersion: "v2",
     autoDownload: false,
   },
@@ -126,6 +128,7 @@ function loadState() {
         exceptions: parsed.exceptions || [],
         schemaVersion: 2,
         courseIds: parsed.courseIds || {},
+        autoCourseIds: parsed.autoCourseIds || {},
         pendingRecords: parsed.pendingRecords || {},
         notifications: parsed.notifications || [],
         notificationEnabled: parsed.notificationEnabled || false,
@@ -135,7 +138,7 @@ function loadState() {
         syncConfig: parsed.syncConfig ? { ...state.syncConfig, ...parsed.syncConfig, serverVersion: parsed.syncConfig.serverVersion || 'v1' } : {
           id: "",
           editKey: "",
-          proxyUrl: "https://tools.ainznino.workers.dev",
+          proxyUrl: "https://opetools-workers.ainznino.workers.dev",
           serverVersion: "v2",
           autoDownload: false,
         },
@@ -147,6 +150,7 @@ function loadState() {
       );
     }
   }
+  if (state.syncConfig.proxyUrl?.replace(/\/$/, '') === 'https://tools.ainznino.workers.dev') { state.syncConfig.proxyUrl = 'https://opetools-workers.ainznino.workers.dev'; saveState(); }
 }
 
 // ========== Core Logic: Schedule Resolvers ==========
@@ -1095,6 +1099,7 @@ function importDataJSON(event) {
           records: parsed.records || state.records,
           schemaVersion: 2,
           courseIds: parsed.courseIds || {},
+          autoCourseIds: parsed.autoCourseIds || {},
           pendingRecords: {},
           importPending: true,
           syncConfig: state.syncConfig,
@@ -1136,6 +1141,7 @@ async function loadSampleData() {
         records: parsed.records || state.records,
         schemaVersion: 2,
         courseIds: parsed.courseIds || {},
+        autoCourseIds: parsed.autoCourseIds || {},
         pendingRecords: {},
         syncConfig: state.syncConfig,
         importPending: true,
@@ -1170,11 +1176,11 @@ function resetAllData() {
       },
       exceptions: [],
       records: {},
-      schemaVersion: 2, courseIds: {}, pendingRecords: {}, notifications: [],
+      schemaVersion: 2, courseIds: {}, autoCourseIds: {}, pendingRecords: {}, notifications: [],
       syncConfig: {
         id: "",
         editKey: "",
-        proxyUrl: "https://tools.ainznino.workers.dev",
+        proxyUrl: "https://opetools-workers.ainznino.workers.dev",
         serverVersion: "v2",
         autoDownload: false,
       },
@@ -1199,7 +1205,7 @@ function parseSyncToken(token) {
   return { id, key: parts.join(separator) };
 }
 function getSyncEndpoint(id = null) {
-  const base = (state.syncConfig.proxyUrl || 'https://tools.ainznino.workers.dev').replace(/\/$/, '');
+  const base = (state.syncConfig.proxyUrl || 'https://opetools-workers.ainznino.workers.dev').replace(/\/$/, '');
   const path = state.syncConfig.serverVersion === 'v1' ? '/api/json' : '/api/v2/attendance';
   return base + path + (id ? '/' + encodeURIComponent(id) : '');
 }
@@ -1220,7 +1226,7 @@ async function syncRequest(endpoint, options = {}, config = state.syncConfig) {
   return data;
 }
 function attendancePayload(includeRecords = false) {
-  const result = { schemaVersion: 2, quarters: state.quarters, periods: state.periods, timetables: state.timetables, exceptions: state.exceptions, courseIds: state.courseIds || {}, revision: state.syncConfig.revision };
+  const result = { schemaVersion: 2, quarters: state.quarters, periods: state.periods, timetables: state.timetables, exceptions: state.exceptions, courseIds: state.courseIds || {}, autoCourseIds: state.autoCourseIds || {}, revision: state.syncConfig.revision };
   if (includeRecords) result.records = state.records;
   return result;
 }
@@ -1281,6 +1287,7 @@ async function syncDownload(silent = false) {
     state.timetables = data.timetables || state.timetables;
     state.exceptions = data.exceptions || [];
     state.courseIds = data.courseIds || {};
+    state.autoCourseIds = data.autoCourseIds || {};
     state.records = data.records || {};
     for (const p of pendingValues) { state.records[p.date] ||= {}; state.records[p.date][p.periodId] = { className: p.className, code: p.code, timestamp: p.timestamp, revision: p.revision }; }
     state.notifications = response.notifications || [];
@@ -1354,8 +1361,8 @@ function renderNotificationSettings() {
   for (const quarter of Object.values(state.timetables)) for (const day of Object.values(quarter)) for (const name of Object.values(day)) if (name) names.add(name);
   for (const e of state.exceptions) if (e.className) names.add(e.className);
   for (const name of [...names].sort()) {
-    const label = document.createElement('label'); label.className = 'form-group'; label.textContent = name;
-    const input = document.createElement('input'); input.className = 'form-input'; input.dataset.courseName = name; input.value = state.courseIds?.[name] || ''; input.placeholder = '例: tut:2026:後期の科目コード:クラス（英数字で）';
+    const label = document.createElement('label'); label.className = 'form-group'; label.textContent = name + (state.autoCourseIds?.[name] ? '（自動設定）' : '');
+    const input = document.createElement('input'); input.className = 'form-input'; input.dataset.courseName = name; input.value = state.courseIds?.[name] || ''; input.placeholder = 'UserScriptで自動設定／例: tut:2026:B13630270';
     label.appendChild(input); container.appendChild(label);
   }
   const status = document.getElementById('notificationStatus');
@@ -1375,6 +1382,7 @@ async function saveCourseIds() {
     if (id && !/^[a-zA-Z0-9:_.-]{1,120}$/.test(id)) { alert('共有科目IDは120文字以内の英数字と : _ . - で入力してね。'); return; }
     ids[input.dataset.courseName] = id;
   }
+  state.autoCourseIds = Object.fromEntries(Object.entries(state.autoCourseIds || {}).filter(([name,id]) => ids[name] === id));
   state.courseIds = ids; state.configDirty = true; saveState(); await syncUpload(true);
 }
 async function joinNotifications(leave = false) {
@@ -1383,7 +1391,7 @@ async function joinNotifications(leave = false) {
     const input = document.getElementById('notificationGroupKey');
     const result = await syncRequest(getSyncEndpoint(state.syncConfig.id) + '/membership', { method: 'POST', body: JSON.stringify(leave ? { leave: true } : { groupKey: input.value.trim() }) });
     input.value = ''; state.notificationEnabled = result.notificationEnabled; saveState(); renderNotificationSettings();
-  } catch (e) { syncStatus(e.message, true); }
+  } catch (e) { syncStatus(e.status === 503 ? '管理者側のDiscord通知設定が未完了です。Workerに参加キーとWebhook URLを設定してください。' : e.status === 403 ? '参加キーが正しくないか、同期トークンが無効です。確認してください。' : e.message, true); }
 }
 window.addEventListener('online', () => flushAttendanceRecords());
 

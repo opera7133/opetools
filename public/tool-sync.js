@@ -10,7 +10,7 @@ class OpetoolsSync {
     if (element) { element.textContent = message; element.style.color = failed ? 'var(--color-danger)' : 'var(--color-primary)'; }
   }
   endpoint(config, id = config.id) {
-    const base = (config.proxyUrl || 'https://tools.ainznino.workers.dev').replace(/\/$/, '');
+    const base = (config.proxyUrl || 'https://opetools-workers.ainznino.workers.dev').replace(/\/$/, '');
     const path = config.serverVersion === 'v1' ? '/api/json' : this.kind === 'foods' ? '/api/v2/data' : '/api/v2/retail';
     return base + path + (id ? '/' + encodeURIComponent(id) : '');
   }

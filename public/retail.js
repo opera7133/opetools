@@ -9,7 +9,7 @@ let state = {
   syncConfig: {
     id: "",
     editKey: "",
-    proxyUrl: "https://tools.ainznino.workers.dev",
+    proxyUrl: "https://opetools-workers.ainznino.workers.dev",
     serverVersion: "v2",
     autoDownload: false,
   },
@@ -114,6 +114,7 @@ function loadState() {
       console.error("Failed to load local state", e);
     }
   }
+  if (state.syncConfig.proxyUrl?.replace(/\/$/, '') === 'https://tools.ainznino.workers.dev') state.syncConfig.proxyUrl = 'https://opetools-workers.ainznino.workers.dev';
 }
 
 function saveState() {

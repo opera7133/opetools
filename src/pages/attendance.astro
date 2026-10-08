@@ -498,7 +498,7 @@ import "../styles/attendance.css";
             id="syncProxyUrl"
             class="form-input font-mono text-sm"
             placeholder="例: https://xxx.workers.dev (CORS回避用)"
-            value="https://tools.ainznino.workers.dev"
+            value="https://opetools-workers.ainznino.workers.dev"
           />
         </div>
 
@@ -534,12 +534,13 @@ import "../styles/attendance.css";
 
       <div class="card">
         <h2 class="card-title">Discord通知</h2>
-        <p class="text-sm my-3">通知したい人だけ、管理者から受け取った参加キーを入力してね。時間割と出席履歴は個人ごと、Discord通知は同じ科目・授業日で1件にまとめます。</p>
+        <p class="text-sm my-3">通知したい人だけ、管理者から受け取った参加キーを入力してね。個人用の同期トークンとは別の、参加者共通のキーです。時間割と出席履歴は個人ごと、Discord通知は同じ科目・授業日で1件にまとめます。</p>
         <p id="notificationStatus" class="text-sm my-3"></p>
+        <p class="text-xs text-gray-500 my-3">管理者は任意のランダムな参加キーを作り、WorkerのSecret「ATTENDANCE_GROUP_KEY」に設定してください。DiscordのWebhook URLは別のSecret「DISCORD_WEBHOOK_URL」に設定します。参加者には参加キーだけを渡してね。</p>
         <label for="notificationGroupKey">通知参加キー</label>
         <input id="notificationGroupKey" type="password" class="form-input" autocomplete="off" />
         <div class="flex gap-3 my-3"><button class="btn btn-primary" onclick="joinNotifications()">通知に参加</button><button class="btn btn-secondary" onclick="joinNotifications(true)">通知から退出</button></div>
-        <p class="text-sm my-3">共有科目IDは参加者全員で同じ値にしてください。年度・科目コード・クラスを含めます（例: tut:2026:ABC123:A）。同じ名前でも別クラスは別IDにしてね。空欄の科目は通知しません。IDを変更しても過去の通知は移動しません。</p>
+        <p class="text-sm my-3">UserScriptで履修時間割を同期すると、シラバスリンクの年度・開講コードから共有科目IDを自動設定します（例: tut:2026:B13630270）。手動で変更したIDは上書きしません。リンクが取得できない科目や同名の別開講科目は、参加者で確認して同じIDを設定してね。空欄の科目は通知しません。IDを変更しても過去の通知は移動しません。</p>
         <div id="courseIdSettings"></div>
         <button class="btn btn-primary" onclick="saveCourseIds()">共有科目IDを保存・同期</button>
         <div id="notificationHistory" class="text-sm mt-4"></div>

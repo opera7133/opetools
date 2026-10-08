@@ -201,7 +201,7 @@
   "syncConfig": {
     "id": "",
     "editKey": "",
-    "proxyUrl": "https://tools.ainznino.workers.dev",
+    "proxyUrl": "https://opetools-workers.ainznino.workers.dev",
     "serverVersion": "v1",
     "autoDownload": false
   }

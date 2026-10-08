@@ -459,7 +459,7 @@ import "../styles/attendance.css";
     <!-- 5. Cloud Sync -->
     <div id="tab-content-sync" class="tab-pane fade-in hidden">
       <div class="card">
-        <h2 class="card-title">☁️ クラウド同期設定 (jsonhosting.com)</h2>
+        <h2 class="card-title">☁️ クラウド同期設定</h2>
         <p class="text-sm text-gray-600 mb-4">
           別の端末とデータを同期できます。データはクラウドに保存されます。
         </p>
@@ -467,8 +467,9 @@ import "../styles/attendance.css";
         <div class="form-group">
           <label>同期サーバー</label>
           <div class="flex gap-4">
+            <label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="syncServer" value="v2" checked />出席専用 / v2 API</label>
             <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="radio" name="syncServer" value="v1" checked />
+              <input type="radio" name="syncServer" value="v1" />
               jsonhosting.com / v1 API
             </label>
           </div>
@@ -523,9 +524,26 @@ import "../styles/attendance.css";
             ↓ クラウドから読み込み
           </button>
         </div>
+        <div class="flex gap-3 mt-4 flex-wrap">
+          <button class="btn btn-secondary" onclick="migrateAttendance()">現在のデータを出席専用v2へ移行</button>
+          <button class="btn btn-secondary" onclick="retryAttendanceRecords()">未同期コードを確認して再送</button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">トークンは個人ごとに作成してね。v1から移行すると新しいトークンが発行されるので、UserScriptも新トークンとv2へ変更してください。移行・バックアップ読込は過去のDiscord通知を作りません。</p>
         <p id="syncStatus" class="mt-4 text-sm font-semibold text-gray-700"></p>
       </div>
 
+      <div class="card">
+        <h2 class="card-title">Discord通知</h2>
+        <p class="text-sm my-3">通知したい人だけ、管理者から受け取った参加キーを入力してね。時間割と出席履歴は個人ごと、Discord通知は同じ科目・授業日で1件にまとめます。</p>
+        <p id="notificationStatus" class="text-sm my-3"></p>
+        <label for="notificationGroupKey">通知参加キー</label>
+        <input id="notificationGroupKey" type="password" class="form-input" autocomplete="off" />
+        <div class="flex gap-3 my-3"><button class="btn btn-primary" onclick="joinNotifications()">通知に参加</button><button class="btn btn-secondary" onclick="joinNotifications(true)">通知から退出</button></div>
+        <p class="text-sm my-3">共有科目IDは参加者全員で同じ値にしてください。年度・科目コード・クラスを含めます（例: tut:2026:ABC123:A）。同じ名前でも別クラスは別IDにしてね。空欄の科目は通知しません。IDを変更しても過去の通知は移動しません。</p>
+        <div id="courseIdSettings"></div>
+        <button class="btn btn-primary" onclick="saveCourseIds()">共有科目IDを保存・同期</button>
+        <div id="notificationHistory" class="text-sm mt-4"></div>
+      </div>
       <!-- Backup Export/Import -->
       <div class="card">
         <h2 class="card-title">💾 バックアップとデータ管理</h2>
@@ -801,10 +819,11 @@ import "../styles/attendance.css";
           <span class="badge badge-success text-xs font-normal">自動連携</span>
         </h2>
         <p class="text-sm text-gray-600 my-3">
-          教務システムで出席登録を行った際の出席コードや、履修時間割表に掲載された時間割データを自動的に本ツール（opetools
+          教務システムで登録ボタンを押した際の入力コードや、履修時間割表に掲載された時間割データを自動的に本ツール（opetools
           出席コード管理）へと送信・自動登録する拡張スクリプトです。
         </p>
 
+        <p class="text-sm text-gray-600 my-3">コードの同期は教務システムの登録成功を確認するものではありません。出席登録の結果は教務システムで確認してね。</p>
         <!-- Script Info Box -->
         <div
           class="bg-indigo-50/70 rounded-lg p-4 border border-indigo-200 mb-6 text-sm"
@@ -1011,7 +1030,7 @@ import "../styles/attendance.css";
                 <div class="text-xs text-gray-600 space-y-2">
                   <p>
                     <strong>① 出席コードの自動同期:</strong>
-                    教務システムの出席登録画面で通常通り出席コードを入力して登録すると、自動的に
+                    教務システムの登録ボタンを押したときに、入力したコードを自動的に
                     opetools に出席コードが記録されます。
                   </p>
                   <p>

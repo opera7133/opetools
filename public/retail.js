@@ -1,6 +1,6 @@
 // ========== Retail Prices App State ==========
 const LOCAL_STORAGE_KEY = "opetools_retail_state";
-const TODAY = new Date().toISOString().split("T")[0];
+const TODAY = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
 
 let state = {
   shops: [], // Array of { id, name, logoUrl, memo, lat, lng }
@@ -16,6 +16,7 @@ let state = {
 };
 
 let activeTab = "compare";
+const comparisonUnits = {};
 let isSyncing = false;
 let detailsChartInstance = null;
 let currentDetailsItemId = null;
@@ -94,6 +95,7 @@ function loadState() {
     try {
       const parsed = JSON.parse(data);
       if (parsed) {
+        state.schemaVersion = 2; state.syncDirty = Boolean(parsed.syncDirty); state.syncChange = parsed.syncChange || 0;
         state.shops = parsed.shops || [];
         state.items = parsed.items || [];
         state.prices = (parsed.prices || []).map((p) => ({
@@ -101,7 +103,7 @@ function loadState() {
           quantity: p.quantity !== undefined ? p.quantity : 1,
           unit: p.unit || "個",
           normalizedPrice:
-            p.normalizedPrice !== undefined ? p.normalizedPrice : p.price,
+            calculateNormalizedPrice(p.price, p.quantity ?? 1, p.unit || "個"),
         }));
         state.syncConfig = {
           ...state.syncConfig,
@@ -115,6 +117,7 @@ function loadState() {
 }
 
 function saveState() {
+  if (!isSyncing) { state.syncDirty = true; state.syncChange = (state.syncChange || 0) + 1; }
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
   if (
     !isSyncing &&
@@ -787,7 +790,14 @@ function renderItems() {
 
   gridContainer.innerHTML = filtered
     .map((item) => {
-      const itemPrices = state.prices.filter((p) => p.itemId === item.id);
+      const allItemPrices = state.prices.filter((p) => p.itemId === item.id);
+      const units = [...new Set(allItemPrices.map(p => p.unit || '個'))];
+      const selectedUnit = units.includes(comparisonUnits[item.id]) ? comparisonUnits[item.id] : units[0];
+      comparisonUnits[item.id] = selectedUnit;
+      const itemPrices = allItemPrices.filter(p => (p.unit || '個') === selectedUnit);
+      const latestByShop = new Map();
+      for (const p of [...itemPrices].sort((a,b) => b.date.localeCompare(a.date))) if (!latestByShop.has(p.shopId)) latestByShop.set(p.shopId, p);
+      const latestLowest = Math.min(...[...latestByShop.values()].map(p => p.normalizedPrice));
 
       let lowestPriceHtml = "";
       let avgPriceHtml = "";
@@ -832,7 +842,7 @@ function renderItems() {
 
           shopItemPrices.sort((a, b) => b.date.localeCompare(a.date));
           const latest = shopItemPrices[0];
-          const isLowest = latest.normalizedPrice === lowestVal;
+          const isLowest = latest.normalizedPrice === latestLowest;
           const latestUnitLabel =
             latest.unit === "g" || latest.unit === "ml"
               ? "100" + latest.unit
@@ -855,14 +865,15 @@ function renderItems() {
         <div class="item-header">
           <h3 class="item-name">${esc(item.name)}</h3>
           <span class="item-category">${esc(item.category)}</span>
+          ${units.length > 1 ? `<label>比較単位 <select data-comparison-item="${esc(item.id)}">${units.map(u => `<option value="${esc(u)}" ${u === selectedUnit ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></label>` : ''}
         </div>
         <div class="stats-row">
           <div class="stat-box">
-            <span class="lbl">底値 (最安)</span>
+            <span class="lbl">過去の底値（選択単位）</span>
             <span class="val lowest">${lowestPriceHtml}</span>
           </div>
           <div class="stat-box">
-            <span class="lbl">平均単価</span>
+            <span class="lbl">記録平均単価</span>
             <span class="val">${avgPriceHtml}</span>
           </div>
         </div>
@@ -949,10 +960,10 @@ function openItemDetails(itemId) {
 
   currentDetailsItemId = itemId;
   document.getElementById("modalDetailsTitle").textContent =
-    `🥬 ${esc(item.name)} の価格履歴`;
+    `🥬 ${item.name} の価格履歴（${comparisonUnits[itemId] || "個"}）`;
 
   const itemPrices = state.prices
-    .filter((p) => p.itemId === itemId)
+    .filter((p) => p.itemId === itemId && (p.unit || "個") === (comparisonUnits[itemId] || state.prices.find(p => p.itemId === itemId)?.unit || "個"))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const listContainer = document.getElementById("detailsPricesList");
@@ -1051,7 +1062,7 @@ function renderPriceTrendChart(itemId) {
     detailsChartInstance = null;
   }
 
-  const itemPrices = state.prices.filter((p) => p.itemId === itemId);
+  const itemPrices = state.prices.filter((p) => p.itemId === itemId && (p.unit || "個") === (comparisonUnits[itemId] || state.prices.find(p => p.itemId === itemId)?.unit || "個"));
   if (itemPrices.length === 0) {
     container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--color-text-muted);font-size:0.85rem;">データ不足のためチャートを表示できません</div>`;
     return;
@@ -1139,209 +1150,6 @@ function renderPriceTrendChart(itemId) {
   });
 }
 
-// ========== Cloud Sync Setup ==========
-function toggleSyncServer() {}
-
-function parseSyncToken(token) {
-  let id = "",
-    key = "";
-  if (!token) return { id, key };
-  if (token.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(token);
-      id = parsed.id || "";
-      key = parsed.editKey || parsed.key || "";
-    } catch (e) {}
-  } else if (token.includes(":")) {
-    const parts = token.split(":");
-    id = parts[0];
-    key = parts.slice(1).join(":");
-  } else if (token.includes("_")) {
-    const parts = token.split("_");
-    id = parts[0];
-    key = parts.slice(1).join("_");
-  }
-  return { id, key };
-}
-
-function copySyncToken() {
-  const token = document.getElementById("syncToken").value.trim();
-  if (!token) {
-    alert("トークンを入力または作成して、同期させてください");
-    return;
-  }
-  if (navigator.clipboard) {
-    navigator.clipboard
-      .writeText(token)
-      .then(() => alert("コピーしました：\n" + token))
-      .catch(() => prompt("以下のトークンをコピーしてください:", token));
-  } else {
-    prompt("以下のトークンをコピーしてください:", token);
-  }
-}
-
-function saveSyncConfig() {
-  const token = document.getElementById("syncToken").value.trim();
-  const { id, key } = parseSyncToken(token);
-
-  let serverVersion = "v2";
-  const rads = document.getElementsByName("syncServer");
-  rads.forEach((r) => {
-    if (r.checked) serverVersion = r.value;
-  });
-
-  state.syncConfig = {
-    id: id || token,
-    editKey: key,
-    proxyUrl: document.getElementById("syncProxyUrl").value.trim(),
-    serverVersion,
-    autoDownload: document.getElementById("syncAutoDL").checked,
-  };
-
-  saveState();
-
-  const statusEl = document.getElementById("syncStatus");
-  statusEl.textContent = "同期設定を保存しました。";
-  statusEl.style.color = "var(--color-primary)";
-}
-
-function getSyncEndpoint(idStr = null) {
-  const proxyUrl =
-    state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
-  const serverVersion = state.syncConfig.serverVersion || "v2";
-  const baseUrl = proxyUrl
-    ? proxyUrl.replace(/\/$/, "")
-    : "https://jsonhosting.com";
-
-  const path = serverVersion === "v2" ? "/api/v2/data" : "/api/json";
-  if (idStr) return `${baseUrl}${path}/${idStr}`;
-  return `${baseUrl}${path}`;
-}
-
-async function syncUpload() {
-  const tokenInput = document.getElementById("syncToken");
-  const proxyInput = document.getElementById("syncProxyUrl");
-  const tokenStr = tokenInput.value.trim();
-  const { id, key: editKey } = parseSyncToken(tokenStr);
-  const statusEl = document.getElementById("syncStatus");
-
-  statusEl.textContent = "データをアップロード中...";
-  statusEl.style.color = "var(--color-primary)";
-
-  try {
-    const payload = JSON.stringify({
-      shops: state.shops,
-      items: state.items,
-      prices: state.prices,
-    });
-
-    if (id && editKey) {
-      const res = await fetch(getSyncEndpoint(id), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Edit-Key": editKey,
-        },
-        body: payload,
-      });
-      if (!res.ok) throw new Error("アップロードに失敗しました");
-      statusEl.textContent =
-        "同期完了！アップロードしました (" +
-        new Date().toLocaleTimeString() +
-        ")";
-    } else {
-      const res = await fetch(getSyncEndpoint(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payload,
-      });
-      if (!res.ok) throw new Error("新規作成に失敗しました");
-      const data = await res.json();
-      tokenInput.value = `${data.id}:${data.editKey}`;
-
-      let serverVersion = "v2";
-      const rads = document.getElementsByName("syncServer");
-      rads.forEach((r) => {
-        if (r.checked) serverVersion = r.value;
-      });
-
-      state.syncConfig = {
-        id: data.id,
-        editKey: data.editKey,
-        proxyUrl: proxyInput.value.trim(),
-        serverVersion,
-        autoDownload: document.getElementById("syncAutoDL").checked,
-      };
-
-      saveState();
-      statusEl.textContent =
-        "新規の同期トークンを作成し、データをアップロードしました！";
-    }
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = "エラー: " + err.message;
-    statusEl.style.color = "var(--color-danger)";
-  }
-}
-
-async function syncDownload(silent = false) {
-  let id = state.syncConfig.id;
-  if (!id) {
-    const t = parseSyncToken(document.getElementById("syncToken").value.trim());
-    id = t.id;
-  }
-  const statusEl = document.getElementById("syncStatus");
-  if (!id) {
-    if (!silent) {
-      statusEl.textContent = "同期 ID/トークンを入力してください";
-      statusEl.style.color = "var(--color-danger)";
-    }
-    return;
-  }
-
-  if (!silent) {
-    statusEl.textContent = "データをダウンロード中...";
-    statusEl.style.color = "var(--color-primary)";
-  }
-
-  try {
-    const res = await fetch(getSyncEndpoint(id) + `?t=${Date.now()}`);
-    if (!res.ok) throw new Error("ダウンロードに失敗しました");
-    const responseData = await res.json();
-    const data = responseData.content;
-
-    if (data && (data.shops || data.items || data.prices)) {
-      isSyncing = true;
-      state.shops = data.shops || [];
-      state.items = data.items || [];
-      state.prices = (data.prices || []).map((p) => ({
-        ...p,
-        quantity: p.quantity !== undefined ? p.quantity : 1,
-        unit: p.unit || "個",
-        normalizedPrice:
-          p.normalizedPrice !== undefined ? p.normalizedPrice : p.price,
-      }));
-      saveState();
-      isSyncing = false;
-      renderAll();
-      if (!silent) {
-        statusEl.textContent =
-          "同期完了！データをダウンロードしました (" +
-          new Date().toLocaleTimeString() +
-          ")";
-      }
-    } else {
-      throw new Error("データ形式が正しくありません");
-    }
-  } catch (err) {
-    console.error(err);
-    if (!silent) {
-      statusEl.textContent = "エラー: " + err.message;
-      statusEl.style.color = "var(--color-danger)";
-    }
-  }
-}
-
 // ========== Helpers & Init ==========
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -1396,32 +1204,8 @@ window.addEventListener("load", () => {
   }
 });
 
-// Auto-upload function called on modifications
-let autoUploadTimeout = null;
-function autoSyncUpload() {
-  if (autoUploadTimeout) clearTimeout(autoUploadTimeout);
-  autoUploadTimeout = setTimeout(async () => {
-    const id = state.syncConfig.id;
-    const editKey = state.syncConfig.editKey;
-    if (!id || !editKey) return;
+function autoSyncUpload() { toolSync.autoUpload(); }
 
-    try {
-      const payload = JSON.stringify({
-        shops: state.shops,
-        items: state.items,
-        prices: state.prices,
-      });
-      await fetch(getSyncEndpoint(id), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Edit-Key": editKey,
-        },
-        body: payload,
-      });
-      console.log("Auto-uploaded state successfully");
-    } catch (e) {
-      console.error("Auto-upload state failed", e);
-    }
-  }, 3000);
-}
+const toolSync = new OpetoolsSync('retail', () => state, () => localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state)), data => { state.shops = data.shops; state.items = data.items; state.prices = data.prices.map(p => ({ ...p, quantity: p.quantity ?? 1, unit: p.unit || "個", normalizedPrice: calculateNormalizedPrice(p.price, p.quantity ?? 1, p.unit || "個") })); }, renderAll);
+
+document.addEventListener('change', event => { const id = event.target.dataset?.comparisonItem; if (id) { comparisonUnits[id] = event.target.value; renderItems(); } });

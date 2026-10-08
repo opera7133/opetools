@@ -521,6 +521,7 @@ import "../styles/foods.css";
             ↓ クラウドから読込
           </button>
         </div>
+        <button class="btn btn-secondary" onclick="createCloudCopy()">現在のデータから新しいv2トークンを作成</button>
         <p
           id="syncStatus"
           style="font-size: 0.85rem; font-weight: bold; margin-top: 12px"
@@ -667,5 +668,6 @@ import "../styles/foods.css";
     </div>
   </div>
 
-  <script is:inline src="/foods.js"></script>
+  <script is:inline src="/tool-sync.js"></script>
+<script is:inline src="/foods.js"></script>
 </Layout>

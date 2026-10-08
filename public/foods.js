@@ -1,3 +1,21 @@
+// Inventory is derived from a baseline and the retained consumption records.
+// Existing snapshots migrate with a baseline that preserves their current remaining quantity.
+function initializeInventory() {
+  for (const food of state.foods) {
+    if (Number.isFinite(food.inventoryBase)) continue;
+    const consumed = state.records.reduce((sum, r) => sum + (r.ingredients || []).filter(i => i.foodId === food.id).reduce((s, i) => s + (Number(i.usage) || 0), 0), 0);
+    food.inventoryBase = (food.remaining ?? food.quantity) + consumed;
+  }
+  state.schemaVersion = 2;
+}
+function reconcileInventory() {
+  initializeInventory();
+  for (const food of state.foods) {
+    const consumed = state.records.reduce((sum, r) => sum + (r.ingredients || []).filter(i => i.foodId === food.id).reduce((s, i) => s + (Number(i.usage) || 0), 0), 0);
+    food.remaining = Math.max(0, food.inventoryBase - consumed);
+  }
+}
+
 // ========== State & Storage ==========
 let state = {
   foods: [], // { id, name, price, quantity, unit, remaining, note }
@@ -14,24 +32,7 @@ const TODAY = (() => {
 let isSyncing = false;
 let syncTimeout = null;
 
-function autoSyncUpload() {
-  if (state.syncConfig && state.syncConfig.id && state.syncConfig.editKey) {
-    if (syncTimeout) clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(() => {
-      fetch(getSyncEndpoint(state.syncConfig.id), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Edit-Key": state.syncConfig.editKey,
-        },
-        body: JSON.stringify({
-          foods: state.foods,
-          records: state.records,
-        }),
-      }).catch((e) => console.error("Auto sync failed", e));
-    }, 1500); // 1.5s debounce
-  }
-}
+function autoSyncUpload() { toolSync.autoUpload(); }
 
 function migrateRecords() {
   state.records.forEach((r) => {
@@ -64,6 +65,8 @@ function migrateRecords() {
 }
 
 function saveState() {
+  reconcileInventory();
+  if (!isSyncing) { state.syncDirty = true; state.syncChange = (state.syncChange || 0) + 1; }
   localStorage.setItem("foods_tool_v1", JSON.stringify(state));
   if (!isSyncing) autoSyncUpload();
 }
@@ -77,6 +80,7 @@ function loadState() {
   if (!state.foods) state.foods = [];
   if (!state.records) state.records = [];
   migrateRecords();
+  initializeInventory();
   if (!state.syncConfig)
     state.syncConfig = {
       id: "",
@@ -518,6 +522,7 @@ function recalcEatingOutTotal() {
 
 // ========== Submit Record ==========
 function submitRecord() {
+  initializeInventory();
   const date = document.getElementById("addDate").value;
   if (!date) {
     alert("日付を入力してください");
@@ -556,6 +561,8 @@ function submitRecord() {
       const cost = calcIngredientCost(food, ing);
       return {
         foodId: ing.foodId,
+        foodName: food?.name || ing.foodName || "削除済み食品",
+        unit: food?.unit || ing.unit || "",
         usage: usageAmount,
         usageType: "amount",
         cost,
@@ -569,13 +576,15 @@ function submitRecord() {
       record.totalCost = 0; // 作り置き作成時は0円として記録
 
       // foodsに作り置きアイテムを追加
+      record.outputFoodId = genId();
       state.foods.push({
-        id: genId(),
+        id: record.outputFoodId,
         name: `【作り置き】${prepName}`,
         price: totalCost,
         quantity: prepServings,
         unit: "食",
         remaining: prepServings,
+        inventoryBase: prepServings,
         note: `${date} 作成`,
       });
     } else {
@@ -662,6 +671,7 @@ function addFood() {
     quantity,
     unit,
     remaining: quantity,
+    inventoryBase: quantity,
     note,
     purchaseDate,
   });
@@ -752,6 +762,8 @@ function openFoodEditModal(id) {
 function saveFoodEdit() {
   const f = state.foods.find((x) => x.id === editingFoodId);
   if (!f) return;
+  initializeInventory();
+  const oldRemaining = f.remaining;
   f.name = document.getElementById("editFoodName").value.trim();
   f.price = parseInt(document.getElementById("editFoodPrice").value) || 0;
   f.quantity =
@@ -759,6 +771,7 @@ function saveFoodEdit() {
   f.unit = document.getElementById("editFoodUnit").value;
   f.remaining =
     parseFloat(document.getElementById("editFoodRemaining").value) || 0;
+  f.inventoryBase += f.remaining - oldRemaining;
   const editFoodDateEl = document.getElementById("editFoodDate");
   if (editFoodDateEl) f.purchaseDate = editFoodDateEl.value;
   f.note = document.getElementById("editFoodNote").value.trim();
@@ -861,6 +874,12 @@ function renderRecords() {
 
 function deleteRecord(id) {
   if (!confirm("この記録を削除しますか？")) return;
+  initializeInventory();
+  const record = state.records.find(r => r.id === id);
+  if (record?.outputFoodId) {
+    if (state.records.some(r => r.id !== id && r.ingredients?.some(i => i.foodId === record.outputFoodId))) { alert('この作り置きを使った記録があるので、先にそちらを編集・削除してください。'); return; }
+    state.foods = state.foods.filter(f => f.id !== record.outputFoodId);
+  }
   state.records = state.records.filter((r) => r.id !== id);
   saveState();
   renderAll();
@@ -890,6 +909,7 @@ function openRecordEditModal(id) {
 }
 
 function saveRecordEdit() {
+  initializeInventory();
   const r = state.records.find((x) => x.id === editingRecordId);
   if (!r) return;
   r.date = document.getElementById("editRecordDate").value;
@@ -909,6 +929,8 @@ function saveRecordEdit() {
       }
       return {
         foodId: ing.foodId,
+        foodName: food?.name || ing.foodName || "削除済み食品",
+        unit: food?.unit || ing.unit || "",
         usage: usageAmount,
         usageType: "amount",
         cost,
@@ -941,6 +963,10 @@ function saveRecordEdit() {
 
     r.ingredients = resolvedNewIngredients;
     r.totalCost = r.type === "prepmake" ? 0 : newTotalCost;
+    if (r.outputFoodId) {
+      const output = state.foods.find(f => f.id === r.outputFoodId);
+      if (output) output.price = newTotalCost;
+    }
     // ※ prepmake cost is theoretically 0 in record, but if we updated the prep item food price, it could get complicated.
     // For now, we keep it simple.
   } else {
@@ -1307,198 +1333,6 @@ function renderCharts() {
   }
 }
 
-// ========== Cloud Sync ==========
-
-function toggleSyncServer() {}
-
-function parseSyncToken(token) {
-  let id = "",
-    key = "";
-  if (!token) return { id, key };
-  if (token.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(token);
-      id = parsed.id || "";
-      key = parsed.editKey || parsed.key || "";
-    } catch (e) {}
-  } else if (token.includes(":")) {
-    const parts = token.split(":");
-    id = parts[0];
-    key = parts.slice(1).join(":");
-  } else if (token.includes("_")) {
-    const parts = token.split("_");
-    id = parts[0];
-    key = parts.slice(1).join("_");
-  }
-  return { id, key };
-}
-
-function copySyncToken() {
-  const token = document.getElementById("syncToken").value.trim();
-  if (!token) {
-    alert("トークンを入力・同期してください");
-    return;
-  }
-  if (navigator.clipboard) {
-    navigator.clipboard
-      .writeText(token)
-      .then(() => {
-        alert("コピーしました：\n" + token);
-      })
-      .catch((e) => prompt("以下のテキストをコピーしてください", token));
-  } else {
-    prompt("以下のテキストをコピーしてください", token);
-  }
-}
-
-function saveSyncConfig() {
-  const token = document.getElementById("syncToken").value.trim();
-  const { id, key } = parseSyncToken(token);
-
-  let serverVersion = "v2";
-  const rads = document.getElementsByName("syncServer");
-  rads.forEach((r) => {
-    if (r.checked) serverVersion = r.value;
-  });
-
-  state.syncConfig = {
-    id: id || token, // if not parseable cleanly, just store
-    editKey: key,
-    proxyUrl: document.getElementById("syncProxyUrl").value.trim(),
-    serverVersion,
-  };
-  saveState();
-
-  const statusEl = document.getElementById("syncStatus");
-  statusEl.textContent = "設定を保存しました。";
-  statusEl.style.color = "var(--color-primary)";
-}
-
-function getSyncEndpoint(idStr = null) {
-  const proxyUrl =
-    state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
-  const serverVersion = state.syncConfig.serverVersion || "v2";
-  const baseUrl = proxyUrl
-    ? proxyUrl.replace(/\/$/, "")
-    : "https://jsonhosting.com";
-
-  const path = serverVersion === "v2" ? "/api/v2/data" : "/api/json";
-  if (idStr) return `${baseUrl}${path}/${idStr}`;
-  return `${baseUrl}${path}`;
-}
-
-async function syncUpload() {
-  const tokenInput = document.getElementById("syncToken");
-  const proxyInput = document.getElementById("syncProxyUrl");
-  const tokenStr = tokenInput.value.trim();
-  const { id, key: editKey } = parseSyncToken(tokenStr);
-  const statusEl = document.getElementById("syncStatus");
-
-  statusEl.textContent = "アップロード中...";
-  statusEl.style.color = "var(--color-primary)";
-
-  try {
-    const payload = JSON.stringify({
-      foods: state.foods,
-      records: state.records,
-    });
-
-    if (id && editKey) {
-      const res = await fetch(getSyncEndpoint(id), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Edit-Key": editKey,
-        },
-        body: payload,
-      });
-      if (!res.ok) throw new Error("アップロード失敗");
-      statusEl.textContent =
-        "アップロード完了！ (" + new Date().toLocaleTimeString() + ")";
-    } else {
-      const res = await fetch(getSyncEndpoint(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payload,
-      });
-      if (!res.ok) throw new Error("新規作成失敗");
-      const data = await res.json();
-      tokenInput.value = `${data.id}:${data.editKey}`;
-
-      let serverVersion = "v2";
-      const rads = document.getElementsByName("syncServer");
-      rads.forEach((r) => {
-        if (r.checked) serverVersion = r.value;
-      });
-      state.syncConfig = {
-        id: data.id,
-        editKey: data.editKey,
-        proxyUrl: proxyInput.value.trim(),
-        serverVersion,
-      };
-
-      saveState();
-      statusEl.textContent = "新規作成してアップロードしました！";
-    }
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = "エラー: " + err.message;
-    statusEl.style.color = "var(--color-danger)";
-  }
-}
-
-async function syncDownload(silent = false) {
-  let id = state.syncConfig.id;
-  if (!id) {
-    const t = parseSyncToken(document.getElementById("syncToken").value.trim());
-    id = t.id;
-  }
-  const statusEl = document.getElementById("syncStatus");
-  if (!id) {
-    if (!silent) {
-      statusEl.textContent = "Data IDを入力してください";
-      statusEl.style.color = "var(--color-danger)";
-    }
-    return;
-  }
-
-  if (!silent) {
-    statusEl.textContent = "ダウンロード中...";
-    statusEl.style.color = "var(--color-primary)";
-  }
-
-  try {
-    // キャッシュを防ぐためにタイムスタンプを付与
-    const res = await fetch(getSyncEndpoint(id) + `?t=${Date.now()}`);
-    if (!res.ok) throw new Error("ダウンロード失敗");
-    const data = (await res.json()).content;
-
-    if (data.foods && data.records) {
-      isSyncing = true;
-      state.foods = data.foods;
-      state.records = data.records;
-      migrateRecords();
-      saveState();
-      isSyncing = false;
-      renderAll();
-      if (!silent) {
-        statusEl.textContent =
-          "ダウンロードしてデータを復元しました！ (" +
-          new Date().toLocaleTimeString() +
-          ")";
-      }
-    } else {
-      throw new Error("データ形式が不正です");
-    }
-  } catch (err) {
-    console.error(err);
-    if (!silent) {
-      statusEl.textContent = "エラー: " + err.message;
-      statusEl.style.color = "var(--color-danger)";
-    }
-  }
-}
-
 // ========== Utils ==========
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -1537,3 +1371,5 @@ window.addEventListener("load", () => {
     syncDownload(true);
   }
 });
+
+const toolSync = new OpetoolsSync('foods', () => state, () => localStorage.setItem("foods_tool_v1", JSON.stringify(state)), data => { state.foods = data.foods; state.records = data.records; migrateRecords(); initializeInventory(); }, renderAll);

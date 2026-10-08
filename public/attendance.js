@@ -1,3 +1,31 @@
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+}
+function bindAttendanceActions(element, date, period, name, code) {
+  for (const button of element.querySelectorAll('[data-action="copy"]')) button.addEventListener('click', () => copyText(code));
+  for (const button of element.querySelectorAll('[data-action="edit"]')) button.addEventListener('click', () => openCodeInputModal(date, period, name, code));
+}
+function validateAttendanceData(data) {
+  const plain = value => value && typeof value === 'object' && !Array.isArray(value);
+  const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
+  if (!plain(data) || (!plain(data.timetables) && !plain(data.records)) || (data.schemaVersion !== undefined && ![1,2].includes(data.schemaVersion))) throw new Error('出席データの形式が正しくありません。');
+  for (const [d, slots] of Object.entries(data.records || {})) {
+    if (!validDate(d) || !plain(slots)) throw new Error('記録の日付が不正です。');
+    for (const [p, record] of Object.entries(slots)) if (!/^\d+$/.test(p) || Number(p) < 1 || Number(p) > 20 || !plain(record) || typeof record.className !== 'string' || record.className.length > 200 || typeof record.code !== 'string' || record.code.length > 100) throw new Error('出席記録の形式が不正です。');
+  }
+  for (const quarter of Object.values(data.timetables || {})) {
+    if (!plain(quarter)) throw new Error('時間割の形式が不正です。');
+    for (const slots of Object.values(quarter)) {
+      if (!plain(slots) || Object.values(slots).some(name => typeof name !== 'string' || name.length > 200)) throw new Error('科目名が不正です。');
+    }
+  }
+  if (data.periods !== undefined && (!Array.isArray(data.periods) || data.periods.some(p => !plain(p) || !Number.isInteger(p.id) || p.id < 1 || p.id > 20 || typeof p.name !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(p.startTime) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(p.endTime)))) throw new Error('時限設定が不正です。');
+  if (Object.keys(data.quarters || {}).some(key => !/^q[1-4]$/.test(key))) throw new Error('学期IDが不正です。');
+  for (const q of Object.values(data.quarters || {})) if (!plain(q) || !validDate(q.startDate) || !validDate(q.endDate) || typeof q.name !== 'string') throw new Error('学期設定が不正です。');
+  if (data.exceptions !== undefined && (!Array.isArray(data.exceptions) || data.exceptions.some(e => !plain(e) || !validDate(e.date) || !['holiday','cancel','substitution','reschedule'].includes(e.type)))) throw new Error('例外設定が不正です。');
+  if (data.courseIds !== undefined && (!plain(data.courseIds) || Object.values(data.courseIds).some(id => typeof id !== 'string' || (id && !/^[a-zA-Z0-9:_.-]{1,120}$/.test(id))))) throw new Error('共有科目IDが不正です。');
+}
+
 // ========== Attendance Tracker State & Defaults ==========
 const LOCAL_STORAGE_KEY = "opetools_attendance_state";
 
@@ -18,6 +46,10 @@ const DEFAULT_QUARTERS = {
 };
 
 let state = {
+  schemaVersion: 2,
+  courseIds: {},
+  pendingRecords: {},
+  notifications: [],
   quarters: JSON.parse(JSON.stringify(DEFAULT_QUARTERS)),
   periods: JSON.parse(JSON.stringify(DEFAULT_PERIODS)),
   timetables: {
@@ -32,7 +64,7 @@ let state = {
     id: "",
     editKey: "",
     proxyUrl: "https://tools.ainznino.workers.dev",
-    serverVersion: "v1",
+    serverVersion: "v2",
     autoDownload: false,
   },
 };
@@ -72,7 +104,6 @@ function getCurrentTime() {
 
 // ========== State Save & Load ==========
 function saveState() {
-  if (isSyncing) return;
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -81,6 +112,7 @@ function loadState() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
+      validateAttendanceData(parsed);
       state = {
         quarters:
           parsed.quarters || JSON.parse(JSON.stringify(DEFAULT_QUARTERS)),
@@ -92,12 +124,19 @@ function loadState() {
           q4: { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} },
         },
         exceptions: parsed.exceptions || [],
+        schemaVersion: 2,
+        courseIds: parsed.courseIds || {},
+        pendingRecords: parsed.pendingRecords || {},
+        notifications: parsed.notifications || [],
+        notificationEnabled: parsed.notificationEnabled || false,
+        importPending: parsed.importPending || false,
+        configDirty: parsed.configDirty || false,
         records: parsed.records || {},
-        syncConfig: parsed.syncConfig || {
+        syncConfig: parsed.syncConfig ? { ...state.syncConfig, ...parsed.syncConfig, serverVersion: parsed.syncConfig.serverVersion || 'v1' } : {
           id: "",
           editKey: "",
           proxyUrl: "https://tools.ainznino.workers.dev",
-          serverVersion: "v1",
+          serverVersion: "v2",
           autoDownload: false,
         },
       };
@@ -259,19 +298,21 @@ function getActivePeriod(nowDate) {
 
 // ========== Attendance Actions ==========
 function setAttendanceCode(dateStr, periodId, className, code) {
-  if (!state.records[dateStr]) {
-    state.records[dateStr] = {};
+  const previous = state.records[dateStr]?.[periodId];
+  const trimmed = code.trim();
+  if (trimmed.length > 100) { alert('コードは100文字以内で入力してね。'); return; }
+  state.records[dateStr] ||= {};
+  const timestamp = new Date().toISOString();
+  state.records[dateStr][periodId] = { className, code: trimmed, timestamp, revision: previous?.revision || 0 };
+  if (state.syncConfig.id && state.syncConfig.editKey && state.syncConfig.serverVersion === 'v2') {
+    const key = `${dateStr}/${periodId}`;
+    const shared = state.notifications?.find(n => n.course_id === state.courseIds?.[className] && n.date === dateStr);
+    state.pendingRecords ||= {};
+    state.pendingRecords[key] = { operationId: crypto.randomUUID(), datasetId: state.syncConfig.id, date: dateStr, periodId, className, code: trimmed, timestamp, revision: previous?.revision || 0, notificationRevision: shared?.revision || 0 };
   }
-  state.records[dateStr][periodId] = {
-    className,
-    code: code.trim(),
-    timestamp: new Date().toISOString(),
-  };
   saveState();
-
-  if (state.syncConfig && state.syncConfig.id && state.syncConfig.editKey) {
-    syncUpload(true);
-  }
+  syncStatus('端末に保存済み。');
+  if (state.syncConfig.id && state.syncConfig.editKey) flushAttendanceRecords();
 }
 
 function getAttendanceCode(dateStr, periodId) {
@@ -533,7 +574,7 @@ function renderDashboard() {
     if (classInfo.isCancelled) {
       statusBadge = `<span class="badge badge-danger">休講</span>`;
     } else if (code) {
-      statusBadge = `<span class="badge badge-success cursor-pointer" onclick="copyText('${code}')">出席 [${code}] 📋</span>`;
+      statusBadge = `<span class="badge badge-success cursor-pointer" data-action="copy">コード記録済み [${escapeHtml(code)}] 📋</span>`;
     } else {
       statusBadge = `<span class="badge badge-warning">未入力</span>`;
     }
@@ -549,10 +590,10 @@ function renderDashboard() {
     if (!classInfo.isCancelled) {
       actionButtons = `
         <div class="flex items-center gap-1">
-          <button class="btn btn-secondary btn-sm" onclick="openCodeInputModal('${dashboardSelectedDate}', ${period.id}, '${classInfo.className}', '${code}')">
+          <button class="btn btn-secondary btn-sm" data-action="edit">
             ${code ? "✍️ 編集" : "➕ 入力"}
           </button>
-          ${code ? `<button class="btn btn-secondary btn-sm" onclick="copyText('${code}')" title="出席コードをコピー">📋 コピー</button>` : ""}
+          ${code ? `<button class="btn btn-secondary btn-sm" data-action="copy" title="出席コードをコピー">📋 コピー</button>` : ""}
         </div>
       `;
     }
@@ -562,9 +603,9 @@ function renderDashboard() {
       <div class="flex-grow">
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div>
-            <span class="text-xs text-gray-500 font-bold">${period.name} (${period.startTime} - ${period.endTime})</span>
+            <span class="text-xs text-gray-500 font-bold">${escapeHtml(period.name)} (${escapeHtml(period.startTime)} - ${escapeHtml(period.endTime)})</span>
             <h4 class="text-base font-bold text-gray-800 mt-0.5 ${classInfo.isCancelled ? "line-through text-gray-400" : ""}">
-              ${classInfo.className}
+              ${escapeHtml(classInfo.className)}
             </h4>
           </div>
           <div class="flex items-center gap-3">
@@ -575,6 +616,7 @@ function renderDashboard() {
       </div>
     `;
 
+    bindAttendanceActions(itemEl, dashboardSelectedDate, period.id, classInfo.className, code);
     timelineContainer.appendChild(itemEl);
   });
 
@@ -654,25 +696,27 @@ function renderHistory() {
 
     // Highlight helper
     const highlight = (text) => {
-      if (!searchVal) return text;
-      const regex = new RegExp(`(${searchVal})`, "gi");
-      return text.replace(regex, `<span class="search-highlight">$1</span>`);
+      const safe = escapeHtml(text);
+      if (!searchVal) return safe;
+      const needle = escapeHtml(searchVal).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return safe.replace(new RegExp(`(${needle})`, 'gi'), '<span class="search-highlight">$1</span>');
     };
 
     tr.innerHTML = `
       <td class="p-3 text-gray-700 font-mono">${highlight(rec.dateStr)}</td>
-      <td class="p-3 text-gray-700">${periodName}</td>
+      <td class="p-3 text-gray-700">${escapeHtml(periodName)}</td>
       <td class="p-3 font-semibold text-gray-800">${highlight(rec.className)}</td>
       <td class="p-3 font-mono font-bold text-indigo-700">${rec.code ? highlight(rec.code) : '<span class="text-gray-400 font-normal">なし</span>'}</td>
       <td class="p-3">
         <div class="flex items-center gap-1.5">
-          <button class="btn btn-secondary btn-sm" onclick="openCodeInputModal('${rec.dateStr}', ${rec.periodId}, '${rec.className}', '${rec.code}')">
+          <button class="btn btn-secondary btn-sm" data-action="edit">
             ✍️ 編集
           </button>
-          ${rec.code ? `<button class="btn btn-secondary btn-sm" onclick="copyText('${rec.code}')">📋 コピー</button>` : ""}
+          ${rec.code ? `<button class="btn btn-secondary btn-sm" data-action="copy">📋 コピー</button>` : ""}
         </div>
       </td>
     `;
+    bindAttendanceActions(tr, rec.dateStr, rec.periodId, rec.className, rec.code);
     tbody.appendChild(tr);
   });
 
@@ -694,11 +738,11 @@ function renderPeriodTimesConfig() {
     div.className =
       "p-3 bg-gray-50 rounded-lg border border-gray-200 flex flex-col gap-1.5";
     div.innerHTML = `
-      <span class="text-xs font-bold text-gray-700">${p.name}</span>
+      <span class="text-xs font-bold text-gray-700">${escapeHtml(p.name)}</span>
       <div class="flex items-center gap-1">
-        <input type="text" id="period-start-${p.id}" class="form-input time-input" value="${p.startTime}" placeholder="08:50" />
+        <input type="text" id="period-start-${p.id}" class="form-input time-input" value="${escapeHtml(p.startTime)}" placeholder="08:50" />
         <span class="text-gray-400 text-xs">-</span>
-        <input type="text" id="period-end-${p.id}" class="form-input time-input" value="${p.endTime}" placeholder="10:20" />
+        <input type="text" id="period-end-${p.id}" class="form-input time-input" value="${escapeHtml(p.endTime)}" placeholder="10:20" />
       </div>
     `;
     container.appendChild(div);
@@ -711,8 +755,9 @@ function savePeriodTimes() {
     const end = document.getElementById(`period-end-${p.id}`).value.trim();
     return { ...p, startTime: start, endTime: end };
   });
+  try { validateAttendanceData({ ...attendancePayload(true), periods: updated }); if (updated.some(p => p.startTime >= p.endTime)) throw new Error('時限の終了は開始より後に設定してね。'); } catch(e) { alert(e.message); return; }
   state.periods = updated;
-  saveState();
+  state.configDirty = true; saveState();
   alert("時限設定を保存しました！");
   renderAll();
 }
@@ -727,15 +772,15 @@ function renderQuarterDatesConfig() {
     div.className =
       "p-4 bg-gray-50 rounded-lg border border-gray-200 flex flex-col gap-3";
     div.innerHTML = `
-      <span class="text-sm font-bold text-indigo-800">${qObj.name}</span>
+      <span class="text-sm font-bold text-indigo-800">${escapeHtml(qObj.name)}</span>
       <div class="grid grid-cols-2 gap-2">
         <div>
           <label class="block text-xs text-gray-500 font-bold mb-1">開始日</label>
-          <input type="date" id="quarter-start-${qKey}" class="form-input text-xs" value="${qObj.startDate}" />
+          <input type="date" id="quarter-start-${qKey}" class="form-input text-xs" value="${escapeHtml(qObj.startDate)}" />
         </div>
         <div>
           <label class="block text-xs text-gray-500 font-bold mb-1">終了日</label>
-          <input type="date" id="quarter-end-${qKey}" class="form-input text-xs" value="${qObj.endDate}" />
+          <input type="date" id="quarter-end-${qKey}" class="form-input text-xs" value="${escapeHtml(qObj.endDate)}" />
         </div>
       </div>
     `;
@@ -750,7 +795,7 @@ function saveQuarterDates() {
     state.quarters[qKey].startDate = start;
     state.quarters[qKey].endDate = end;
   });
-  saveState();
+  state.configDirty = true; saveState();
   alert("学期日程を設定しました！");
   renderAll();
 }
@@ -767,7 +812,7 @@ function renderTimetableGrid() {
   state.periods.forEach((period) => {
     const tr = document.createElement("tr");
 
-    let tds = `<td class="period-label">${period.name}</td>`;
+    let tds = `<td class="period-label">${escapeHtml(period.name)}</td>`;
 
     // Monday to Friday (1 to 5)
     for (let day = 1; day <= 5; day++) {
@@ -779,7 +824,7 @@ function renderTimetableGrid() {
             class="timetable-input font-bold"
             data-day="${day}"
             data-period="${period.id}"
-            value="${className}"
+            value="${escapeHtml(className)}"
             placeholder="-"
           />
         </td>
@@ -811,7 +856,7 @@ function saveTimetableGrid() {
     state.timetables[qKey][day][period] = val;
   });
 
-  saveState();
+  state.configDirty = true; saveState();
   const msgEl = document.getElementById("timetableSaveMessage");
   msgEl.textContent = "時間割を保存しました！";
   setTimeout(() => {
@@ -819,6 +864,7 @@ function saveTimetableGrid() {
   }, 3000);
 
   renderAll();
+  renderNotificationSettings();
 }
 
 // 4. Exceptions List
@@ -845,26 +891,27 @@ function renderExceptions() {
       const periodName =
         state.periods.find((p) => p.id === exp.periodId)?.name ||
         `${exp.periodId}限`;
-      details = `<span class="badge badge-warning">休講</span> ${periodName} 休講`;
+      details = `<span class="badge badge-warning">休講</span> ${escapeHtml(periodName)} 休講`;
     } else if (exp.type === "reschedule") {
       const periodName =
         state.periods.find((p) => p.id === exp.periodId)?.name ||
         `${exp.periodId}限`;
-      details = `<span class="badge badge-primary">臨時</span> ${periodName} に「${exp.className}」を追加`;
+      details = `<span class="badge badge-primary">臨時</span> ${escapeHtml(periodName)} に「${escapeHtml(exp.className)}」を追加`;
     } else if (exp.type === "substitution") {
       const dayName = getDayOfWeekJp(exp.substituteDay);
       details = `<span class="badge badge-success">曜日振替</span> ${dayName}曜日の時間割を適用`;
     }
 
     tr.innerHTML = `
-      <td class="p-3 text-gray-700 font-mono">${exp.date}</td>
+      <td class="p-3 text-gray-700 font-mono">${escapeHtml(exp.date)}</td>
       <td class="p-3 text-gray-800">${details}</td>
       <td class="p-3">
-        <button class="btn btn-secondary btn-sm text-red-650" onclick="deleteException('${exp.id}')">
+        <button class="btn btn-secondary btn-sm text-red-650" data-action="delete">
           削除
         </button>
       </td>
     `;
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteException(exp.id));
     tbody.appendChild(tr);
   });
 
@@ -926,7 +973,7 @@ function addException(event) {
   };
 
   state.exceptions.push(newExp);
-  saveState();
+  state.configDirty = true; saveState();
 
   // Reset fields
   document.getElementById("exceptionClassName").value = "";
@@ -938,7 +985,7 @@ function addException(event) {
 function deleteException(id) {
   if (confirm("この例外設定を削除しますか？")) {
     state.exceptions = state.exceptions.filter((e) => e.id !== id);
-    saveState();
+    state.configDirty = true; saveState();
     renderExceptions();
     renderAll();
   }
@@ -990,7 +1037,7 @@ function saveQuickAttendance() {
   renderAll();
 
   const quickSaveStatus = document.getElementById("quickSaveStatus");
-  quickSaveStatus.textContent = "出席コードを保存しました！";
+  quickSaveStatus.textContent = "端末に保存しました。同期状態はクラウド設定で確認できます。";
   quickSaveStatus.className = "mt-2 text-xs font-semibold text-emerald-600";
   setTimeout(() => {
     quickSaveStatus.textContent = "";
@@ -1018,7 +1065,7 @@ function copyText(text) {
 function exportDataJSON() {
   const dataStr =
     "data:text/json;charset=utf-8," +
-    encodeURIComponent(JSON.stringify(state, null, 2));
+    encodeURIComponent(JSON.stringify({ ...attendancePayload(true), revision: undefined }, null, 2));
   const downloadAnchor = document.createElement("a");
   downloadAnchor.setAttribute("href", dataStr);
   downloadAnchor.setAttribute(
@@ -1038,6 +1085,7 @@ function importDataJSON(event) {
   reader.onload = function (e) {
     try {
       const parsed = JSON.parse(e.target.result);
+      validateAttendanceData(parsed);
       if (parsed.timetables || parsed.records) {
         state = {
           quarters: parsed.quarters || state.quarters,
@@ -1045,10 +1093,15 @@ function importDataJSON(event) {
           timetables: parsed.timetables || state.timetables,
           exceptions: parsed.exceptions || state.exceptions,
           records: parsed.records || state.records,
-          syncConfig: parsed.syncConfig || state.syncConfig,
+          schemaVersion: 2,
+          courseIds: parsed.courseIds || {},
+          pendingRecords: {},
+          importPending: true,
+          syncConfig: state.syncConfig,
         };
         saveState();
         renderAll();
+        renderNotificationSettings();
         alert("JSONファイルからデータをインポートしました！");
       } else {
         alert("インポート失敗：無効なファイル形式です。");
@@ -1073,6 +1126,7 @@ async function loadSampleData() {
     const res = await fetch("/attendance/opetools_attendance_example.json");
     if (!res.ok) throw new Error("サンプルデータの読み込みに失敗しました。");
     const parsed = await res.json();
+    validateAttendanceData(parsed);
     if (parsed.timetables || parsed.records) {
       state = {
         quarters: parsed.quarters || state.quarters,
@@ -1080,10 +1134,15 @@ async function loadSampleData() {
         timetables: parsed.timetables || state.timetables,
         exceptions: parsed.exceptions || state.exceptions,
         records: parsed.records || state.records,
-        syncConfig: parsed.syncConfig || state.syncConfig,
+        schemaVersion: 2,
+        courseIds: parsed.courseIds || {},
+        pendingRecords: {},
+        syncConfig: state.syncConfig,
+        importPending: true,
       };
       saveState();
       renderAll();
+      renderNotificationSettings();
       alert("サンプルデータを正常に読み込みました！");
     } else {
       throw new Error("無効なファイル形式です。");
@@ -1111,11 +1170,12 @@ function resetAllData() {
       },
       exceptions: [],
       records: {},
+      schemaVersion: 2, courseIds: {}, pendingRecords: {}, notifications: [],
       syncConfig: {
         id: "",
         editKey: "",
         proxyUrl: "https://tools.ainznino.workers.dev",
-        serverVersion: "v1",
+        serverVersion: "v2",
         autoDownload: false,
       },
     };
@@ -1125,244 +1185,207 @@ function resetAllData() {
   }
 }
 
-// ========== Cloud Synchronization Implementation ==========
+// ========== Cloud Synchronization ==========
+let uploadChain = Promise.resolve();
+let flushingRecords = false;
 
 function parseSyncToken(token) {
-  let id = "",
-    key = "";
-  if (!token) return { id, key };
-  if (token.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(token);
-      id = parsed.id || "";
-      key = parsed.editKey || parsed.key || "";
-    } catch (e) {}
-  } else if (token.includes(":")) {
-    const parts = token.split(":");
-    id = parts[0];
-    key = parts.slice(1).join(":");
-  } else if (token.includes("_")) {
-    const parts = token.split("_");
-    id = parts[0];
-    key = parts.slice(1).join("_");
+  if (!token) return { id: '', key: '' };
+  if (token.startsWith('{')) {
+    try { const t = JSON.parse(token); return { id: t.id || '', key: t.editKey || t.key || '' }; } catch { return { id: '', key: '' }; }
   }
-  return { id, key };
+  const separator = token.includes(':') ? ':' : '_';
+  const [id, ...parts] = token.split(separator);
+  return { id, key: parts.join(separator) };
 }
-
-function getSyncEndpoint(idStr = null) {
-  const proxyUrl =
-    state.syncConfig.proxyUrl || "https://tools.ainznino.workers.dev";
-  const serverVersion = state.syncConfig.serverVersion || "v1";
-  const baseUrl = proxyUrl
-    ? proxyUrl.replace(/\/$/, "")
-    : "https://jsonhosting.com";
-
-  const path = serverVersion === "v2" ? "/api/v2/data" : "/api/json";
-  if (idStr) return `${baseUrl}${path}/${idStr}`;
-  return `${baseUrl}${path}`;
+function getSyncEndpoint(id = null) {
+  const base = (state.syncConfig.proxyUrl || 'https://tools.ainznino.workers.dev').replace(/\/$/, '');
+  const path = state.syncConfig.serverVersion === 'v1' ? '/api/json' : '/api/v2/attendance';
+  return base + path + (id ? '/' + encodeURIComponent(id) : '');
 }
-
-async function syncUpload(silent = false) {
-  let id = "";
-  let editKey = "";
-
-  if (silent) {
-    id = state.syncConfig.id;
-    editKey = state.syncConfig.editKey;
-  } else {
-    const tokenInput = document.getElementById("syncToken");
-    const tokenStr = tokenInput ? tokenInput.value.trim() : "";
-    const parsed = parseSyncToken(tokenStr);
-    id = parsed.id;
-    editKey = parsed.key;
-  }
-
-  const statusEl = document.getElementById("syncStatus");
-
-  if (!silent && statusEl) {
-    statusEl.textContent = "アップロード中...";
-    statusEl.className = "mt-4 text-sm font-semibold text-indigo-600";
-  }
-
-  try {
-    const payload = JSON.stringify({
-      quarters: state.quarters,
-      periods: state.periods,
-      timetables: state.timetables,
-      exceptions: state.exceptions,
-      records: state.records,
-    });
-
-    const proxyInput = document.getElementById("syncProxyUrl");
-    const proxyUrl = proxyInput
-      ? proxyInput.value.trim()
-      : state.syncConfig.proxyUrl || "";
-    const serverVersion =
-      document.querySelector('input[name="syncServer"]:checked')?.value ||
-      "v1";
-    const autoDownload =
-      document.getElementById("syncAutoDL")?.checked || false;
-
-    if (id && editKey) {
-      // Update existing JSON hosting bin
-      const res = await fetch(getSyncEndpoint(id), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Edit-Key": editKey,
-        },
-        body: payload,
-      });
-      if (!res.ok) throw new Error("アップロードに失敗しました");
-
-      // Always save token & config to state and localStorage
-      state.syncConfig = {
-        id,
-        editKey,
-        proxyUrl,
-        serverVersion,
-        autoDownload,
-      };
-      saveState();
-
-      if (!silent && statusEl) {
-        statusEl.textContent =
-          "同期完了！アップロードしました (" +
-          new Date().toLocaleTimeString() +
-          ")";
-        statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
-      }
-    } else {
-      if (silent) return; // Don't auto-create bin in background
-
-      // Create new JSON hosting bin
-      const res = await fetch(getSyncEndpoint(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payload,
-      });
-      if (!res.ok) throw new Error("新規作成に失敗しました");
-      const data = await res.json();
-      const newId = data.id || "";
-      const newKey = data.editKey || data.key || "";
-
-      if (tokenInput) {
-        tokenInput.value = `${newId}:${newKey}`;
-      }
-
-      state.syncConfig = {
-        id: newId,
-        editKey: newKey,
-        proxyUrl,
-        serverVersion,
-        autoDownload,
-      };
-      saveState();
-
-      if (statusEl) {
-        statusEl.textContent =
-          "新規の同期トークンを作成し、ローカルに保存してデータをアップロードしました！";
-        statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    if (!silent && statusEl) {
-      statusEl.textContent = "エラー: " + err.message;
-      statusEl.className = "mt-4 text-sm font-semibold text-red-600";
-    }
-  }
+function syncStatus(message, failed = false) {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = message; el.className = `mt-4 text-sm font-semibold ${failed ? 'text-red-600' : 'text-indigo-600'}`; }
+  const quick = document.getElementById('quickSaveStatus');
+  if (quick) quick.textContent = message;
 }
-
-async function syncDownload(silent = false) {
-  let id = state.syncConfig.id;
-  if (!id) {
-    const t = parseSyncToken(document.getElementById("syncToken").value.trim());
-    id = t.id;
-  }
-  const statusEl = document.getElementById("syncStatus");
-  if (!id) {
-    if (!silent) {
-      statusEl.textContent = "同期 ID/トークンを入力してください";
-      statusEl.className = "mt-4 text-sm font-semibold text-red-600";
-    }
-    return;
-  }
-
-  if (!silent) {
-    statusEl.textContent = "データをダウンロード中...";
-    statusEl.className = "mt-4 text-sm font-semibold text-indigo-600";
-  }
-
-  try {
-    const res = await fetch(getSyncEndpoint(id) + `?t=${Date.now()}`);
-    if (!res.ok) throw new Error("ダウンロードに失敗しました");
-
-    const responseJson = await res.json();
-    // In v1/v2, the actual saved content is usually wrapped in responseJson.content
-    const data = responseJson.content;
-
-    if (data && (data.timetables || data.records)) {
-      isSyncing = true;
-      state.quarters = data.quarters || state.quarters;
-      state.periods = data.periods || state.periods;
-      state.timetables = data.timetables || state.timetables;
-      state.exceptions = data.exceptions || state.exceptions;
-      state.records = data.records || state.records;
-      saveState();
-      isSyncing = false;
-
-      renderAll();
-      if (!silent) {
-        statusEl.textContent =
-          "同期完了！データをダウンロードしました (" +
-          new Date().toLocaleTimeString() +
-          ")";
-        statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
-      }
-    } else {
-      throw new Error("データ形式が正しくありません");
-    }
-  } catch (err) {
-    console.error(err);
-    if (!silent) {
-      statusEl.textContent = "エラー: " + err.message;
-      statusEl.className = "mt-4 text-sm font-semibold text-red-600";
-    }
-  }
+async function syncRequest(endpoint, options = {}, config = state.syncConfig) {
+  const response = await fetch(endpoint, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'X-Edit-Key': config.editKey || '', ...options.headers },
+    signal: AbortSignal.timeout(15000),
+  });
+  const data = await response.json();
+  if (!response.ok) { const err = new Error(data.error || `HTTP ${response.status}`); err.status = response.status; err.data = data; throw err; }
+  return data;
 }
-
-function copySyncToken() {
-  const token = document.getElementById("syncToken").value.trim();
-  if (!token) {
-    alert("トークンを入力または作成してください");
-    return;
-  }
-  copyText(token);
+function attendancePayload(includeRecords = false) {
+  const result = { schemaVersion: 2, quarters: state.quarters, periods: state.periods, timetables: state.timetables, exceptions: state.exceptions, courseIds: state.courseIds || {}, revision: state.syncConfig.revision };
+  if (includeRecords) result.records = state.records;
+  return result;
 }
-
+function readSyncFields() {
+  const token = parseSyncToken(document.getElementById('syncToken').value.trim());
+  return { id: token.id, editKey: token.key, proxyUrl: document.getElementById('syncProxyUrl').value.trim(), serverVersion: document.querySelector('input[name="syncServer"]:checked')?.value || 'v2', autoDownload: document.getElementById('syncAutoDL').checked };
+}
 function saveSyncConfig() {
-  const token = document.getElementById("syncToken").value.trim();
-  const { id, key } = parseSyncToken(token);
-  const serverVersion = document.querySelector(
-    'input[name="syncServer"]:checked',
-  ).value;
-  const proxyUrl = document.getElementById("syncProxyUrl").value.trim();
-  const autoDownload = document.getElementById("syncAutoDL").checked;
-
-  state.syncConfig = {
-    id,
-    editKey: key,
-    proxyUrl,
-    serverVersion,
-    autoDownload,
-  };
-  saveState();
-
-  const statusEl = document.getElementById("syncStatus");
-  statusEl.textContent = "同期設定を保存しました。";
-  statusEl.className = "mt-4 text-sm font-semibold text-emerald-600";
+  const config = readSyncFields();
+  if (config.id !== state.syncConfig.id || config.serverVersion !== state.syncConfig.serverVersion || config.proxyUrl !== state.syncConfig.proxyUrl) {
+    if (Object.keys(state.pendingRecords || {}).length) { alert('未同期コードがあるので、先に再送するかバックアップしてから接続先を変更してね。'); return false; }
+    state.notifications = [];
+    config.revision = undefined;
+  } else config.revision = state.syncConfig.revision;
+  state.syncConfig = config; saveState(); syncStatus('同期設定を保存しました。'); return true;
 }
+function syncUpload(silent = false) {
+  const task = uploadChain.then(() => performSyncUpload(silent));
+  uploadChain = task.catch(() => {});
+  return task;
+}
+async function performSyncUpload(silent) {
+  if (!silent && !saveSyncConfig()) return;
+  const config = { ...state.syncConfig };
+  const includeRecords = !config.id || state.importPending;
+  try {
+    if (config.id && config.serverVersion === 'v2' && config.revision === undefined) throw new Error('先にクラウドから読み込み、現在のデータを確認してください。');
+    const data = await syncRequest(getSyncEndpoint(config.id || null), { method: config.id ? 'PATCH' : 'POST', body: JSON.stringify(config.serverVersion === 'v1' ? { ...attendancePayload(true) } : attendancePayload(includeRecords)) }, config);
+    state.syncConfig = { ...config, id: config.id || data.id, editKey: config.editKey || data.editKey || data.key, revision: data.revision };
+    document.getElementById('syncToken').value = `${state.syncConfig.id}:${state.syncConfig.editKey}`;
+    state.importPending = false;
+    state.configDirty = false;
+    saveState();
+    if (includeRecords && state.syncConfig.serverVersion === 'v2') await syncDownload(true);
+    syncStatus('クラウドに保存しました。');
+    if (state.syncConfig.serverVersion === 'v2') await flushAttendanceRecords();
+  } catch (e) { syncStatus('同期失敗: ' + e.message + '（端末の記録は残っています）', true); }
+}
+async function syncDownload(silent = false) {
+  if (!silent && !saveSyncConfig()) return;
+  if (state.configDirty || state.importPending) {
+    if (silent) { syncStatus('未同期の設定・インポートがあるため自動読込を止めました。', true); return; }
+    if (!confirm('端末に未同期の設定があります。クラウドの設定で置き換えますか？先にバックアップしてね。')) return;
+  }
+  const config = { ...state.syncConfig };
+  const configBefore = JSON.stringify(attendancePayload(false));
+  if (!config.id) { syncStatus('同期トークンを入力してください。', true); return; }
+  try {
+    const response = await syncRequest(getSyncEndpoint(config.id), {}, config);
+    const data = response.content;
+    validateAttendanceData(data);
+    if (state.syncConfig.id !== config.id || JSON.stringify(attendancePayload(false)) !== configBefore) throw new Error('読込中に設定が更新されました。もう一度確認してください。');
+    // Pending local entries survive downloads, but their base revision stays unchanged to expose conflicts.
+    const pending = state.pendingRecords || {};
+    const pendingValues = Object.values(pending).map(p => ({ ...p }));
+    state.quarters = data.quarters || state.quarters;
+    state.periods = data.periods || state.periods;
+    state.timetables = data.timetables || state.timetables;
+    state.exceptions = data.exceptions || [];
+    state.courseIds = data.courseIds || {};
+    state.records = data.records || {};
+    for (const p of pendingValues) { state.records[p.date] ||= {}; state.records[p.date][p.periodId] = { className: p.className, code: p.code, timestamp: p.timestamp, revision: p.revision }; }
+    state.notifications = response.notifications || [];
+    state.notificationEnabled = Boolean(response.notificationEnabled);
+    state.syncConfig.revision = response.revision;
+    state.configDirty = false; state.importPending = false;
+    saveState(); renderAll(); renderNotificationSettings();
+    if (!silent) syncStatus('クラウドから読み込みました。未同期コードは端末に保持しています。');
+  } catch (e) { syncStatus('読み込み失敗: ' + e.message, true); }
+}
+async function flushAttendanceRecords() {
+  let completed = false;
+  if (flushingRecords || !state.syncConfig.id || !state.syncConfig.editKey) return;
+  if (state.syncConfig.serverVersion === 'v1') { syncUpload(true); return; }
+  flushingRecords = true;
+  try {
+    for (const [key, pending] of Object.entries(state.pendingRecords || {})) {
+      if (pending.paused) continue;
+      const sent = { ...pending };
+      if (sent.datasetId !== state.syncConfig.id) throw new Error('未同期コードの接続先が違います。');
+      const response = await syncRequest(getSyncEndpoint(state.syncConfig.id) + '/records', { method: 'PUT', body: JSON.stringify(sent) });
+      const current = state.pendingRecords[key];
+      if (current?.operationId === sent.operationId) delete state.pendingRecords[key];
+      else if (current) current.revision = response.revision;
+      if (state.records[sent.date]?.[sent.periodId]) state.records[sent.date][sent.periodId].revision = response.revision;
+      saveState();
+      syncStatus(response.notification === 'course-id-required' ? 'クラウド保存済み。通知には共有科目IDの設定が必要です。' : response.notification === 'disabled' ? 'クラウド保存済み。Discord通知は未参加です。' : 'クラウド保存済み。Discord通知の処理を受け付けました。');
+    }
+    // Refresh revisions/status without overwriting local config edits.
+    const data = await syncRequest(getSyncEndpoint(state.syncConfig.id));
+    state.notifications = data.notifications || [];
+    // Do not advance config revision: unuploaded config changes must still detect concurrent changes.
+    saveState(); renderNotificationSettings();
+    completed = true;
+  } catch (e) { syncStatus('端末に保存済み・未同期: ' + e.message, true); }
+  finally { flushingRecords = false; }
+  if (completed && Object.values(state.pendingRecords || {}).some(p => !p.paused)) queueMicrotask(() => flushAttendanceRecords());
+}
+async function retryAttendanceRecords() {
+  try {
+    const data = await syncRequest(getSyncEndpoint(state.syncConfig.id));
+    for (const pending of Object.values(state.pendingRecords || {})) {
+      const remote = data.content.records?.[pending.date]?.[pending.periodId];
+      const course = state.courseIds?.[pending.className];
+      const shared = data.notifications?.find(n => n.course_id === course && n.date === pending.date);
+      if ((remote && remote.code !== pending.code) || (shared && shared.code !== pending.code)) {
+        if (!confirm(`${pending.className} (${pending.date})\nクラウド/Discordのコードを「${pending.code}」に訂正しますか？`)) { pending.paused = true; continue; }
+      }
+      pending.paused = false;
+      pending.revision = remote?.revision || 0;
+      pending.notificationRevision = shared?.revision || 0;
+    }
+    saveState(); await flushAttendanceRecords();
+  } catch (e) { syncStatus(e.message, true); }
+}
+async function migrateAttendance() {
+  if (Object.keys(state.pendingRecords || {}).length) { alert('先に未同期コードを保存してください。'); return; }
+  if (!confirm('今の端末のデータから、出席専用の新しい同期トークンを作ります。旧トークンは変更しません。先に必要なデータを読み込み・バックアップしてね。')) return;
+  state.syncConfig = { ...state.syncConfig, id: '', editKey: '', revision: undefined, serverVersion: 'v2' };
+  document.querySelector('input[name="syncServer"][value="v2"]').checked = true;
+  document.getElementById('syncToken').value = '';
+  state.notifications = []; state.notificationEnabled = false;
+  saveState(); await syncUpload(true); renderNotificationSettings();
+}
+function copySyncToken() { const token = document.getElementById('syncToken').value.trim(); if (token) navigator.clipboard.writeText(token).catch(() => prompt('このトークンをコピーしてね', token)); }
+function renderNotificationSettings() {
+  const container = document.getElementById('courseIdSettings');
+  if (!container) return;
+  container.replaceChildren();
+  const names = new Set(Object.keys(state.courseIds || {}));
+  for (const quarter of Object.values(state.timetables)) for (const day of Object.values(quarter)) for (const name of Object.values(day)) if (name) names.add(name);
+  for (const e of state.exceptions) if (e.className) names.add(e.className);
+  for (const name of [...names].sort()) {
+    const label = document.createElement('label'); label.className = 'form-group'; label.textContent = name;
+    const input = document.createElement('input'); input.className = 'form-input'; input.dataset.courseName = name; input.value = state.courseIds?.[name] || ''; input.placeholder = '例: tut:2026:後期の科目コード:クラス（英数字で）';
+    label.appendChild(input); container.appendChild(label);
+  }
+  const status = document.getElementById('notificationStatus');
+  status.textContent = state.notificationEnabled ? 'Discord通知に参加済み。共有科目IDが設定された科目だけ通知します。' : 'Discord通知は未参加です。';
+  const notices = document.getElementById('notificationHistory'); notices.replaceChildren();
+  for (const n of [...(state.notifications || [])].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20)) {
+    const row = document.createElement('p');
+    const statuses = { sent: '通知済み', pending: '通知待ち', sending: '送信中', unknown: '送信結果不明・管理者確認が必要', failed: '通知失敗・管理者確認が必要' };
+    row.textContent = `${n.date} ${n.class_name}: ${statuses[n.status] || n.status}`;
+    notices.appendChild(row);
+  }
+}
+async function saveCourseIds() {
+  const ids = {};
+  for (const input of document.querySelectorAll('[data-course-name]')) {
+    const id = input.value.trim();
+    if (id && !/^[a-zA-Z0-9:_.-]{1,120}$/.test(id)) { alert('共有科目IDは120文字以内の英数字と : _ . - で入力してね。'); return; }
+    ids[input.dataset.courseName] = id;
+  }
+  state.courseIds = ids; state.configDirty = true; saveState(); await syncUpload(true);
+}
+async function joinNotifications(leave = false) {
+  if (state.syncConfig.serverVersion !== 'v2' || !state.syncConfig.id) { alert('出席専用v2の同期トークンを作成してください。'); return; }
+  try {
+    const input = document.getElementById('notificationGroupKey');
+    const result = await syncRequest(getSyncEndpoint(state.syncConfig.id) + '/membership', { method: 'POST', body: JSON.stringify(leave ? { leave: true } : { groupKey: input.value.trim() }) });
+    input.value = ''; state.notificationEnabled = result.notificationEnabled; saveState(); renderNotificationSettings();
+  } catch (e) { syncStatus(e.message, true); }
+}
+window.addEventListener('online', () => flushAttendanceRecords());
 
 // ========== Lifecycle Initialization ==========
 
@@ -1401,6 +1424,8 @@ window.addEventListener("load", async () => {
   }
 
   renderAll();
+  renderNotificationSettings();
+  if (Object.keys(state.pendingRecords || {}).length) flushAttendanceRecords();
 
   // Clock ticking and quick entry update
   setInterval(() => {
